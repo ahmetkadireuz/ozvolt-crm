@@ -11,6 +11,9 @@ const nextConfig = {
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
+  experimental: {
+    serverComponentsExternalPackages: ['@neondatabase/serverless'],
+  },
 }
 
 export default nextConfig
