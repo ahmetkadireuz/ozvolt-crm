@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { formatEuro } from '@/lib/utils'
 
-export default function FactuurActions({ factuur, factuurId, totalen }: { factuur: any; factuurId: number; totalen: any }) {
+export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean }) {
   const router = useRouter()
 
   async function updateStatus(status: string) {
@@ -101,6 +101,10 @@ export default function FactuurActions({ factuur, factuurId, totalen }: { factuu
                     <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>
                   </a>
                 )}
+              </div>
+            ) : !mbConfigured ? (
+              <div style={{ fontSize: '.75rem', color: '#f59e0b', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px' }}>
+                ⚠️ Moneybird API keys niet ingesteld in Vercel.
               </div>
             ) : (
               <button

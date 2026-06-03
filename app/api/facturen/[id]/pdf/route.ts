@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { requireSession } from '@/lib/session'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
+  // PDF is publiek toegankelijk via directe link (voor klanten)
 
   const { id } = await params
   const factuurId = parseInt(id)
