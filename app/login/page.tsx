@@ -40,19 +40,22 @@ export default async function LoginPage({
         <div style={{ position: 'absolute', bottom: -60, left: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
 
         <div style={{ position: 'relative', textAlign: 'center' }}>
-          <div style={{ marginBottom: 32 }}>
-            <Image
-              src="/logo.png"
-              alt="Ozvolt Elektrotechniek"
-              width={80}
-              height={80}
-              style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
-            />
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ width: 90, height: 90, borderRadius: 22, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+              <Image
+                src="/logo-wit.png"
+                alt="Ozvolt Elektrotechniek"
+                width={64}
+                height={64}
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
           </div>
-          <h1 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: 900, margin: '0 0 10px', letterSpacing: '-.5px' }}>
-            Ozvolt Elektrotechniek
+          <h1 style={{ color: '#fff', fontSize: '1.9rem', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-.5px' }}>
+            Ozvolt
           </h1>
-          <p style={{ color: '#8ba8c4', margin: '0 0 48px', fontSize: '.95rem' }}>CRM Beheerportaal</p>
+          <p style={{ color: '#8ba8c4', margin: '0 0 8px', fontSize: '1rem', fontWeight: 600 }}>Elektrotechniek</p>
+          <p style={{ color: '#4a6580', margin: '0 0 44px', fontSize: '.82rem' }}>CRM Beheerportaal</p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
             {[

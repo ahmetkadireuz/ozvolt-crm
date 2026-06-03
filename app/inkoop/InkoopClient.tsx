@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 type Lijst = { id: number; titel: string; klant_id: number | null; klant_naam: string | null; klus_naam: string | null; klus_id: number | null; aangemaakt_op: string }
-type Item = { id: number; lijst_id: number; omschrijving: string; aantal: number; eenheid: string; leverancier: string | null; afgevinkt: boolean }
+type Item = { id: number; lijst_id: number; omschrijving: string; aantal: number; eenheid: string; leverancier: string | null; prijs_ex_btw: number | null; afgevinkt: boolean }
 
 export default function InkoopClient({ lijsten, items, klanten, klussen }: {
   lijsten: Lijst[]; items: Item[]; klanten: any[]; klussen: any[]
@@ -12,7 +12,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
   const [localItems, setLocalItems] = useState<Item[]>(items)
   const [activeLijst, setActiveLijst] = useState<Lijst | null>(null)
   const [showNieuweLijst, setShowNieuweLijst] = useState(false)
-  const [nieuwItem, setNieuwItem] = useState({ omschrijving: '', aantal: '1', eenheid: 'stuk', leverancier: '' })
+  const [nieuwItem, setNieuwItem] = useState({ omschrijving: '', aantal: '1', eenheid: 'stuk', leverancier: '', prijs_ex_btw: '', prijs_per_stuk: '' })
   const [lijstForm, setLijstForm] = useState({ titel: '', klant_id: '', klus_id: '' })
   const [saving, setSaving] = useState(false)
 
@@ -46,12 +46,12 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
     const res = await fetch(`/api/inkoop/${activeLijst.id}/items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...nieuwItem, aantal: parseFloat(nieuwItem.aantal) }),
+      body: JSON.stringify({ ...nieuwItem, aantal: parseFloat(nieuwItem.aantal), prijs_ex_btw: nieuwItem.prijs_ex_btw ? parseFloat(nieuwItem.prijs_ex_btw) : null }),
     })
     if (res.ok) {
       const { item } = await res.json()
       setLocalItems(prev => [...prev, item])
-      setNieuwItem({ omschrijving: '', aantal: '1', eenheid: 'stuk', leverancier: '' })
+      setNieuwItem({ omschrijving: '', aantal: '1', eenheid: 'stuk', leverancier: '', prijs_ex_btw: '', prijs_per_stuk: '' })
     }
   }
 
@@ -152,37 +152,71 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
               </div>
 
               {/* Items */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
                 {lijstItems.length === 0 && (
                   <p style={{ color: '#8ba8c4', fontSize: '.85rem', margin: 0 }}>Nog geen items. Voeg hieronder toe.</p>
                 )}
-                {lijstItems.map(item => (
-                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: item.afgevinkt ? '#f0fdf4' : '#f8fafc', borderRadius: 8, border: `1px solid ${item.afgevinkt ? '#bbf7d0' : '#e2e8f0'}` }}>
-                    <input type="checkbox" checked={item.afgevinkt} onChange={() => toggleItem(item)} style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#16a34a' }} />
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontWeight: 600, color: '#0d1b3e', textDecoration: item.afgevinkt ? 'line-through' : 'none', opacity: item.afgevinkt ? .5 : 1 }}>
-                        {item.aantal} {item.eenheid} — {item.omschrijving}
-                      </span>
-                      {item.leverancier && <span style={{ fontSize: '.78rem', color: '#8ba8c4', marginLeft: 8 }}>({item.leverancier})</span>}
+                {lijstItems.map(item => {
+                  const totaalPrijs = item.prijs_ex_btw != null ? Number(item.prijs_ex_btw) * Number(item.aantal) : null
+                  return (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: item.afgevinkt ? '#f0fdf4' : '#f8fafc', borderRadius: 8, border: `1px solid ${item.afgevinkt ? '#bbf7d0' : '#e2e8f0'}` }}>
+                      <input type="checkbox" checked={item.afgevinkt} onChange={() => toggleItem(item)} style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#16a34a' }} />
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontWeight: 600, color: '#0d1b3e', textDecoration: item.afgevinkt ? 'line-through' : 'none', opacity: item.afgevinkt ? .5 : 1 }}>
+                          {item.aantal} {item.eenheid} — {item.omschrijving}
+                        </span>
+                        {item.leverancier && <span style={{ fontSize: '.78rem', color: '#8ba8c4', marginLeft: 8 }}>({item.leverancier})</span>}
+                        {item.prijs_ex_btw != null && (
+                          <span style={{ fontSize: '.78rem', color: '#5b7fa6', marginLeft: 8 }}>
+                            € {Number(item.prijs_ex_btw).toFixed(2)}/stuk
+                          </span>
+                        )}
+                      </div>
+                      {totaalPrijs != null && (
+                        <span style={{ fontSize: '.82rem', color: '#16a34a', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                          € {totaalPrijs.toFixed(2)} ex btw
+                        </span>
+                      )}
+                      <button className="btn btn-ghost btn-sm" onClick={() => verwijderItem(item.id)}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+                      </button>
                     </div>
-                    <button className="btn btn-ghost btn-sm" onClick={() => verwijderItem(item.id)}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
-                    </button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
+              {/* Totaal inkoop */}
+              {lijstItems.some(i => i.prijs_ex_btw != null) && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '.84rem', color: '#5b7fa6' }}>
+                    Totaal inkoop:&nbsp;
+                    <strong style={{ color: '#0d1b3e', fontSize: '.95rem' }}>
+                      € {lijstItems.reduce((s, i) => s + (i.prijs_ex_btw != null ? Number(i.prijs_ex_btw) * Number(i.aantal) : 0), 0).toFixed(2)} ex btw
+                    </strong>
+                  </div>
+                </div>
+              )}
+
               {/* Nieuw item */}
-              <form onSubmit={voegItemToe} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <input className="form-ctrl" style={{ flex: 3, minWidth: 160 }} placeholder="Item omschrijving *" value={nieuwItem.omschrijving} onChange={e => setNieuwItem(f => ({ ...f, omschrijving: e.target.value }))} required />
-                <input className="form-ctrl" style={{ width: 70 }} type="number" min="0.1" step="0.1" value={nieuwItem.aantal} onChange={e => setNieuwItem(f => ({ ...f, aantal: e.target.value }))} />
-                <select className="form-ctrl" style={{ width: 90 }} value={nieuwItem.eenheid} onChange={e => setNieuwItem(f => ({ ...f, eenheid: e.target.value }))}>
-                  {['stuk', 'm', 'm²', 'kg', 'liter', 'doos', 'rol', 'set'].map(u => <option key={u}>{u}</option>)}
-                </select>
-                <input className="form-ctrl" style={{ flex: 2, minWidth: 120 }} placeholder="Leverancier" value={nieuwItem.leverancier} onChange={e => setNieuwItem(f => ({ ...f, leverancier: e.target.value }))} />
-                <button type="submit" className="btn btn-primary">
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
-                </button>
+              <form onSubmit={voegItemToe} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <input className="form-ctrl" style={{ flex: 3, minWidth: 160 }} placeholder="Item omschrijving *" value={nieuwItem.omschrijving} onChange={e => setNieuwItem(f => ({ ...f, omschrijving: e.target.value }))} required />
+                  <input className="form-ctrl" style={{ width: 70 }} type="number" min="0.1" step="0.1" placeholder="Aantal" value={nieuwItem.aantal} onChange={e => setNieuwItem(f => ({ ...f, aantal: e.target.value }))} />
+                  <select className="form-ctrl" style={{ width: 90 }} value={nieuwItem.eenheid} onChange={e => setNieuwItem(f => ({ ...f, eenheid: e.target.value }))}>
+                    {['stuk', 'm', 'm²', 'kg', 'liter', 'doos', 'rol', 'set'].map(u => <option key={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <input className="form-ctrl" style={{ flex: 2, minWidth: 120 }} placeholder="Leverancier" value={nieuwItem.leverancier} onChange={e => setNieuwItem(f => ({ ...f, leverancier: e.target.value }))} />
+                  <div style={{ position: 'relative', flex: 1, minWidth: 110 }}>
+                    <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8ba8c4', fontWeight: 600, pointerEvents: 'none' }}>€</span>
+                    <input className="form-ctrl" style={{ paddingLeft: 24 }} type="number" min="0" step="0.01" placeholder="Prijs p/stuk ex btw" value={nieuwItem.prijs_ex_btw} onChange={e => setNieuwItem(f => ({ ...f, prijs_ex_btw: e.target.value }))} />
+                  </div>
+                  <button type="submit" className="btn btn-primary">
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
+                    Toevoegen
+                  </button>
+                </div>
               </form>
             </div>
           )}

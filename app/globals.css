@@ -37,9 +37,8 @@ body {
   padding: 20px 16px 16px;
   border-bottom: 1px solid rgba(255,255,255,.08);
 }
-.sb-brand img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
-.sb-brand strong { display: block; color: #fff; font-size: .82rem; font-weight: 700; line-height: 1.2; }
-.sb-brand span   { color: #8ba8c4; font-size: .72rem; }
+.sb-brand strong { display: block; color: #fff; font-size: .88rem; font-weight: 800; line-height: 1.2; letter-spacing: -.2px; }
+.sb-brand span   { color: #6b8faa; font-size: .7rem; }
 .sb-nav { flex: 1; padding: 10px 8px; }
 .nav-item {
   display: flex; align-items: center; gap: 10px;

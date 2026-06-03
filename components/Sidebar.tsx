@@ -40,10 +40,12 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
     <>
       <aside className="sidebar" id="sidebar">
         <div className="sb-brand">
-          <Image src="/logo.png" alt="Ozvolt" width={40} height={40} style={{ objectFit: 'contain' }} />
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(255,255,255,0.15)' }}>
+            <Image src="/logo.png" alt="Ozvolt" width={30} height={30} style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+          </div>
           <div>
-            <strong>Ozvolt Elektrotechniek</strong>
-            <span>CRM Portaal</span>
+            <strong>Ozvolt</strong>
+            <span>Elektrotechniek · CRM</span>
           </div>
         </div>
 

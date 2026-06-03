@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { formatEuro } from '@/lib/db'
+import { formatEuro } from '@/lib/utils'
 
 export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl, facturen }: {
   offerte: any; offerteId: number; totalen: any; acceptUrl: string | null; facturen: any[]

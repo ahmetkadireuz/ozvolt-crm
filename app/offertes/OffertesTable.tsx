@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import StatusBadge from '@/components/StatusBadge'
-import { berekenTotalen, formatEuro } from '@/lib/db'
+import { berekenTotalen, formatEuro } from '@/lib/utils'
 
 export default function OffertesTable({ offertes }: { offertes: any[] }) {
   const router = useRouter()

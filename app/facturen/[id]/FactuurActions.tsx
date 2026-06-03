@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { formatEuro } from '@/lib/db'
+import { formatEuro } from '@/lib/utils'
 
 export default function FactuurActions({ factuur, factuurId, totalen }: { factuur: any; factuurId: number; totalen: any }) {
   const router = useRouter()
