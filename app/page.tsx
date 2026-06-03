@@ -1,101 +1,198 @@
-import Image from "next/image";
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { sql } from '@/lib/db'
+import StatusBadge from '@/components/StatusBadge'
 
-export default function Home() {
+export const metadata: Metadata = { title: 'Overzicht' }
+
+function timeAgo(dt: string) {
+  const diff = Math.floor((Date.now() - new Date(dt).getTime()) / 1000)
+  if (diff < 60)    return 'zojuist'
+  if (diff < 3600)  return `${Math.round(diff / 60)}m geleden`
+  if (diff < 86400) return `${Math.round(diff / 3600)}u geleden`
+  return `${Math.round(diff / 86400)}d geleden`
+}
+
+export default async function Dashboard() {
+  const [stats, nieuweKlussen, agendaVandaag, openFacturen] = await Promise.all([
+    sql`
+      SELECT
+        (SELECT COUNT(*)::int FROM klussen WHERE status='nieuw') AS nieuw,
+        (SELECT COUNT(*)::int FROM klussen WHERE status IN ('in_behandeling','offerte_gestuurd','gepland')) AS open,
+        (SELECT COUNT(*)::int FROM klanten) AS klanten,
+        (SELECT COUNT(*)::int FROM offertes WHERE status IN ('concept','gestuurd')) AS offertes_open,
+        (SELECT COUNT(*)::int FROM facturen WHERE status IN ('verstuurd','te_laat')) AS facturen_open,
+        (SELECT COUNT(*)::int FROM facturen WHERE status='te_laat') AS te_laat
+    `,
+    sql`
+      SELECT k.id, k.type_werk, k.status, k.bron, k.aangemaakt_op,
+             kt.naam AS klant_naam, kt.telefoon, kt.locatie
+      FROM klussen k
+      JOIN klanten kt ON kt.id = k.klant_id
+      WHERE k.status = 'nieuw'
+      ORDER BY k.aangemaakt_op DESC
+      LIMIT 8
+    `,
+    sql`
+      SELECT a.*, kt.naam AS klant_naam
+      FROM agenda_items a
+      LEFT JOIN klanten kt ON kt.id = a.klant_id
+      WHERE DATE(a.datum_start AT TIME ZONE 'Europe/Amsterdam') = CURRENT_DATE
+        AND a.status = 'gepland'
+      ORDER BY a.datum_start ASC
+      LIMIT 5
+    `,
+    sql`
+      SELECT f.id, f.factuurnummer, f.status, f.factuurdatum, kt.naam AS klant_naam
+      FROM facturen f
+      JOIN klanten kt ON kt.id = f.klant_id
+      WHERE f.status IN ('verstuurd','te_laat')
+      ORDER BY f.status DESC, f.factuurdatum ASC
+      LIMIT 5
+    `,
+  ])
+
+  const s = stats[0]
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div>
+      <div className="topbar">
+        <h1 className="page-title">Overzicht</h1>
+        <Link href="/klussen/nieuw" className="btn btn-primary">
+          <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
+          Nieuwe klus
+        </Link>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Stats */}
+      <div className="stats-grid">
+        <Link href="/klussen?status=nieuw" style={{ textDecoration: 'none' }}>
+          <div className="stat-card" style={{ borderLeft: '3px solid #3b82f6' }}>
+            <div className="stat-label">Nieuwe aanvragen</div>
+            <div className="stat-value" style={{ color: '#1d4ed8' }}>{s.nieuw}</div>
+            <div className="stat-sub">Wachten op opvolging</div>
+          </div>
+        </Link>
+        <Link href="/klussen" style={{ textDecoration: 'none' }}>
+          <div className="stat-card" style={{ borderLeft: '3px solid #ea580c' }}>
+            <div className="stat-label">Open klussen</div>
+            <div className="stat-value">{s.open}</div>
+            <div className="stat-sub">In behandeling</div>
+          </div>
+        </Link>
+        <Link href="/offertes" style={{ textDecoration: 'none' }}>
+          <div className="stat-card" style={{ borderLeft: '3px solid #7c3aed' }}>
+            <div className="stat-label">Open offertes</div>
+            <div className="stat-value">{s.offertes_open}</div>
+            <div className="stat-sub">Concept of gestuurd</div>
+          </div>
+        </Link>
+        <Link href="/facturen?status=te_laat" style={{ textDecoration: 'none' }}>
+          <div className="stat-card" style={{ borderLeft: `3px solid ${s.te_laat > 0 ? '#dc2626' : '#16a34a'}` }}>
+            <div className="stat-label">Te laat</div>
+            <div className="stat-value" style={{ color: s.te_laat > 0 ? '#dc2626' : '#0d1b3e' }}>{s.te_laat}</div>
+            <div className="stat-sub">{s.facturen_open} facturen open</div>
+          </div>
+        </Link>
+        <Link href="/klanten" style={{ textDecoration: 'none' }}>
+          <div className="stat-card">
+            <div className="stat-label">Klanten</div>
+            <div className="stat-value">{s.klanten}</div>
+            <div className="stat-sub">Totaal in database</div>
+          </div>
+        </Link>
+      </div>
+
+      <div className="detail-grid">
+        {/* Nieuwe aanvragen */}
+        <div>
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div className="section-label">Nieuwe aanvragen</div>
+              <Link href="/klussen?status=nieuw" style={{ fontSize: '.78rem', color: '#3b82f6', textDecoration: 'none' }}>Alle klussen →</Link>
+            </div>
+            {nieuweKlussen.length === 0 ? (
+              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: 0 }}>Geen nieuwe aanvragen.</p>
+            ) : (
+              <div className="table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Klant</th>
+                      <th>Type werk</th>
+                      <th>Bron</th>
+                      <th>Status</th>
+                      <th>Tijd</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nieuweKlussen.map((k: any) => (
+                      <tr key={k.id} onClick={() => { window.location.href = `/klussen/${k.id}` }}>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{k.klant_naam}</div>
+                          <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{k.locatie}</div>
+                        </td>
+                        <td>{k.type_werk || '—'}</td>
+                        <td><span style={{ fontSize: '.75rem', color: '#64748b' }}>{k.bron}</span></td>
+                        <td><StatusBadge status={k.status} /></td>
+                        <td style={{ color: '#8ba8c4', fontSize: '.78rem', whiteSpace: 'nowrap' }}>{timeAgo(k.aangemaakt_op)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Rechterkolom */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Agenda vandaag */}
+          <div className="card">
+            <div className="section-label" style={{ marginBottom: 12 }}>Agenda vandaag</div>
+            {agendaVandaag.length === 0 ? (
+              <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: 0 }}>Geen afspraken vandaag.</p>
+            ) : agendaVandaag.map((a: any) => (
+              <div key={a.id} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                <div style={{
+                  width: 4, borderRadius: 4, background: '#3b82f6', flexShrink: 0,
+                }} />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '.84rem' }}>{a.titel}</div>
+                  <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>
+                    {new Date(a.datum_start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                    {a.klant_naam && ` · ${a.klant_naam}`}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <Link href="/agenda" className="btn btn-ghost btn-sm" style={{ marginTop: 8, width: '100%', justifyContent: 'center' }}>
+              Agenda openen
+            </Link>
+          </div>
+
+          {/* Open facturen */}
+          <div className="card">
+            <div className="section-label" style={{ marginBottom: 12 }}>Open facturen</div>
+            {openFacturen.length === 0 ? (
+              <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: 0 }}>Geen openstaande facturen.</p>
+            ) : openFacturen.map((f: any) => (
+              <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'block', textDecoration: 'none', marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '.84rem', color: '#0d1b3e' }}>{f.klant_naam}</div>
+                    <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{f.factuurnummer}</div>
+                  </div>
+                  <StatusBadge status={f.status} />
+                </div>
+              </Link>
+            ))}
+            <Link href="/facturen" className="btn btn-ghost btn-sm" style={{ marginTop: 4, width: '100%', justifyContent: 'center' }}>
+              Alle facturen
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
