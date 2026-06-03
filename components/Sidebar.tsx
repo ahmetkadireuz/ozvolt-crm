@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 const navMain = [
@@ -23,6 +24,9 @@ const navOps = [
 export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount?: number; notifCount?: number }) {
   const pathname = usePathname()
 
+  // Verberg sidebar op login en API pagina's
+  if (pathname.startsWith('/login') || pathname.startsWith('/api')) return null
+
   function isActive(key: string) {
     if (key === '/') return pathname === '/'
     return pathname.startsWith(key)
@@ -32,7 +36,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
     <>
       <aside className="sidebar" id="sidebar">
         <div className="sb-brand">
-          <img src="/logo.png" alt="Ozvolt" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          <Image src="/logo.png" alt="Ozvolt" width={40} height={40} style={{ objectFit: 'contain' }} />
           <div>
             <strong>Ozvolt Elektrotechniek</strong>
             <span>CRM Portaal</span>
@@ -42,7 +46,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
         <nav className="sb-nav">
           {navMain.map(item => (
             <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`}>
-              <span className="nav-ico">{item.icon}</span>
+              <span className="material-symbols-outlined nav-ico">{item.icon}</span>
               <span>{item.label}</span>
               {item.key === '/klussen' && nieuwCount > 0 && (
                 <span className="n-badge">{nieuwCount}</span>
@@ -57,7 +61,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
 
           {navOps.map(item => (
             <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`}>
-              <span className="nav-ico">{item.icon}</span>
+              <span className="material-symbols-outlined nav-ico">{item.icon}</span>
               <span>{item.label}</span>
             </Link>
           ))}
@@ -66,7 +70,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
         <div className="sb-foot">
           <form action="/api/auth/logout" method="POST">
             <button type="submit" className="logout-link" style={{ width: '100%', cursor: 'pointer', background: 'none', border: 'none' }}>
-              <span className="nav-ico">logout</span>
+              <span className="material-symbols-outlined nav-ico">logout</span>
               Uitloggen
             </button>
           </form>
@@ -76,14 +80,14 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
       {/* Mobile tab bar */}
       <nav className="mobile-tab-bar">
         {[
-          { href: '/',           icon: 'dashboard',     label: 'Overzicht' },
-          { href: '/klussen',    icon: 'construction',  label: 'Klussen' },
-          { href: '/agenda',     icon: 'calendar_month',label: 'Agenda' },
-          { href: '/whatsapp',   icon: 'chat',          label: 'WhatsApp' },
+          { href: '/',             icon: 'dashboard',     label: 'Overzicht' },
+          { href: '/klussen',      icon: 'construction',  label: 'Klussen' },
+          { href: '/agenda',       icon: 'calendar_month',label: 'Agenda' },
+          { href: '/whatsapp',     icon: 'chat',          label: 'WhatsApp' },
           { href: '/notificaties', icon: 'notifications', label: 'Meldingen' },
         ].map(t => (
           <Link key={t.href} href={t.href} className={`mobile-tab ${isActive(t.href) ? 'active' : ''}`}>
-            <span className="nav-ico" style={{ fontSize: 22 }}>{t.icon}</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>{t.icon}</span>
             <span>{t.label}</span>
           </Link>
         ))}
@@ -92,7 +96,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
           className="mobile-tab"
           onClick={() => document.getElementById('sidebar')?.classList.toggle('open')}
         >
-          <span className="nav-ico" style={{ fontSize: 22 }}>menu</span>
+          <span className="material-symbols-outlined" style={{ fontSize: 22 }}>menu</span>
           <span>Meer</span>
         </button>
       </nav>
