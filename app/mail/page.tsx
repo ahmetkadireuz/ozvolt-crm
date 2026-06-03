@@ -1,17 +1,14 @@
 import type { Metadata } from 'next'
+import { sql } from '@/lib/db'
+import MailClient from './MailClient'
 
-export const metadata: Metadata = { title: 'Binnenkort' }
+export const metadata: Metadata = { title: 'Mail AI' }
 
-export default function Page() {
-  return (
-    <div>
-      <h1 className="page-title" style={{ marginBottom: 20 }}>Binnenkort beschikbaar</h1>
-      <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-        <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 48, color: '#8ba8c4', display: 'block', marginBottom: 16 }}>construction</span>
-        <p style={{ color: '#8ba8c4', margin: 0, fontSize: '.9rem' }}>
-          Deze module is in ontwikkeling en wordt binnenkort toegevoegd.
-        </p>
-      </div>
-    </div>
-  )
+export default async function MailPage() {
+  const [klanten, klussen] = await Promise.all([
+    sql`SELECT id, naam, email FROM klanten WHERE email IS NOT NULL ORDER BY naam`,
+    sql`SELECT k.id, k.type_werk, k.omschrijving, kt.naam AS klant_naam, k.klant_id FROM klussen k JOIN klanten kt ON kt.id = k.klant_id ORDER BY k.aangemaakt_op DESC LIMIT 100`,
+  ])
+  const aiActief = !!process.env.OPENAI_API_KEY
+  return <MailClient klanten={klanten as any[]} klussen={klussen as any[]} aiActief={aiActief} />
 }

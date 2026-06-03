@@ -1,17 +1,22 @@
 import type { Metadata } from 'next'
+import { sql } from '@/lib/db'
+import KostenClient from './KostenClient'
 
-export const metadata: Metadata = { title: 'Binnenkort' }
+export const metadata: Metadata = { title: 'Kosten' }
 
-export default function Page() {
-  return (
-    <div>
-      <h1 className="page-title" style={{ marginBottom: 20 }}>Binnenkort beschikbaar</h1>
-      <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-        <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 48, color: '#8ba8c4', display: 'block', marginBottom: 16 }}>construction</span>
-        <p style={{ color: '#8ba8c4', margin: 0, fontSize: '.9rem' }}>
-          Deze module is in ontwikkeling en wordt binnenkort toegevoegd.
-        </p>
-      </div>
-    </div>
-  )
+export default async function KostenPage() {
+  const [kosten, klanten, klussen] = await Promise.all([
+    sql`
+      SELECT ko.*, k.naam AS klant_naam, kl.type_werk AS klus_naam
+      FROM kosten ko
+      LEFT JOIN klanten k ON k.id = ko.klant_id
+      LEFT JOIN klussen kl ON kl.id = ko.klus_id
+      ORDER BY ko.datum DESC
+      LIMIT 200
+    `,
+    sql`SELECT id, naam FROM klanten ORDER BY naam`,
+    sql`SELECT k.id, k.type_werk, kt.naam AS klant_naam FROM klussen k JOIN klanten kt ON kt.id = k.klant_id ORDER BY k.aangemaakt_op DESC LIMIT 100`,
+  ])
+
+  return <KostenClient kosten={kosten as any[]} klanten={klanten as any[]} klussen={klussen as any[]} />
 }

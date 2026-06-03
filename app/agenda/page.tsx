@@ -1,17 +1,21 @@
 import type { Metadata } from 'next'
+import { sql } from '@/lib/db'
+import AgendaClient from './AgendaClient'
 
-export const metadata: Metadata = { title: 'Binnenkort' }
+export const metadata: Metadata = { title: 'Agenda' }
 
-export default function Page() {
-  return (
-    <div>
-      <h1 className="page-title" style={{ marginBottom: 20 }}>Binnenkort beschikbaar</h1>
-      <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-        <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 48, color: '#8ba8c4', display: 'block', marginBottom: 16 }}>construction</span>
-        <p style={{ color: '#8ba8c4', margin: 0, fontSize: '.9rem' }}>
-          Deze module is in ontwikkeling en wordt binnenkort toegevoegd.
-        </p>
-      </div>
-    </div>
-  )
+export default async function AgendaPage() {
+  const [items, klanten, klussen] = await Promise.all([
+    sql`
+      SELECT a.*, k.naam AS klant_naam, kl.type_werk AS klus_naam
+      FROM agenda_items a
+      LEFT JOIN klanten k ON k.id = a.klant_id
+      LEFT JOIN klussen kl ON kl.id = a.klus_id
+      ORDER BY a.datum_start ASC
+    `,
+    sql`SELECT id, naam FROM klanten ORDER BY naam`,
+    sql`SELECT id, type_werk, klant_id FROM klussen ORDER BY aangemaakt_op DESC LIMIT 200`,
+  ])
+
+  return <AgendaClient items={items as any[]} klanten={klanten as any[]} klussen={klussen as any[]} />
 }

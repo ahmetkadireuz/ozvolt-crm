@@ -11,14 +11,18 @@ const navMain = [
   { key: '/klanten',    icon: 'groups',            label: 'Klanten' },
   { key: '/offertes',   icon: 'description',       label: 'Offertes' },
   { key: '/facturen',   icon: 'receipt_long',      label: 'Facturen' },
-  { key: '/whatsapp',   icon: 'chat',              label: 'WhatsApp' },
-  { key: '/mail',       icon: 'inbox',             label: 'Postvak' },
-  { key: '/notificaties', icon: 'notifications',   label: 'Notificaties' },
+  { key: '/whatsapp',     icon: 'chat',          label: 'WhatsApp' },
+  { key: '/notificaties', icon: 'notifications', label: 'Notificaties' },
 ]
 
 const navOps = [
-  { key: '/kosten',  icon: 'payments',      label: 'Kosten' },
-  { key: '/inkoop',  icon: 'shopping_cart', label: 'Inkoop' },
+  { key: '/kosten',             icon: 'payments',         label: 'Kosten' },
+  { key: '/inkoop',             icon: 'shopping_cart',    label: 'Inkoop' },
+  { key: '/groepenverklaring',  icon: 'electrical_services', label: 'Groepenverklaring' },
+]
+
+const navAI = [
+  { key: '/mail', icon: 'auto_awesome', label: 'Mail AI' },
 ]
 
 export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount?: number; notifCount?: number }) {
@@ -60,6 +64,15 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
           <div className="sb-divider">Bedrijf</div>
 
           {navOps.map(item => (
+            <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`}>
+              <span className="material-symbols-outlined nav-ico">{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+
+          <div className="sb-divider">AI Tools</div>
+
+          {navAI.map(item => (
             <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`}>
               <span className="material-symbols-outlined nav-ico">{item.icon}</span>
               <span>{item.label}</span>
