@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-type Lijst = { id: number; titel: string; klant_naam: string | null; klus_naam: string | null; klus_id: number | null; aangemaakt_op: string }
+type Lijst = { id: number; titel: string; klant_id: number | null; klant_naam: string | null; klus_naam: string | null; klus_id: number | null; aangemaakt_op: string }
 type Item = { id: number; lijst_id: number; omschrijving: string; aantal: number; eenheid: string; leverancier: string | null; afgevinkt: boolean }
 
 export default function InkoopClient({ lijsten, items, klanten, klussen }: {
@@ -115,6 +115,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                     }}
                   >
                     <div style={{ fontWeight: 700, marginBottom: 4 }}>{lijst.titel}</div>
+                    {lijst.klant_naam && <div style={{ fontSize: '.75rem', opacity: .7, marginBottom: 2 }}>👤 {lijst.klant_naam}</div>}
                     {lijst.klus_naam && <div style={{ fontSize: '.75rem', opacity: .7, marginBottom: 6 }}>🔧 {lijst.klus_naam}</div>}
                     <div style={{ height: 4, background: activeLijst?.id === lijst.id ? 'rgba(255,255,255,.3)' : '#e2e8f0', borderRadius: 2, overflow: 'hidden' }}>
                       <div style={{ height: '100%', background: activeLijst?.id === lijst.id ? '#fff' : '#16a34a', width: `${pct}%`, transition: 'width .3s' }} />
@@ -139,7 +140,12 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                 <div>
                   <h2 style={{ margin: '0 0 4px', color: '#0d1b3e' }}>{activeLijst.titel}</h2>
-                  {activeLijst.klant_naam && <div style={{ fontSize: '.82rem', color: '#5b7fa6' }}>👤 {activeLijst.klant_naam}{activeLijst.klus_naam ? ` — ${activeLijst.klus_naam}` : ''}</div>}
+                  {activeLijst.klant_naam && (
+                    <div style={{ fontSize: '.82rem', color: '#5b7fa6', marginBottom: 2 }}>
+                      👤 <strong>{activeLijst.klant_naam}</strong>
+                      {activeLijst.klus_naam && <span> — 🔧 {activeLijst.klus_naam}</span>}
+                    </div>
+                  )}
                   <div style={{ fontSize: '.8rem', color: '#8ba8c4', marginTop: 4 }}>{gedaan}/{lijstItems.length} afgevinkt</div>
                 </div>
                 <button className="btn btn-danger btn-sm" onClick={() => verwijderLijst(activeLijst.id)}>Verwijderen</button>
@@ -198,23 +204,32 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                 <input className="form-ctrl" required value={lijstForm.titel} onChange={e => setLijstForm(f => ({ ...f, titel: e.target.value }))} placeholder="Bijv. Materiaal groepenkast Janssen" />
               </div>
               <div>
-                <label className="form-label">Klant</label>
-                <select className="form-ctrl" value={lijstForm.klant_id} onChange={e => setLijstForm(f => ({ ...f, klant_id: e.target.value, klus_id: '' }))}>
+                <label className="form-label">Klant koppelen</label>
+                <select className="form-ctrl" value={lijstForm.klant_id}
+                  onChange={e => setLijstForm(f => ({ ...f, klant_id: e.target.value, klus_id: '' }))}>
                   <option value="">— Geen klant —</option>
                   {klanten.map(k => <option key={k.id} value={k.id}>{k.naam}</option>)}
                 </select>
               </div>
-              {lijstForm.klant_id && (
-                <div>
-                  <label className="form-label">Klus</label>
-                  <select className="form-ctrl" value={lijstForm.klus_id} onChange={e => setLijstForm(f => ({ ...f, klus_id: e.target.value }))}>
-                    <option value="">— Geen klus —</option>
-                    {klussen.filter(k => k.klant_id === Number(lijstForm.klant_id)).map(k => (
-                      <option key={k.id} value={k.id}>{k.type_werk || `Klus #${k.id}`}</option>
+
+              <div>
+                <label className="form-label">
+                  Klus koppelen
+                  <span style={{ color: '#8ba8c4', fontWeight: 400, marginLeft: 6 }}>(optioneel)</span>
+                </label>
+                <select className="form-ctrl" value={lijstForm.klus_id}
+                  onChange={e => setLijstForm(f => ({ ...f, klus_id: e.target.value }))}
+                  disabled={!lijstForm.klant_id}>
+                  <option value="">— {lijstForm.klant_id ? 'Geen klus' : 'Selecteer eerst een klant'} —</option>
+                  {klussen
+                    .filter(k => !lijstForm.klant_id || k.klant_id === Number(lijstForm.klant_id))
+                    .map(k => (
+                      <option key={k.id} value={k.id}>
+                        {lijstForm.klant_id ? (k.type_werk || `Klus #${k.id}`) : `${k.klant_naam} — ${k.type_werk || `Klus #${k.id}`}`}
+                      </option>
                     ))}
-                  </select>
-                </div>
-              )}
+                </select>
+              </div>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => setShowNieuweLijst(false)}>Annuleren</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Aanmaken...' : 'Aanmaken'}</button>
