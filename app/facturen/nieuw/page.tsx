@@ -26,7 +26,7 @@ export default async function NieuweFactuurPage() {
         RETURNING id`
       klantId = r[0].id
     }
-    if (!klantId) return
+    if (!klantId) redirect('/facturen/nieuw?fout=klant')
 
     const maxRow = await sql`SELECT MAX(CAST(REGEXP_REPLACE(factuurnummer, '[^0-9]', '', 'g') AS INTEGER)) AS max_nr FROM facturen`
     const nextNr = (maxRow[0]?.max_nr ?? 1000) + 1
@@ -53,8 +53,8 @@ export default async function NieuweFactuurPage() {
           <div>
             <label className="form-label">Bestaande klant kiezen</label>
             <select className="form-ctrl" name="klant_id">
-              <option value="">— Kies een klant —</option>
-              {klanten.map((k: any) => <option key={k.id} value={k.id}>{k.naam}</option>)}
+              <option value="">— Kies een klant ({(klanten as any[]).length} beschikbaar) —</option>
+              {(klanten as any[]).map((k) => <option key={k.id} value={k.id}>{k.naam}</option>)}
             </select>
             <Link href="/klanten/nieuw" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: '.75rem' }}>
               + Klant beheren
