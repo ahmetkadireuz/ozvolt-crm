@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic'
-
 import { redirect } from 'next/navigation'
 import { requireSession } from '@/lib/session'
 import { sql } from '@/lib/db'
