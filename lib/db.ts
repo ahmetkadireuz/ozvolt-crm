@@ -46,6 +46,7 @@ export type Klus = {
 
 export type RegelItem = {
   omschrijving: string
+  beschrijving?: string   // optionele subtitel/extra omschrijving
   aantal: number
   prijs: number
   btw: number
@@ -120,9 +121,9 @@ export type Notificatie = {
 }
 
 // Helpers
-export function berekenTotalen(regels: RegelItem[], kortingPct: number, btwPct: number) {
-  const subtotaal = regels.reduce((s, r) => s + r.aantal * r.prijs, 0)
-  const korting = subtotaal * (kortingPct / 100)
+export function berekenTotalen(regels: RegelItem[], kortingBedrag: number, btwPct: number) {
+  const subtotaal = regels.reduce((s, r) => s + Number(r.aantal) * Number(r.prijs), 0)
+  const korting = Math.min(Number(kortingBedrag), subtotaal)
   const naTotaal = subtotaal - korting
   const btw = naTotaal * (btwPct / 100)
   const inclBtw = naTotaal + btw

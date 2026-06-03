@@ -61,7 +61,7 @@ export default function FactuurForm({ factuur, klanten, factuurId }: { factuur: 
         <div className="section-label">Regeloverzicht</div>
         <RegelEditor
           initialRegels={factuur.regels ?? []}
-          kortingPct={0}
+          kortingBedrag={0}
           btwPct={Number(factuur.btw_pct)}
           onChange={(r, _k, b) => { setRegels(r); setBtwPct(b) }}
         />

@@ -63,7 +63,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         <div className="section-label">Regeloverzicht</div>
         <RegelEditor
           initialRegels={offerte.regels ?? []}
-          kortingPct={Number(offerte.korting_pct)}
+          kortingBedrag={Number(offerte.korting_pct)}
           btwPct={Number(offerte.btw_pct)}
           onChange={(r, k, b) => { setRegels(r); setKortingPct(k); setBtwPct(b) }}
         />

@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_telefoon, k.locatie AS klant_adres, k.type AS klant_type
+           k.telefoon AS klant_telefoon, k.locatie AS klant_adres
     FROM facturen f
     JOIN klanten k ON k.id = f.klant_id
     WHERE f.id = ${factuurId}
@@ -16,11 +16,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const f = rows[0]
   if (!f) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
 
-  const regels = Array.isArray(f.regels) ? f.regels : []
-  const totalen = berekenTotalen(regels, 0, f.btw_pct)
+  let regels: any[] = []
+  if (Array.isArray(f.regels)) regels = f.regels
+  else if (typeof f.regels === 'string') { try { regels = JSON.parse(f.regels) } catch {} }
+
+  const btwPct = Number(f.btw_pct ?? 21)
+  const totalen = berekenTotalen(regels, 0, btwPct)
 
   const vervalDatum = new Date(f.factuurdatum)
-  vervalDatum.setDate(vervalDatum.getDate() + (f.betalingstermijn ?? 14))
+  vervalDatum.setDate(vervalDatum.getDate() + (Number(f.betalingstermijn) || 14))
   const teLaat = f.status !== 'betaald' && vervalDatum < new Date()
 
   const html = `<!DOCTYPE html>
@@ -28,167 +32,145 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Factuur ${f.factuurnummer} — Ozvolt Elektrotechniek</title>
+<title>Factuur ${f.factuurnummer}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --navy: #0d1b3e;
-    --orange: #f97316;
-    --orange2: #ea580c;
-    --bg: #f8fafc;
-    --text: #1e293b;
-    --muted: #64748b;
-    --border: #e2e8f0;
+    --navy: #1d2f4c; --navy2: #162440; --blue: #4c7191;
+    --slate: #374151; --light: #f0f4f8; --muted: #64748b;
+    --border: #d0dce8; --green: #15803d; --red: #dc2626;
   }
-
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--text); background: #fff;
+    font-family: 'Poppins', -apple-system, sans-serif;
+    color: var(--navy); background: #fff;
     font-size: 13px; line-height: 1.6;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
+  .page { width: 210mm; min-height: 297mm; margin: 0 auto; }
 
-  .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; }
+  .header { background: var(--navy); color: #fff; padding: 0; display: grid; grid-template-columns: 1fr auto; }
+  .header-left { padding: 36px 44px 32px; }
+  .header-right { background: var(--navy2); padding: 36px 44px 32px; text-align: right; display: flex; flex-direction: column; justify-content: space-between; min-width: 200px; }
 
-  .header {
-    background: var(--navy); padding: 36px 48px 32px;
-    display: flex; justify-content: space-between; align-items: flex-start;
-    position: relative; overflow: hidden;
-  }
-  .header::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,.03); }
-  .header::after  { content:''; position:absolute; bottom:-40px; left:20%; width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,.025); }
+  .logo-img { height: 52px; width: auto; object-fit: contain; display: block; margin-bottom: 20px; }
+  .company-info { font-size: 11px; color: rgba(255,255,255,.5); line-height: 1.9; }
+  .company-info strong { color: rgba(255,255,255,.8); font-weight: 600; }
 
-  .logo-area { position: relative; z-index: 1; }
-  .logo-icon { width:48px; height:48px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; font-size:22px; font-weight:900; color:#fff; letter-spacing:-1px; }
-  .logo-name { font-size:24px; font-weight:900; color:#fff; letter-spacing:-.5px; line-height:1; }
-  .logo-sub  { font-size:12px; color:rgba(255,255,255,.55); margin-top:3px; letter-spacing:.5px; text-transform:uppercase; }
-  .logo-info { margin-top:20px; display:flex; flex-direction:column; gap:2px; }
-  .logo-info span { font-size:11px; color:rgba(255,255,255,.5); }
+  .doc-label { font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.45); margin-bottom: 4px; }
+  .doc-type { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -.5px; }
+  .doc-nr { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.6); margin-top: 6px; letter-spacing: .5px; }
+  .doc-status { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-top: 10px; align-self: flex-end; }
+  .status-betaald { background: rgba(21,128,61,.25); color: #86efac; border: 1px solid rgba(21,128,61,.3); }
+  .status-open    { background: rgba(255,255,255,.12); color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.18); }
+  .status-laat    { background: rgba(220,38,38,.25); color: #fca5a5; border: 1px solid rgba(220,38,38,.3); }
 
-  .doc-area { position:relative; z-index:1; text-align:right; }
-  .doc-type { font-size:32px; font-weight:900; color:#fff; letter-spacing:-1px; line-height:1; text-transform:uppercase; }
-  .doc-nr { font-size:15px; font-weight:600; color:rgba(249,115,22,.9); margin-top:4px; letter-spacing:.5px; }
-  .doc-status { margin-top:12px; }
-  .status-pill { display:inline-block; padding:4px 14px; border-radius:999px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
-  .status-concept  { background:rgba(255,255,255,.12); color:rgba(255,255,255,.8); border:1px solid rgba(255,255,255,.2); }
-  .status-verstuurd{ background:rgba(59,130,246,.25); color:#93c5fd; border:1px solid rgba(59,130,246,.3); }
-  .status-betaald  { background:rgba(34,197,94,.2); color:#86efac; border:1px solid rgba(34,197,94,.25); }
-  .status-te_laat  { background:rgba(239,68,68,.25); color:#fca5a5; border:1px solid rgba(239,68,68,.3); }
+  .stripe { height: 4px; background: var(--blue); }
+  .body { padding: 40px 44px 44px; }
 
-  .accent-strip { height:5px; background:linear-gradient(90deg,var(--orange) 0%,var(--orange2) 60%,#c2410c 100%); }
+  .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 36px; }
+  .info-card { background: var(--light); border-radius: 10px; padding: 20px 22px; }
+  .info-card-label { font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+  .info-card h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .info-card p { font-size: 12px; color: var(--muted); line-height: 1.9; }
+  .meta-row { display: flex; font-size: 12px; margin-bottom: 4px; }
+  .meta-k { color: var(--muted); min-width: 130px; }
+  .meta-v { font-weight: 600; color: var(--navy); }
+  .meta-v.laat { color: var(--red); }
 
-  .body { padding:40px 48px 48px; }
+  .sec-title { font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--blue); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:36px; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-  .info-block { padding:22px 24px; }
-  .info-block:first-child { border-right:1px solid var(--border); }
-  .info-label { font-size:9px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; color:var(--orange); margin-bottom:10px; }
-  .info-block h3 { font-size:15px; font-weight:800; color:var(--navy); margin-bottom:4px; }
-  .info-block p  { font-size:12.5px; color:var(--muted); line-height:1.8; }
-  .meta-row { display:flex; gap:0; margin-bottom:4px; }
-  .meta-key { font-size:12px; color:var(--muted); min-width:130px; }
-  .meta-val { font-size:12px; font-weight:600; color:var(--navy); }
-  .meta-val.red { color:#dc2626; }
+  table.items { width: 100%; border-collapse: collapse; }
+  table.items thead tr { background: var(--navy); }
+  table.items thead th { padding: 10px 14px; text-align: left; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.65); }
+  table.items thead th:not(:first-child) { text-align: right; }
+  table.items tbody tr { border-bottom: 1px solid var(--border); }
+  table.items tbody tr:last-child { border-bottom: 2px solid var(--border); }
+  table.items tbody tr:nth-child(even) { background: #f8fafc; }
+  table.items tbody td { padding: 11px 14px; vertical-align: top; }
+  table.items tbody td:not(:first-child) { text-align: right; font-size: 12.5px; }
+  .td-omschrijving { font-weight: 600; color: var(--navy); font-size: 13px; }
+  .td-beschrijving { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-  .section-title { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-  .section-title-text { font-size:9px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); }
-  .section-title-line { flex:1; height:1px; background:var(--border); }
+  .totals-wrap { display: flex; justify-content: flex-end; margin-top: 18px; }
+  .totals-box { width: 290px; }
+  .tot-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12.5px; border-bottom: 1px solid var(--border); }
+  .tot-row:last-child { border-bottom: none; }
+  .tot-row .l { color: var(--muted); }
+  .tot-row .v { font-weight: 600; }
+  .tot-final { background: var(--navy); border-radius: 10px; padding: 13px 18px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .tot-final .l { color: rgba(255,255,255,.65); font-size: 13px; font-weight: 600; }
+  .tot-final .v { color: #fff; font-size: 22px; font-weight: 800; }
 
-  table.items { width:100%; border-collapse:collapse; border-radius:10px; overflow:hidden; }
-  table.items thead tr { background:var(--navy); }
-  table.items thead th { padding:11px 14px; text-align:left; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.7); }
-  table.items thead th:not(:first-child) { text-align:right; }
-  table.items tbody td { padding:12px 14px; font-size:12.5px; border-bottom:1px solid var(--border); }
-  table.items tbody td:not(:first-child) { text-align:right; }
-  table.items tbody tr:last-child td { border-bottom:none; }
-  table.items tbody tr:nth-child(even) { background:#fafbfc; }
-  .item-desc { font-weight:600; color:var(--navy); }
+  .betaalbox { margin-top: 28px; background: var(--light); border-radius: 10px; padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--navy); }
+  .betaal-left .bl { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+  .betaal-left .iban { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .betaal-left .iban-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .betaal-right .bl { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 4px; text-align: right; }
+  .betaal-amount { font-size: 24px; font-weight: 800; color: var(--navy); }
 
-  .totals-wrap { display:flex; justify-content:flex-end; margin-top:20px; }
-  .totals-box { width:300px; }
-  .totals-row { display:flex; justify-content:space-between; padding:5px 0; font-size:12.5px; border-bottom:1px solid var(--border); }
-  .totals-row:last-child { border-bottom:none; }
-  .totals-row .lbl { color:var(--muted); }
-  .totals-row .val { font-weight:600; }
-  .totals-final { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; margin-top:8px; background:var(--navy); border-radius:10px; }
-  .totals-final .lbl { font-size:14px; font-weight:700; color:rgba(255,255,255,.7); }
-  .totals-final .val { font-size:22px; font-weight:900; color:#fff; }
+  .notities { margin-top: 24px; padding: 16px 20px; background: var(--light); border-left: 3px solid var(--blue); border-radius: 8px; }
+  .notities-title { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+  .notities p { font-size: 12px; color: #374151; line-height: 1.75; white-space: pre-wrap; }
 
-  .betaal-box { margin-top:28px; background:var(--navy); border-radius:12px; padding:22px 24px; display:flex; justify-content:space-between; align-items:center; }
-  .betaal-left .betaal-label { font-size:9px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:6px; }
-  .betaal-left .iban { font-size:14px; font-weight:700; color:#fff; }
-  .betaal-left .iban-sub { font-size:11px; color:rgba(255,255,255,.5); margin-top:2px; }
-  .betaal-right .betaal-label { font-size:9px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:4px; text-align:right; }
-  .betaal-amount { font-size:26px; font-weight:900; color:#fff; }
+  .footer { background: var(--light); border-top: 1px solid var(--border); padding: 18px 44px; display: flex; justify-content: space-between; align-items: center; margin-top: 40px; }
+  .footer p { font-size: 10.5px; color: var(--muted); }
 
-  .notes-box { margin-top:24px; padding:16px 18px; background:var(--bg); border-left:3px solid var(--orange); border-radius:8px; }
-  .notes-label { font-size:9px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
-  .notes-box p { font-size:12px; color:var(--text); white-space:pre-wrap; line-height:1.7; }
-
-  .footer { margin-top:40px; padding:20px 48px; background:var(--bg); border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
-  .footer p { font-size:10.5px; color:var(--muted); }
-  .footer .footer-bold { font-weight:600; color:var(--navy); }
-
-  .print-bar { position:fixed; top:0; left:0; right:0; z-index:999; background:var(--navy); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 12px rgba(0,0,0,.2); }
-  .print-bar span { color:rgba(255,255,255,.7); font-size:13px; }
-  .print-bar-btns { display:flex; gap:8px; }
-  .btn-print { background:var(--orange); color:#fff; border:none; padding:9px 20px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
-  .btn-close  { background:rgba(255,255,255,.1); color:#fff; border:none; padding:9px 16px; border-radius:8px; font-size:13px; cursor:pointer; font-family:inherit; }
+  .printbar { position: fixed; top: 0; left: 0; right: 0; background: var(--navy); z-index: 999; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+  .printbar-info { color: rgba(255,255,255,.65); font-size: 13px; }
+  .printbar-btns { display: flex; gap: 8px; }
+  .btn-p { background: var(--slate); color: #fff; border: none; padding: 8px 20px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .btn-x { background: rgba(255,255,255,.1); color: #fff; border: none; padding: 8px 14px; border-radius: 7px; font-size: 13px; cursor: pointer; font-family: inherit; }
 
   @media print {
-    .print-bar { display:none !important; }
-    body { padding-top:0 !important; }
-    .page { width:100%; }
+    .printbar { display: none !important; }
+    body { padding-top: 0 !important; }
+    .page { width: 100%; }
   }
-  body.has-bar { padding-top:52px; }
+  body { padding-top: 52px; }
 </style>
 </head>
-<body class="has-bar">
+<body>
 
-<div class="print-bar">
-  <span>Factuur ${f.factuurnummer} — ${f.klant_naam}</span>
-  <div class="print-bar-btns">
-    <button class="btn-print" onclick="window.print()">🖨 Afdrukken / PDF opslaan</button>
-    <button class="btn-close" onclick="window.close()">✕ Sluiten</button>
+<div class="printbar">
+  <span class="printbar-info">Factuur ${f.factuurnummer} — ${f.klant_naam}</span>
+  <div class="printbar-btns">
+    <button class="btn-p" onclick="window.print()">🖨 Afdrukken / PDF opslaan</button>
+    <button class="btn-x" onclick="window.close()">✕</button>
   </div>
 </div>
 
 <div class="page">
 
   <div class="header">
-    <div class="logo-area">
-      <div class="logo-icon">OZ</div>
-      <div class="logo-name">Ozvolt</div>
-      <div class="logo-sub">Elektrotechniek</div>
-      <div class="logo-info">
-        <span>KVK 99837366</span>
-        <span>BTW NL000000000B00</span>
-        <span>info@ozvoltelektro.nl</span>
-        <span>www.ozvoltelektro.nl</span>
+    <div class="header-left">
+      <img class="logo-img" src="https://portaal.ozvoltelektro.nl/logo-wit-site.png" alt="Ozvolt" onerror="this.style.display='none'">
+      <div class="company-info">
+        <strong>Ozvolt Elektrotechniek</strong><br>
+        KVK 99837366 · BTW NL000000000B00<br>
+        info@ozvoltelektro.nl · www.ozvoltelektro.nl<br>
+        06 449 98 789
       </div>
     </div>
-    <div class="doc-area">
-      <div class="doc-type">Factuur</div>
-      <div class="doc-nr">${f.factuurnummer}</div>
-      <div class="doc-status">
-        <span class="status-pill status-${teLaat ? 'te_laat' : f.status}">${
-          f.status === 'betaald' ? '✓ Betaald' :
-          teLaat ? '⚠ Vervallen' :
-          f.status === 'verstuurd' ? 'Openstaand' : 'Concept'
-        }</span>
+    <div class="header-right">
+      <div>
+        <div class="doc-label">Document</div>
+        <div class="doc-type">Factuur</div>
+        <div class="doc-nr">${f.factuurnummer}</div>
+      </div>
+      <div class="doc-status ${f.status === 'betaald' ? 'status-betaald' : teLaat ? 'status-laat' : 'status-open'}">
+        ${f.status === 'betaald' ? '✓ Betaald' : teLaat ? '⚠ Vervallen' : 'Openstaand'}
       </div>
     </div>
   </div>
-  <div class="accent-strip"></div>
+  <div class="stripe"></div>
 
   <div class="body">
 
-    <div class="info-grid">
-      <div class="info-block">
-        <div class="info-label">Factuur aan</div>
+    <div class="info-row">
+      <div class="info-card">
+        <div class="info-card-label">Factuur aan</div>
         <h3>${f.klant_naam}</h3>
         <p>
           ${f.klant_adres ? f.klant_adres.replace(/\n/g, '<br>') + '<br>' : ''}
@@ -196,25 +178,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           ${f.klant_telefoon ? f.klant_telefoon : ''}
         </p>
       </div>
-      <div class="info-block">
-        <div class="info-label">Factuurgegevens</div>
-        <div class="meta-row"><span class="meta-key">Factuurnummer</span><span class="meta-val">${f.factuurnummer}</span></div>
-        <div class="meta-row"><span class="meta-key">Factuurdatum</span><span class="meta-val">${new Date(f.factuurdatum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
-        <div class="meta-row"><span class="meta-key">Vervaldatum</span><span class="meta-val${teLaat ? ' red' : ''}">${vervalDatum.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
-        <div class="meta-row"><span class="meta-key">Betalingstermijn</span><span class="meta-val">${f.betalingstermijn ?? 14} dagen</span></div>
+      <div class="info-card">
+        <div class="info-card-label">Factuurgegevens</div>
+        <div class="meta-row"><span class="meta-k">Factuurnummer</span><span class="meta-v">${f.factuurnummer}</span></div>
+        <div class="meta-row"><span class="meta-k">Factuurdatum</span><span class="meta-v">${new Date(f.factuurdatum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+        <div class="meta-row"><span class="meta-k">Vervaldatum</span><span class="meta-v${teLaat ? ' laat' : ''}">${vervalDatum.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+        <div class="meta-row"><span class="meta-k">Betalingstermijn</span><span class="meta-v">${f.betalingstermijn ?? 14} dagen</span></div>
       </div>
     </div>
 
-    <div class="section-title">
-      <span class="section-title-text">Gefactureerde werkzaamheden</span>
-      <div class="section-title-line"></div>
-    </div>
+    <div class="sec-title">Gefactureerde werkzaamheden</div>
 
     <table class="items">
       <thead>
         <tr>
-          <th style="width:48%">Omschrijving</th>
-          <th style="width:10%">Aantal</th>
+          <th style="width:50%">Omschrijving</th>
+          <th style="width:9%">Aantal</th>
           <th style="width:14%">Stukprijs</th>
           <th style="width:8%">BTW</th>
           <th style="width:14%">Totaal</th>
@@ -222,50 +201,46 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       </thead>
       <tbody>
         ${regels.length === 0 ? `
-        <tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:24px;font-style:italic;">Geen regels</td></tr>
+          <tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:24px;font-style:italic;font-size:12px;">
+            Sla de factuur op om de regels te zien in de PDF.
+          </td></tr>
         ` : regels.map((r: any) => `
-        <tr>
-          <td><div class="item-desc">${r.omschrijving}</div></td>
-          <td>${Number(r.aantal).toLocaleString('nl-NL')}</td>
-          <td>${formatEuro(Number(r.prijs))}</td>
-          <td>${r.btw ?? f.btw_pct}%</td>
-          <td>${formatEuro(Number(r.aantal) * Number(r.prijs))}</td>
-        </tr>
+          <tr>
+            <td>
+              <div class="td-omschrijving">${r.omschrijving || '—'}</div>
+              ${r.beschrijving ? `<div class="td-beschrijving">${r.beschrijving}</div>` : ''}
+            </td>
+            <td>${Number(r.aantal).toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+            <td>${formatEuro(Number(r.prijs))}</td>
+            <td>${r.btw ?? btwPct}%</td>
+            <td style="font-weight:700;">${formatEuro(Number(r.aantal) * Number(r.prijs))}</td>
+          </tr>
         `).join('')}
       </tbody>
     </table>
 
     <div class="totals-wrap">
       <div class="totals-box">
-        <div class="totals-row">
-          <span class="lbl">Subtotaal (ex. BTW)</span>
-          <span class="val">${formatEuro(totalen.subtotaal)}</span>
-        </div>
-        <div class="totals-row">
-          <span class="lbl">BTW ${f.btw_pct}%</span>
-          <span class="val">${formatEuro(totalen.btw)}</span>
-        </div>
-        <div class="totals-final">
-          <span class="lbl">Te betalen</span>
-          <span class="val">${formatEuro(totalen.inclBtw)}</span>
-        </div>
+        <div class="tot-row"><span class="l">Subtotaal (ex. BTW)</span><span class="v">${formatEuro(totalen.subtotaal)}</span></div>
+        <div class="tot-row"><span class="l">BTW ${btwPct}%</span><span class="v">${formatEuro(totalen.btw)}</span></div>
+        <div class="tot-final"><span class="l">Te betalen incl. BTW</span><span class="v">${formatEuro(totalen.inclBtw)}</span></div>
       </div>
     </div>
 
     ${f.notities ? `
-    <div class="notes-box">
-      <div class="notes-label">Opmerkingen</div>
+    <div class="notities">
+      <div class="notities-title">Opmerkingen</div>
       <p>${f.notities}</p>
     </div>` : ''}
 
-    <div class="betaal-box">
+    <div class="betaalbox">
       <div class="betaal-left">
-        <div class="betaal-label">Betaalgegevens</div>
+        <div class="bl">Betaalgegevens</div>
         <div class="iban">IBAN: NL00 BANK 0000 0000 00</div>
-        <div class="iban-sub">t.n.v. Ozvolt Elektrotechniek &nbsp;·&nbsp; Vermeld: ${f.factuurnummer}</div>
+        <div class="iban-sub">t.n.v. Ozvolt Elektrotechniek &nbsp;·&nbsp; Kenmerk: ${f.factuurnummer}</div>
       </div>
       <div class="betaal-right">
-        <div class="betaal-label">Totaalbedrag</div>
+        <div class="bl">Te betalen</div>
         <div class="betaal-amount">${formatEuro(totalen.inclBtw)}</div>
       </div>
     </div>
@@ -273,15 +248,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   </div>
 
   <div class="footer">
-    <p><span class="footer-bold">Ozvolt Elektrotechniek</span> &nbsp;·&nbsp; KVK 99837366 &nbsp;·&nbsp; info@ozvoltelektro.nl &nbsp;·&nbsp; www.ozvoltelektro.nl</p>
-    <p style="color:#94a3b8">Factuur ${f.factuurnummer}</p>
+    <p><strong style="color:var(--navy)">Ozvolt Elektrotechniek</strong> · KVK 99837366 · info@ozvoltelektro.nl · 06 449 98 789</p>
+    <p>${f.factuurnummer}</p>
   </div>
 
 </div>
 </body>
 </html>`
 
-  return new NextResponse(html, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-  })
+  return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
 }
