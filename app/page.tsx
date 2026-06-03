@@ -4,6 +4,7 @@ export const revalidate = 0
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
+import DashboardKlussenRijen from './DashboardKlussenRijen'
 import StatusBadge from '@/components/StatusBadge'
 
 export const metadata: Metadata = { title: 'Overzicht' }
@@ -129,18 +130,7 @@ export default async function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {nieuweKlussen.map((k: any) => (
-                      <tr key={k.id} onClick={() => { window.location.href = `/klussen/${k.id}` }}>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{k.klant_naam}</div>
-                          <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{k.locatie}</div>
-                        </td>
-                        <td>{k.type_werk || '—'}</td>
-                        <td><span style={{ fontSize: '.75rem', color: '#64748b' }}>{k.bron}</span></td>
-                        <td><StatusBadge status={k.status} /></td>
-                        <td style={{ color: '#8ba8c4', fontSize: '.78rem', whiteSpace: 'nowrap' }}>{timeAgo(k.aangemaakt_op)}</td>
-                      </tr>
-                    ))}
+                    <DashboardKlussenRijen klussen={nieuweKlussen} />
                   </tbody>
                 </table>
               </div>
