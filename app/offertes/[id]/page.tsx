@@ -30,12 +30,14 @@ export default async function OfferteDetailPage({
     sql`SELECT id, factuurnummer, status FROM facturen WHERE offerte_id = ${offerteId}`,
   ])
 
-  const offerte = offerteRows[0]
+  const offerte = JSON.parse(JSON.stringify(offerteRows[0]))
   if (!offerte) notFound()
 
   const totalen = berekenTotalen(offerte.regels ?? [], offerte.korting_pct, offerte.btw_pct)
   const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
   const acceptUrl = offerte.accept_token ? `${siteUrl}/api/offertes/${offerteId}/accepteren?token=${offerte.accept_token}` : null
+  const klanten2 = JSON.parse(JSON.stringify(klanten))
+  const facturen2 = JSON.parse(JSON.stringify(factuurRows))
 
   return (
     <div>
@@ -64,7 +66,7 @@ export default async function OfferteDetailPage({
 
       <div className="detail-grid">
         {/* Formulier */}
-        <OfferteForm offerte={offerte} klanten={klanten} offerteId={offerteId} />
+        <OfferteForm offerte={offerte} klanten={klanten2} offerteId={offerteId} />
 
         {/* Acties sidebar */}
         <OfferteActions
@@ -72,7 +74,7 @@ export default async function OfferteDetailPage({
           offerteId={offerteId}
           totalen={totalen}
           acceptUrl={acceptUrl}
-          facturen={factuurRows}
+          facturen={facturen2}
         />
       </div>
     </div>

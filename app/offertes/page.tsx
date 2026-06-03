@@ -50,7 +50,7 @@ export default async function OffertesPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
 
-      <OffertesTable offertes={offertes as any[]} />
+      <OffertesTable offertes={JSON.parse(JSON.stringify(offertes))} />
     </div>
   )
 }

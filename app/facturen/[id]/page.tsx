@@ -22,10 +22,11 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
     sql`SELECT id, naam FROM klanten ORDER BY naam`,
   ])
 
-  const factuur = factuurRows[0]
+  const factuur = JSON.parse(JSON.stringify(factuurRows[0]))
   if (!factuur) notFound()
 
   const totalen = berekenTotalen(factuur.regels ?? [], 0, factuur.btw_pct)
+  const klanten2 = JSON.parse(JSON.stringify(klanten))
 
   return (
     <div>
@@ -49,7 +50,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="detail-grid">
-        <FactuurForm factuur={factuur} klanten={klanten} factuurId={factuurId} />
+        <FactuurForm factuur={factuur} klanten={klanten2} factuurId={factuurId} />
         <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} />
       </div>
     </div>

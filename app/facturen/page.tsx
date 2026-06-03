@@ -49,7 +49,7 @@ export default async function FacturenPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
 
-      <FacturenTable facturen={facturen as any[]} />
+      <FacturenTable facturen={JSON.parse(JSON.stringify(facturen))} />
     </div>
   )
 }
