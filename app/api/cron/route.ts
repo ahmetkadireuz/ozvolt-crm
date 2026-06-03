@@ -74,8 +74,8 @@ export async function GET(req: NextRequest) {
   for (const o of verlopen) {
     await sql`
       INSERT INTO admin_notifications (type, titel, bericht, link)
-      VALUES ('offerte_verlopen', ${`Offerte AM-${o.offertenummer} verlopen`},
-        ${`${o.klant_naam} heeft offerte AM-${o.offertenummer} niet geaccepteerd voor de deadline.`},
+      VALUES ('offerte_verlopen', ${`Offerte OZVT-${String(o.offertenummer).padStart(4,'0')} verlopen`},
+        ${`${o.klant_naam} heeft offerte OZVT-${String(o.offertenummer).padStart(4,'0')} niet geaccepteerd voor de deadline.`},
         ${`/offertes/${o.id}`})
     `
     // Update offerte status naar verlopen

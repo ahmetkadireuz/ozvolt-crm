@@ -14,7 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Volgende factuurnummer
   const maxRow = await sql`SELECT MAX(CAST(REGEXP_REPLACE(factuurnummer, '[^0-9]', '', 'g') AS INTEGER)) AS max_nr FROM facturen`
   const nextNr = (maxRow[0]?.max_nr ?? 1000) + 1
-  const factuurNr = `OZ-${nextNr}`
+  const factuurNr = `OZVT-${String(nextNr).padStart(4,'0')}`
 
   const result = await sql`
     INSERT INTO facturen (factuurnummer, klant_id, klus_id, offerte_id, status, factuurdatum, betalingstermijn, regels, btw_pct, notities)

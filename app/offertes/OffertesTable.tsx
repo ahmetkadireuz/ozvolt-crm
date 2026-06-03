@@ -20,7 +20,7 @@ export default function OffertesTable({ offertes }: { offertes: any[] }) {
                   const totalen = berekenTotalen(o.regels ?? [], o.korting_pct, o.btw_pct)
                   return (
                     <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/offertes/${o.id}`)}>
-                      <td className="mono">AM-{o.offertenummer}</td>
+                      <td className="mono">OZVT-{String(o.offertenummer).padStart(4,'0')}</td>
                       <td style={{ fontWeight: 600 }}>{o.klant_naam}</td>
                       <td><StatusBadge status={o.status} /></td>
                       <td style={{ fontSize: '.82rem' }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</td>

@@ -27,10 +27,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     await sendMail({
       to: offerte.klant_email,
-      subject: `Uw offerte AM-${offerte.offertenummer} — Ozvolt Elektrotechniek`,
+      subject: `Uw offerte OZVT-${String(offerte.offertenummer).padStart(4,'0')} — Ozvolt Elektrotechniek`,
       html: offerteMailHtml({
         klantNaam: offerte.klant_naam,
-        offerteNr: `AM-${offerte.offertenummer}`,
+        offerteNr: `OZVT-${String(offerte.offertenummer).padStart(4,"0")}`,
         acceptUrl,
       }),
     })

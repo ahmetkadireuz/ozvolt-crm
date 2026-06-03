@@ -67,7 +67,7 @@ export default async function OfferteDetailPage({
             <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
           </Link>
           <div>
-            <h1 className="page-title">Offerte AM-{offerte.offertenummer}</h1>
+            <h1 className="page-title">Offerte OZVT-{String(offerte.offertenummer).padStart(4,'0')}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <StatusBadge status={offerte.status} />
               <span style={{ color: '#8ba8c4', fontSize: '.78rem' }}>{offerte.klant_naam}</span>

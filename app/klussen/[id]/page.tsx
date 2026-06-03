@@ -126,7 +126,7 @@ export default async function KlusDetailPage({
               {offertesRows.map((o: any) => (
                 <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
                   <div>
-                    <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Offerte AM-{o.offertenummer}</span>
+                    <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Offerte OZVT-{String(o.offertenummer).padStart(4,'0')}</span>
                     <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</span>
                   </div>
                   <StatusBadge status={o.status} />

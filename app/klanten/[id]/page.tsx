@@ -90,7 +90,7 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
               {offertes.map((o: any) => (
                 <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
                   <div>
-                    <div style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>AM-{o.offertenummer}</div>
+                    <div style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>OZVT-{String(o.offertenummer).padStart(4,'0')}</div>
                     <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</div>
                   </div>
                   <StatusBadge status={o.status} />

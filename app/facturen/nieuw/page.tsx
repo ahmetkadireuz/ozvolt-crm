@@ -32,7 +32,7 @@ export default async function NieuweFactuurPage() {
     const nextNr = (maxRow[0]?.max_nr ?? 1000) + 1
     const result = await sql`
       INSERT INTO facturen (factuurnummer, klant_id, status, factuurdatum, betalingstermijn, regels, btw_pct)
-      VALUES (${`OZ-${nextNr}`}, ${klantId}, 'concept', CURRENT_DATE, 14, '[]'::jsonb, 21)
+      VALUES (${`OZVT-${String(nextNr).padStart(4,'0')}`}, ${klantId}, 'concept', CURRENT_DATE, 14, '[]'::jsonb, 21)
       RETURNING id`
     redirect(`/facturen/${result[0].id}`)
   }
