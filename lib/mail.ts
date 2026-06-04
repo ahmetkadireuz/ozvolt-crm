@@ -78,20 +78,13 @@ function mailWrapper(opts: {
 
     <!-- Footer -->
     <tr><td style="background:#f7f9fc;border-top:1px solid #e4e9f0;padding:20px 40px;border-radius:0 0 6px 6px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="vertical-align:top;">
-          <p style="margin:0;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">Ozvolt Elektrotechniek</p>
-          <p style="margin:3px 0 0;font-size:11px;color:#9daab8;font-family:${F};">KVK 99837366 &nbsp;·&nbsp; BTW NL005413208B33</p>
-        </td>
-        <td style="text-align:right;vertical-align:top;">
-          <p style="margin:0;font-size:11px;color:#9daab8;font-family:${F};line-height:1.9;">
-            financien@ozvoltelektro.nl<br>
-            06 449 98 789 &nbsp;·&nbsp; ozvoltelektro.nl
-          </p>
-        </td>
-      </tr>
-      </table>
+      <p style="margin:0 0 2px;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">Ozvolt Elektrotechniek</p>
+      <p style="margin:0 0 10px;font-size:11px;color:#9daab8;font-family:${F};">KVK 99837366 &nbsp;·&nbsp; BTW NL005413208B33</p>
+      <p style="margin:0;font-size:11px;color:#9daab8;font-family:${F};line-height:2;">
+        <a href="mailto:financien@ozvoltelektro.nl" style="color:#9daab8;text-decoration:none;">financien@ozvoltelektro.nl</a> &nbsp;·&nbsp;
+        06 449 98 789 &nbsp;·&nbsp;
+        <a href="https://ozvoltelektro.nl" style="color:#9daab8;text-decoration:none;">ozvoltelektro.nl</a>
+      </p>
     </td></tr>
 
   </table>
