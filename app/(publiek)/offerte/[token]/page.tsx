@@ -8,7 +8,8 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
 
   const rows = await sql`
     SELECT o.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_telefoon, k.locatie AS klant_adres
+           k.telefoon AS klant_telefoon, k.locatie AS klant_adres,
+           o.betaal_url, o.betaling_50_50, o.betaal_url_2
     FROM offertes o JOIN klanten k ON k.id = o.klant_id
     WHERE o.accept_token = ${token}
   `
@@ -82,11 +83,17 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
           .success-title { font-size: 20px; font-weight: 800; color: #15803d; margin-bottom: 8px; }
           .success-sub { font-size: 14px; color: #4a5568; }
           footer { margin-top: 24px; text-align: center; font-size: 11px; color: #94a3b8; }
+          .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 16px; }
+          .table-wrap table { margin-bottom: 0; }
           @media (max-width: 600px) {
             .info-row { grid-template-columns: 1fr; }
-            .header { flex-direction: column; gap: 12px; }
+            .header { flex-direction: column; gap: 12px; align-items: flex-start; }
             .doc-nr { text-align: left; }
             .doc-lbl { text-align: left; }
+            .body { padding: 20px 16px; }
+            .akkoord-box { padding: 18px 16px; }
+            .totals { justify-content: flex-start; }
+            .totals-box { width: 100%; }
           }
         `}</style>
       </head>
@@ -128,6 +135,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
             </div>
 
             <div className="sec-title">Werkzaamheden &amp; materialen</div>
+            <div className="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -151,6 +159,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                 ))}
               </tbody>
             </table>
+            </div>
 
             <div className="totals">
               <div className="totals-box">
@@ -168,6 +177,30 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
               </div>
             )}
 
+            {(o.betaal_url || o.betaling_50_50) && (
+              <>
+                <div className="sec-title">Online betalen</div>
+                {o.betaling_50_50 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
+                    <a href={o.betaal_url ?? '#'} style={{ display: 'block', background: '#1d2f4c', color: '#fff', borderRadius: 10, padding: '14px 20px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 14 }}>
+                      Eerste termijn betalen (50%)
+                      <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{formatEuro(totalen.inclBtw / 2)}</div>
+                    </a>
+                    <a href={o.betaal_url_2 ?? '#'} style={{ display: 'block', background: '#4c7191', color: '#fff', borderRadius: 10, padding: '14px 20px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 14 }}>
+                      Tweede termijn betalen (50%)
+                      <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{formatEuro(totalen.inclBtw / 2)}</div>
+                    </a>
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: 28 }}>
+                    <a href={o.betaal_url} style={{ display: 'inline-block', background: '#16a34a', color: '#fff', borderRadius: 10, padding: '14px 32px', textDecoration: 'none', fontWeight: 700, fontSize: 15 }}>
+                      Online betalen — {formatEuro(totalen.inclBtw)} →
+                    </a>
+                  </div>
+                )}
+              </>
+            )}
+
             <div className="sec-title">Akkoord &amp; ondertekening</div>
             <SignForm
               token={token}
@@ -177,6 +210,10 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
               klantEmail={o.klant_email ?? ''}
               totaal={formatEuro(totalen.inclBtw)}
               btwPct={btwPct}
+              betaalUrl={o.betaal_url ?? null}
+              betaling50_50={!!o.betaling_50_50}
+              betaalUrl2={o.betaal_url_2 ?? null}
+              eersteTermijn={formatEuro(totalen.inclBtw / 2)}
             />
           </div>
           <footer>Ozvolt Elektrotechniek · KVK 99837366 · financien@ozvoltelektro.nl</footer>

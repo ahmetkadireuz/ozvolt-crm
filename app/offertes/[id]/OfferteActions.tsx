@@ -34,6 +34,22 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
     else alert('Aanmaken mislukt')
   }
 
+  const [mollieLoading, setMollieLoading] = useState(false)
+
+  async function maakMollieBetaallinks() {
+    if (!confirm('Mollie betaallinks aanmaken? Dit werkt alleen als MOLLIE_API_KEY is ingesteld in Vercel.')) return
+    setMollieLoading(true)
+    const res = await fetch(`/api/offertes/${offerteId}/betaallinks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ betaling_50_50: offerte.betaling_50_50 }),
+    })
+    const data = await res.json()
+    setMollieLoading(false)
+    if (data.ok) { alert('Betaallinks aangemaakt!'); router.refresh() }
+    else alert('Fout: ' + (data.error ?? 'Onbekend'))
+  }
+
   async function deleteOfferte() {
     if (!confirm('Offerte verwijderen?')) return
     await fetch(`/api/offertes/${offerteId}`, { method: 'DELETE' })
@@ -120,6 +136,32 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           Factuur {f.factuurnummer} →
         </Link>
       ))}
+
+      {/* Mollie betaallinks */}
+      <div className="card">
+        <div className="section-label">Online betaling (Mollie)</div>
+        {offerte.betaal_url ? (
+          <div>
+            <div style={{ fontSize: '.72rem', color: '#16a34a', marginBottom: 6, fontWeight: 600 }}>✓ Betaallink actief</div>
+            {offerte.betaling_50_50 && offerte.betaal_url_2 && (
+              <div style={{ fontSize: '.72rem', color: '#16a34a', marginBottom: 6, fontWeight: 600 }}>✓ Tweede termijn actief</div>
+            )}
+          </div>
+        ) : null}
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ width: '100%', justifyContent: 'center' }}
+          onClick={maakMollieBetaallinks}
+          disabled={mollieLoading}
+        >
+          <span className="nav-ico" style={{ fontSize: 16 }}>payments</span>
+          {mollieLoading ? 'Bezig...' : offerte.betaal_url ? 'Betaallinks vernieuwen' : 'Mollie betaallinks aanmaken'}
+        </button>
+        <div style={{ fontSize: '.72rem', color: '#8ba8c4', marginTop: 6 }}>
+          Klant betaalt direct via iDEAL → direct op jouw IBAN
+        </div>
+      </div>
 
       {/* Status */}
       <div className="card">

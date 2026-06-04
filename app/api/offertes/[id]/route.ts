@@ -43,6 +43,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         notities = ${body.notities || null},
         status_notitie = ${body.status_notitie || null},
         betaal_url = ${body.betaal_url || null},
+        betaling_50_50 = ${!!body.betaling_50_50},
+        betaal_url_2 = ${body.betaal_url_2 || null},
         accept_token = ${token},
         bijgewerkt_op = NOW()
       WHERE id = ${offerteId}
@@ -57,6 +59,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         korting_pct = ${korting},
         btw_pct = ${btw},
         notities = ${body.notities || null},
+        betaal_url = ${body.betaal_url || null},
         accept_token = ${token},
         bijgewerkt_op = NOW()
       WHERE id = ${offerteId}

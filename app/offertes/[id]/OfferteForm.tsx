@@ -11,6 +11,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
   const [regels, setRegels] = useState<RegelItem[]>(offerte.regels ?? [])
   const [kortingPct, setKortingPct] = useState(Number(offerte.korting_pct))
   const [btwPct, setBtwPct] = useState(Number(offerte.btw_pct))
+  const [betaling50, setBetaling50] = useState(!!offerte.betaling_50_50)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -25,6 +26,8 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         geldig_tot: fd.get('geldig_tot'),
         notities: fd.get('notities'),
         betaal_url: fd.get('betaal_url'),
+        betaling_50_50: betaling50,
+        betaal_url_2: fd.get('betaal_url_2'),
         regels,
         korting_pct: kortingPct,
         btw_pct: btwPct,
@@ -59,10 +62,23 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
           <textarea className="form-ctrl" name="notities" defaultValue={offerte.notities ?? ''} rows={3} />
         </div>
         <div className="form-group" style={{ marginTop: 12, marginBottom: 0 }}>
-          <label className="form-label">Betaallink (optioneel)</label>
-          <input className="form-ctrl" type="url" name="betaal_url" defaultValue={offerte.betaal_url ?? ''} placeholder="https://betalen.ozvoltelektro.nl/..." />
-          <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 4 }}>Wordt als knop getoond in de mail en op de offerte-pagina</div>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input type="checkbox" checked={betaling50} onChange={e => setBetaling50(e.target.checked)} style={{ width: 16, height: 16 }} />
+            50/50 betaling (twee termijnen)
+          </label>
+          <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 4 }}>Klant betaalt 50% nu, 50% later. Vul twee betaallinks in.</div>
         </div>
+        <div className="form-group" style={{ marginTop: 12, marginBottom: 0 }}>
+          <label className="form-label">{betaling50 ? 'Betaallink eerste termijn (50%)' : 'Betaallink (optioneel)'}</label>
+          <input className="form-ctrl" type="url" name="betaal_url" defaultValue={offerte.betaal_url ?? ''} placeholder="https://pay.mollie.com/..." />
+          <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 4 }}>Mollie betaallink — klant betaalt direct via iDEAL</div>
+        </div>
+        {betaling50 && (
+          <div className="form-group" style={{ marginTop: 12, marginBottom: 0 }}>
+            <label className="form-label">Betaallink tweede termijn (50%)</label>
+            <input className="form-ctrl" type="url" name="betaal_url_2" defaultValue={offerte.betaal_url_2 ?? ''} placeholder="https://pay.mollie.com/..." />
+          </div>
+        )}
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>

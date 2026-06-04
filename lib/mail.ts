@@ -33,18 +33,7 @@ export async function sendMail(opts: {
   })
 }
 
-// Gedeelde logo header (tekst-gebaseerd, werkt altijd)
-function mailLogo() {
-  return `
-  <tr><td style="padding-bottom:20px;text-align:center;">
-    <table cellpadding="0" cellspacing="0" style="display:inline-table;">
-    <tr><td style="background:#1d2f4c;border-radius:10px;padding:10px 24px;text-align:center;">
-      <span style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">OZVOLT</span>
-      <span style="display:block;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">Elektrotechniek</span>
-    </td></tr>
-    </table>
-  </td></tr>`
-}
+// Logo header verwijderd op verzoek — mail begint direct met de inhoud
 
 function mailFooter() {
   return `
@@ -71,7 +60,6 @@ export function offerteMailHtml(params: {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 
-  ${mailLogo()}
 
   <tr><td style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     <table width="100%" cellpadding="0" cellspacing="0">
@@ -127,6 +115,51 @@ export function offerteMailHtml(params: {
 </html>`
 }
 
+export function offerteBevestigingMailHtml(params: {
+  klantNaam: string
+  offerteNr: string
+  acceptedName: string
+  acceptUrl: string
+  totaal: string
+}) {
+  const { klantNaam, offerteNr, acceptedName, acceptUrl, totaal } = params
+  return `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:40px 16px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
+  <tr><td style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:36px 40px 32px;">
+      <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;">Offerte geaccepteerd ✓</p>
+      <h1 style="margin:0 0 8px;font-size:28px;font-weight:900;color:#ffffff;line-height:1.2;">${klantNaam} heeft getekend!</h1>
+      <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.75);">${offerteNr} · ${totaal}</p>
+    </td></tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="padding:36px 40px;">
+      <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.8;">
+        <strong>${acceptedName}</strong> heeft zojuist offerte <strong>${offerteNr}</strong> ondertekend en geaccepteerd (totaal: <strong>${totaal}</strong>).
+      </p>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr><td style="background:#1d2f4c;border-radius:10px;">
+        <a href="${acceptUrl}" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">Offerte bekijken in CRM →</a>
+      </td></tr>
+      </table>
+      <hr style="margin:0 0 24px;border:none;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;font-size:13px;color:#9ca3af;">Ozvolt Elektrotechniek · KVK 99837366</p>
+    </td></tr>
+    </table>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
 export function factuurMailHtml(params: {
   klantNaam: string
   factuurNr: string
@@ -145,7 +178,6 @@ export function factuurMailHtml(params: {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 
-  ${mailLogo()}
 
   <tr><td style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
     <table width="100%" cellpadding="0" cellspacing="0">

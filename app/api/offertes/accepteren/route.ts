@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@/lib/db'
+import { sql, berekenTotalen, formatEuro } from '@/lib/db'
+import { sendMail, offerteBevestigingMailHtml } from '@/lib/mail'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -10,8 +11,10 @@ export async function POST(req: NextRequest) {
   }
 
   const rows = await sql`
-    SELECT o.id, o.status, o.accepted_at, o.klant_id
-    FROM offertes o WHERE o.accept_token = ${token}
+    SELECT o.id, o.status, o.accepted_at, o.klant_id, o.offertenummer, o.regels, o.korting_pct, o.btw_pct, o.accept_token,
+           k.naam AS klant_naam
+    FROM offertes o JOIN klanten k ON k.id = o.klant_id
+    WHERE o.accept_token = ${token}
   `
   const offerte = rows[0]
   if (!offerte) return NextResponse.json({ error: 'Offerte niet gevonden' }, { status: 404 })
@@ -29,6 +32,29 @@ export async function POST(req: NextRequest) {
       bijgewerkt_op = NOW()
     WHERE accept_token = ${token}
   `
+
+  // Stuur bevestigingsemail naar Ozvolt
+  try {
+    const notifEmail = process.env.NOTIF_EMAIL ?? 'financien@ozvoltelektro.nl'
+    const regels = Array.isArray(offerte.regels) ? offerte.regels : JSON.parse(offerte.regels ?? '[]')
+    const totalen = berekenTotalen(regels, Number(offerte.korting_pct ?? 0), Number(offerte.btw_pct ?? 21))
+    const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4, '0')}`
+    const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
+    const crmUrl = `${siteUrl}/offertes/${offerte.id}`
+    await sendMail({
+      to: notifEmail,
+      subject: `✅ ${offerte.klant_naam} heeft offerte ${offerteNr} getekend!`,
+      html: offerteBevestigingMailHtml({
+        klantNaam: offerte.klant_naam,
+        offerteNr,
+        acceptedName: naam,
+        acceptUrl: crmUrl,
+        totaal: formatEuro(totalen.inclBtw),
+      }),
+    })
+  } catch (err) {
+    console.error('[bevestiging mail]', err)
+  }
 
   return NextResponse.json({ ok: true })
 }

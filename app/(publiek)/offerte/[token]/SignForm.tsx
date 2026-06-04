@@ -10,9 +10,13 @@ interface Props {
   klantEmail: string
   totaal: string
   btwPct: number
+  betaalUrl?: string | null
+  betaling50_50?: boolean
+  betaalUrl2?: string | null
+  eersteTermijn?: string
 }
 
-export default function SignForm({ token, isGeaccepteerd, acceptedName, acceptedAt, klantEmail, totaal, btwPct }: Props) {
+export default function SignForm({ token, isGeaccepteerd, acceptedName, acceptedAt, klantEmail, totaal, btwPct, betaalUrl, betaling50_50, betaalUrl2, eersteTermijn }: Props) {
   const [naam, setNaam] = useState('')
   const [email, setEmail] = useState(klantEmail)
   const [loading, setLoading] = useState(false)
@@ -94,10 +98,28 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
           {acceptedName ? `Ondertekend door ${acceptedName}` : `Ondertekend door ${naam}`}
         </div>
         {acceptedAt && <div style={{ fontSize: 12, color: '#94a3b8' }}>{acceptedAt}</div>}
-        <div style={{ marginTop: 20, padding: '16px 20px', background: '#fff', borderRadius: 10, display: 'inline-block', textAlign: 'left' }}>
+        <div style={{ marginTop: 16, padding: '14px 18px', background: '#fff', borderRadius: 10, display: 'inline-block', textAlign: 'left' }}>
           <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Ozvolt neemt spoedig contact met u op om de werkzaamheden in te plannen.</div>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#1d2f4c' }}>financien@ozvoltelektro.nl</div>
         </div>
+        {(betaalUrl || betaling50_50) && (
+          <div style={{ marginTop: 20 }}>
+            {betaling50_50 ? (
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <a href={betaalUrl ?? '#'} style={{ flex: 1, minWidth: 160, display: 'block', background: '#1d2f4c', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
+                  Eerste termijn betalen<br /><strong>{eersteTermijn}</strong>
+                </a>
+                <a href={betaalUrl2 ?? '#'} style={{ flex: 1, minWidth: 160, display: 'block', background: '#4c7191', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
+                  Tweede termijn betalen<br /><strong>{eersteTermijn}</strong>
+                </a>
+              </div>
+            ) : (
+              <a href={betaalUrl ?? '#'} style={{ display: 'inline-block', background: '#16a34a', color: '#fff', borderRadius: 10, padding: '12px 28px', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                Online betalen → {totaal}
+              </a>
+            )}
+          </div>
+        )}
       </div>
     )
   }

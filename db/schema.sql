@@ -121,6 +121,8 @@ CREATE TABLE IF NOT EXISTS admin_notifications (
 -- Migraties (voer uit via Neon console als kolommen nog niet bestaan)
 -- ALTER TABLE offertes ADD COLUMN IF NOT EXISTS status_notitie TEXT;
 -- ALTER TABLE klanten ADD COLUMN IF NOT EXISTS status_notitie TEXT;
+-- ALTER TABLE offertes ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE;
+-- ALTER TABLE offertes ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT;
 
 -- Indexen voor snelheid
 CREATE INDEX IF NOT EXISTS idx_klussen_status    ON klussen(status);
