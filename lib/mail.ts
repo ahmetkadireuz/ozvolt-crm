@@ -131,13 +131,16 @@ export function offerteMailHtml(params: {
   acceptUrl: string
   betaalUrl?: string
   totaal?: string
+  werkafspraakUrl?: string
+  werkafspraakNr?: string
 }) {
-  const { klantNaam, offerteNr, acceptUrl, betaalUrl, totaal } = params
+  const { klantNaam, offerteNr, acceptUrl, betaalUrl, totaal, werkafspraakUrl, werkafspraakNr } = params
   const voornaam = klantNaam.split(' ')[0]
+  const heeftAfspraak = !!(werkafspraakUrl && werkafspraakNr)
 
   const body = `
     <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#9daab8;text-transform:uppercase;
-       letter-spacing:0.12em;font-family:${F};">Persoonlijke offerte</p>
+       letter-spacing:0.12em;font-family:${F};">${heeftAfspraak ? 'Offerte & werkafspraken' : 'Persoonlijke offerte'}</p>
     <p style="margin:0 0 20px;font-size:26px;font-weight:800;color:#1b2d4a;letter-spacing:-0.5px;
        font-family:${F};">${offerteNr}</p>
 
@@ -145,24 +148,43 @@ export function offerteMailHtml(params: {
       Beste <strong>${voornaam}</strong>,
     </p>
     <p style="margin:0 0 28px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
-      Wij hebben een offerte voor u klaarstaan. Bekijk en onderteken de offerte digitaal
-      via onderstaande knop als u akkoord gaat met de werkzaamheden.
+      ${heeftAfspraak
+        ? `Hierbij ontvangt u de offerte en de bijbehorende werkafspraken. Bekijk en onderteken beide documenten digitaal via onderstaande knoppen.`
+        : `Wij hebben een offerte voor u klaarstaan. Bekijk en onderteken de offerte digitaal via onderstaande knop als u akkoord gaat met de werkzaamheden.`
+      }
     </p>
 
     ${primaryBtn(acceptUrl, 'Offerte bekijken &amp; ondertekenen  →')}
+    ${heeftAfspraak ? primaryBtn(werkafspraakUrl!, 'Werkafspraken bekijken &amp; bevestigen  →', '#1a5a8a') : ''}
     ${betaalUrl ? primaryBtn(betaalUrl, 'Direct online betalen  →', GREEN) : ''}
 
     ${totaal ? infoBox([
-      { label: 'Offerte', value: offerteNr, borderRight: true },
-      { label: 'Totaalbedrag', value: totaal },
+      { label: 'Offerte', value: offerteNr, borderRight: heeftAfspraak },
+      ...(heeftAfspraak ? [{ label: 'Werkafspraken', value: werkafspraakNr! }] : []),
+      ...(!heeftAfspraak ? [{ label: 'Totaalbedrag', value: totaal }] : []),
     ]) : ''}
 
+    ${heeftAfspraak && totaal ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="border:1px solid #e4e9f0;border-radius:6px;overflow:hidden;margin-bottom:20px;">
+    <tr><td style="padding:14px 20px;background:#f7f9fc;">
+      <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#9daab8;text-transform:uppercase;
+         letter-spacing:0.12em;font-family:${F};">Totaalbedrag</p>
+      <p style="margin:0;font-size:16px;font-weight:700;color:#1b2d4a;font-family:${F};">${totaal}</p>
+    </td></tr>
+    </table>` : ''}
+
     <p style="margin:16px 0 4px;font-size:12px;color:#9daab8;font-family:${F};">
-      Knop werkt niet? Kopieer de link:
+      Knop werkt niet? Kopieer de offerte-link:
     </p>
-    <p style="margin:0 0 32px;font-family:${F};">
+    <p style="margin:0 0 ${heeftAfspraak ? '8' : '32'}px;font-family:${F};">
       <a href="${acceptUrl}" style="font-size:12px;color:#3b6fa0;word-break:break-all;">${acceptUrl}</a>
     </p>
+    ${heeftAfspraak ? `
+    <p style="margin:0 0 4px;font-size:12px;color:#9daab8;font-family:${F};">Werkafspraken-link:</p>
+    <p style="margin:0 0 32px;font-family:${F};">
+      <a href="${werkafspraakUrl}" style="font-size:12px;color:#3b6fa0;word-break:break-all;">${werkafspraakUrl}</a>
+    </p>` : ''}
 
     <div style="border-top:1px solid #e4e9f0;padding-top:24px;">
       <p style="margin:0;font-size:13px;color:#4a5568;line-height:1.7;font-family:${F};">

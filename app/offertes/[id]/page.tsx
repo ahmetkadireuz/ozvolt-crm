@@ -24,10 +24,11 @@ export default async function OfferteDetailPage({
   const offerteId = parseInt(id)
   if (isNaN(offerteId)) notFound()
 
-  const [offerteRows, klanten, factuurRows] = await Promise.all([
+  const [offerteRows, klanten, factuurRows, afspraakRows] = await Promise.all([
     sql`SELECT o.*, kt.naam AS klant_naam, kt.email AS klant_email FROM offertes o JOIN klanten kt ON kt.id = o.klant_id WHERE o.id = ${offerteId}`,
     sql`SELECT id, naam, email FROM klanten ORDER BY naam`,
     sql`SELECT id, factuurnummer, status FROM facturen WHERE offerte_id = ${offerteId}`,
+    sql`SELECT id, afspraaknummer, status, accept_token, sent_at FROM werkafspraken WHERE offerte_id = ${offerteId} ORDER BY aangemaakt_op DESC`.catch(() => []),
   ])
 
   // Kosten voor deze klant (alle kosten van de klant tonen, gefilterd op klus indien aanwezig)
@@ -49,6 +50,7 @@ export default async function OfferteDetailPage({
   const klanten2 = JSON.parse(JSON.stringify(klanten))
   const facturen2 = JSON.parse(JSON.stringify(factuurRows))
   const kosten = JSON.parse(JSON.stringify(kostenRows))
+  const afspraken2 = JSON.parse(JSON.stringify(Array.isArray(afspraakRows) ? afspraakRows : []))
 
   const totaalKosten = kosten.reduce((s: number, k: any) => s + Number(k.bedrag), 0)
   const marge = totalen.naTotaal - totaalKosten
@@ -95,6 +97,7 @@ export default async function OfferteDetailPage({
           totalen={totalen}
           acceptUrl={acceptUrl}
           facturen={facturen2}
+          afspraken={afspraken2}
         />
       </div>
 

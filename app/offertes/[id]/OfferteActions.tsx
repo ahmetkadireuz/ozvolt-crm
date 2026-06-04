@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/utils'
 
-export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl, facturen }: {
-  offerte: any; offerteId: number; totalen: any; acceptUrl: string | null; facturen: any[]
+export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl, facturen, afspraken }: {
+  offerte: any; offerteId: number; totalen: any; acceptUrl: string | null; facturen: any[]; afspraken: any[]
 }) {
   const router = useRouter()
+  const [inclAfspraak, setInclAfspraak] = useState(false)
+  const [maakAfspraakLoading, setMaakAfspraakLoading] = useState(false)
 
   async function updateStatus(status: string) {
     await fetch(`/api/offertes/${offerteId}`, {
@@ -20,11 +22,32 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
   }
 
   async function versturen() {
-    if (!confirm('Offerte per e-mail verzenden naar de klant?')) return
-    const res = await fetch(`/api/offertes/${offerteId}/versturen`, { method: 'POST' })
+    const afspraakId = afspraken[0]?.id ?? null
+    const msg = inclAfspraak && afspraakId
+      ? 'Offerte + werkafspraken per e-mail versturen naar de klant?'
+      : 'Offerte per e-mail versturen naar de klant?'
+    if (!confirm(msg)) return
+    const res = await fetch(`/api/offertes/${offerteId}/versturen`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inclAfspraak: inclAfspraak && !!afspraakId, afspraakId }),
+    })
     const data = await res.json()
     if (data.ok) router.refresh()
     else alert('Versturen mislukt: ' + (data.error ?? 'Onbekende fout'))
+  }
+
+  async function maakAfspraak() {
+    setMaakAfspraakLoading(true)
+    const res = await fetch('/api/afspraken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ klant_id: offerte.klant_id, offerte_id: offerteId, datum: new Date().toISOString().slice(0, 10), afspraken: [] }),
+    })
+    const data = await res.json()
+    setMaakAfspraakLoading(false)
+    if (data.id) { router.push(`/afspraken/${data.id}`); router.refresh() }
+    else alert('Aanmaken mislukt')
   }
 
   async function maakFactuur() {
@@ -85,11 +108,72 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         )}
       </div>
 
+      {/* Werkafspraken */}
+      <div className="card">
+        <div className="section-label">Werkafspraken</div>
+        {afspraken.length === 0 ? (
+          <div>
+            <p style={{ fontSize: '.82rem', color: '#8ba8c4', margin: '0 0 10px' }}>
+              Geen werkafspraken gekoppeld aan deze offerte.
+            </p>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ width: '100%', justifyContent: 'center' }}
+              onClick={maakAfspraak}
+              disabled={maakAfspraakLoading}
+            >
+              <span className="nav-ico" style={{ fontSize: 16 }}>add</span>
+              {maakAfspraakLoading ? 'Aanmaken…' : 'Nieuw werkafspraken document'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {afspraken.map((a: any) => (
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#f8fafc', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+                <div>
+                  <div style={{ fontSize: '.84rem', fontWeight: 700, color: '#0d1b3e' }}>
+                    OZWA-{String(a.afspraaknummer).padStart(4,'0')}
+                  </div>
+                  <div style={{ fontSize: '.72rem', color: '#8ba8c4' }}>
+                    {a.sent_at ? `Verstuurd ${new Date(a.sent_at).toLocaleDateString('nl-NL')}` : 'Nog niet verstuurd'}
+                  </div>
+                </div>
+                <Link href={`/afspraken/${a.id}`} className="btn btn-ghost btn-sm">
+                  Openen →
+                </Link>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+              onClick={maakAfspraak}
+              disabled={maakAfspraakLoading}
+            >
+              <span className="nav-ico" style={{ fontSize: 16 }}>add</span>
+              Nog een document aanmaken
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Verzenden */}
       <div className="card">
         <div className="section-label">Verzenden</div>
         {!offerte.klant_email && (
           <div className="alert alert-err" style={{ fontSize: '.78rem', padding: '8px 12px' }}>Klant heeft geen e-mailadres.</div>
+        )}
+        {afspraken.length > 0 && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.82rem', color: '#374151', marginBottom: 10, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={inclAfspraak}
+              onChange={e => setInclAfspraak(e.target.checked)}
+              style={{ width: 15, height: 15 }}
+            />
+            Werkafspraken meesturen (OZWA-{String(afspraken[0].afspraaknummer).padStart(4,'0')})
+          </label>
         )}
         <button
           type="button"
@@ -99,7 +183,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           disabled={!offerte.klant_email}
         >
           <span className="nav-ico" style={{ fontSize: 16 }}>send</span>
-          E-mail versturen
+          {inclAfspraak ? 'Offerte + afspraken versturen' : 'E-mail versturen'}
         </button>
         {acceptUrl && (
           <div>

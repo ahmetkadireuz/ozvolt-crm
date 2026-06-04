@@ -24,21 +24,41 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   await sql`UPDATE offertes SET accept_token = ${token}, sent_at = NOW(), status = 'gestuurd', bijgewerkt_op = NOW() WHERE id = ${offerteId}`
 
+  // Optioneel werkafspraken meesturen
+  const body = await req.json().catch(() => ({}))
+  const inclAfspraak = !!body.inclAfspraak
+  const afspraakId = body.afspraakId ? parseInt(String(body.afspraakId)) : null
+
+  let werkafspraakUrl: string | undefined
+  let werkafspraakNr: string | undefined
+  if (inclAfspraak && afspraakId) {
+    const aRows = await sql`SELECT afspraaknummer, accept_token FROM werkafspraken WHERE id = ${afspraakId} AND offerte_id = ${offerteId}`
+    if (aRows[0]?.accept_token) {
+      werkafspraakUrl = `${siteUrl}/werkafspraak/${aRows[0].accept_token}`
+      werkafspraakNr = `OZWA-${String(aRows[0].afspraaknummer).padStart(4,'0')}`
+      await sql`UPDATE werkafspraken SET sent_at = NOW(), status = 'gestuurd', bijgewerkt_op = NOW() WHERE id = ${afspraakId}`
+    }
+  }
+
   try {
     const regels = Array.isArray(offerte.regels) ? offerte.regels : []
-    const { berekenTotalen, formatEuro } = await import('@/lib/db')
+    const { berekenTotalen, formatEuro } = await import('@/lib/utils')
     const totalen = berekenTotalen(regels, Number(offerte.korting_pct ?? 0), Number(offerte.btw_pct ?? 21))
     const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4,'0')}`
 
     await sendMail({
       to: offerte.klant_email,
-      subject: `Uw offerte ${offerteNr} — Ozvolt Elektrotechniek`,
+      subject: werkafspraakNr
+        ? `Offerte ${offerteNr} + werkafspraken — Ozvolt Elektrotechniek`
+        : `Uw offerte ${offerteNr} — Ozvolt Elektrotechniek`,
       html: offerteMailHtml({
         klantNaam: offerte.klant_naam,
         offerteNr,
         acceptUrl,
         betaalUrl: offerte.betaal_url || undefined,
         totaal: formatEuro(totalen.inclBtw),
+        werkafspraakUrl,
+        werkafspraakNr,
       }),
     })
     return NextResponse.json({ ok: true })
