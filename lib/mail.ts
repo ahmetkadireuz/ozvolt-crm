@@ -43,11 +43,9 @@ const F = `'Helvetica Neue',Helvetica,Arial,sans-serif`
 function mailWrapper(opts: {
   accentColor: string
   headerBg: string
-  badgeLabel: string
-  badgeValue: string
   body: string
 }) {
-  const { accentColor, headerBg, badgeLabel, badgeValue, body } = opts
+  const { accentColor, headerBg, body } = opts
   return `<!DOCTYPE html>
 <html lang="nl" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -67,31 +65,19 @@ function mailWrapper(opts: {
     <!-- Kleur accent balk bovenaan -->
     <tr><td style="background:${accentColor};height:4px;border-radius:6px 6px 0 0;font-size:0;line-height:0;">&nbsp;</td></tr>
 
-    <!-- Header -->
-    <tr><td style="background:${headerBg};padding:36px 48px 32px;border-radius:0;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="vertical-align:middle;">
-          <img src="${LOGO_URL}" alt="Ozvolt Elektrotechniek" height="42" width="auto"
-               style="display:block;height:42px;width:auto;border:0;outline:none;text-decoration:none;">
-        </td>
-        <td style="text-align:right;vertical-align:middle;">
-          <p style="margin:0 0 3px 0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.5);
-             text-transform:uppercase;letter-spacing:0.13em;font-family:${F};">${badgeLabel}</p>
-          <p style="margin:0;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;
-             font-family:${F};">${badgeValue}</p>
-        </td>
-      </tr>
-      </table>
+    <!-- Header: alleen logo -->
+    <tr><td style="background:${headerBg};padding:28px 40px;">
+      <img src="${LOGO_URL}" alt="Ozvolt Elektrotechniek" height="40" width="auto"
+           style="display:block;height:40px;width:auto;border:0;outline:none;text-decoration:none;">
     </td></tr>
 
     <!-- Witte card body -->
-    <tr><td style="background:#ffffff;padding:44px 48px 40px;">
+    <tr><td style="background:#ffffff;padding:40px 40px 36px;">
       ${body}
     </td></tr>
 
     <!-- Footer -->
-    <tr><td style="background:#f7f9fc;border-top:1px solid #e4e9f0;padding:22px 48px;border-radius:0 0 6px 6px;">
+    <tr><td style="background:#f7f9fc;border-top:1px solid #e4e9f0;padding:20px 40px;border-radius:0 0 6px 6px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="vertical-align:top;">
@@ -118,12 +104,12 @@ function mailWrapper(opts: {
 
 function primaryBtn(href: string, label: string, bg = BRAND) {
   return `
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
-  <tr><td style="border-radius:6px;background:${bg};">
-    <a href="${href}" target="_blank"
-       style="display:inline-block;padding:15px 32px;font-size:15px;font-weight:700;
-              color:#ffffff;text-decoration:none;letter-spacing:-0.2px;font-family:${F};
-              border-radius:6px;mso-padding-alt:15px 32px;">${label}</a>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-bottom:16px;">
+  <tr><td align="center" style="border-radius:6px;background:${bg};">
+    <a href="${href}"
+       style="display:block;padding:16px 28px;font-size:15px;font-weight:700;
+              color:#ffffff;text-decoration:none;font-family:${F};
+              border-radius:6px;text-align:center;">${label}</a>
   </td></tr>
   </table>`
 }
@@ -157,28 +143,31 @@ export function offerteMailHtml(params: {
   const voornaam = klantNaam.split(' ')[0]
 
   const body = `
-    <p style="margin:0 0 8px;font-size:16px;color:#1b2d4a;line-height:1.5;font-family:${F};">
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#9daab8;text-transform:uppercase;
+       letter-spacing:0.12em;font-family:${F};">Persoonlijke offerte</p>
+    <p style="margin:0 0 20px;font-size:26px;font-weight:800;color:#1b2d4a;letter-spacing:-0.5px;
+       font-family:${F};">${offerteNr}</p>
+
+    <p style="margin:0 0 8px;font-size:15px;color:#1b2d4a;line-height:1.5;font-family:${F};">
       Beste <strong>${voornaam}</strong>,
     </p>
-    <p style="margin:0 0 32px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
+    <p style="margin:0 0 28px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
       Wij hebben een offerte voor u klaarstaan. Bekijk en onderteken de offerte digitaal
       via onderstaande knop als u akkoord gaat met de werkzaamheden.
     </p>
 
-    ${primaryBtn(acceptUrl, 'Offerte bekijken &amp; ondertekenen &nbsp;→')}
-    ${betaalUrl ? primaryBtn(betaalUrl, 'Direct online betalen &nbsp;→', GREEN) : ''}
+    ${primaryBtn(acceptUrl, 'Offerte bekijken &amp; ondertekenen  →')}
+    ${betaalUrl ? primaryBtn(betaalUrl, 'Direct online betalen  →', GREEN) : ''}
 
-    <div style="height:28px;"></div>
+    ${totaal ? infoBox([
+      { label: 'Offerte', value: offerteNr, borderRight: true },
+      { label: 'Totaalbedrag', value: totaal },
+    ]) : ''}
 
-    ${infoBox([
-      { label: 'Offerte', value: offerteNr, borderRight: !!totaal },
-      ...(totaal ? [{ label: 'Totaalbedrag', value: totaal }] : []),
-    ])}
-
-    <p style="margin:0 0 4px;font-size:12px;color:#9daab8;font-family:${F};">
-      Knop werkt niet? Kopieer de link hieronder:
+    <p style="margin:16px 0 4px;font-size:12px;color:#9daab8;font-family:${F};">
+      Knop werkt niet? Kopieer de link:
     </p>
-    <p style="margin:0 0 36px;font-family:${F};">
+    <p style="margin:0 0 32px;font-family:${F};">
       <a href="${acceptUrl}" style="font-size:12px;color:#3b6fa0;word-break:break-all;">${acceptUrl}</a>
     </p>
 
@@ -190,13 +179,7 @@ export function offerteMailHtml(params: {
       </p>
     </div>`
 
-  return mailWrapper({
-    accentColor: GREEN,
-    headerBg: BRAND,
-    badgeLabel: 'Persoonlijke offerte',
-    badgeValue: offerteNr,
-    body,
-  })
+  return mailWrapper({ accentColor: GREEN, headerBg: BRAND, body })
 }
 
 // ── Offerte bevestiging (intern naar Ozvolt) ──────────────────────────────────
@@ -211,8 +194,10 @@ export function offerteBevestigingMailHtml(params: {
   const { klantNaam, offerteNr, acceptedName, acceptUrl, totaal } = params
 
   const body = `
-    <p style="margin:0 0 20px;font-size:16px;color:#1b2d4a;line-height:1.6;font-family:${F};">
-      <strong>${acceptedName}</strong> heeft zojuist offerte <strong>${offerteNr}</strong> geaccepteerd.
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;
+       letter-spacing:0.12em;font-family:${F};">Offerte geaccepteerd ✓</p>
+    <p style="margin:0 0 24px;font-size:20px;font-weight:800;color:#1b2d4a;font-family:${F};">
+      <strong>${acceptedName}</strong> heeft <strong>${offerteNr}</strong> geaccepteerd.
     </p>
 
     ${infoBox([
@@ -221,21 +206,15 @@ export function offerteBevestigingMailHtml(params: {
       { label: 'Bedrag', value: totaal, valueColor: GREEN },
     ])}
 
-    ${primaryBtn(acceptUrl, 'Offerte openen in CRM &nbsp;→')}
+    ${primaryBtn(acceptUrl, 'Offerte openen in CRM  →')}
 
-    <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e4e9f0;">
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e4e9f0;">
       <p style="margin:0;font-size:11px;color:#9daab8;font-family:${F};">
         Automatische melding van het Ozvolt CRM systeem
       </p>
     </div>`
 
-  return mailWrapper({
-    accentColor: GREEN,
-    headerBg: '#15622e',
-    badgeLabel: 'Offerte geaccepteerd ✓',
-    badgeValue: klantNaam,
-    body,
-  })
+  return mailWrapper({ accentColor: GREEN, headerBg: '#15622e', body })
 }
 
 // ── Factuur mail (naar klant) ─────────────────────────────────────────────────
@@ -251,20 +230,23 @@ export function factuurMailHtml(params: {
   const voornaam = klantNaam.split(' ')[0]
 
   const body = `
-    <p style="margin:0 0 8px;font-size:16px;color:#1b2d4a;line-height:1.5;font-family:${F};">
+    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#9daab8;text-transform:uppercase;
+       letter-spacing:0.12em;font-family:${F};">Factuur</p>
+    <p style="margin:0 0 20px;font-size:26px;font-weight:800;color:#1b2d4a;letter-spacing:-0.5px;
+       font-family:${F};">${factuurNr}</p>
+
+    <p style="margin:0 0 8px;font-size:15px;color:#1b2d4a;line-height:1.5;font-family:${F};">
       Beste <strong>${voornaam}</strong>,
     </p>
     <p style="margin:0 0 12px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
       Hierbij ontvangt u factuur <strong>${factuurNr}</strong> voor een totaalbedrag van
       <strong>${bedrag}</strong>.
     </p>
-    <p style="margin:0 0 32px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
+    <p style="margin:0 0 28px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
       Gelieve dit bedrag vóór <strong>${vervaldatum}</strong> te voldoen.
     </p>
 
-    ${betaalUrl ? primaryBtn(betaalUrl, 'Direct online betalen &nbsp;→', GREEN) : ''}
-
-    <div style="height:${betaalUrl ? '28' : '0'}px;"></div>
+    ${betaalUrl ? primaryBtn(betaalUrl, 'Direct online betalen  →', GREEN) : ''}
 
     ${infoBox([
       { label: 'Factuurnummer', value: factuurNr, borderRight: true },
@@ -273,10 +255,10 @@ export function factuurMailHtml(params: {
     ])}
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="border:1px solid #e4e9f0;border-radius:6px;overflow:hidden;margin-bottom:36px;">
-    <tr><td style="padding:18px 20px;background:#f7f9fc;">
+           style="border:1px solid #e4e9f0;border-radius:6px;overflow:hidden;margin-bottom:32px;">
+    <tr><td style="padding:16px 20px;background:#f7f9fc;">
       <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#9daab8;text-transform:uppercase;
-         letter-spacing:0.12em;font-family:${F};">Bankoverschrijving</p>
+         letter-spacing:0.12em;font-family:${F};">Betalen via bankoverschrijving</p>
       <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#1b2d4a;
          letter-spacing:0.02em;font-family:${F};">NL04 ABNA 0154 5811 43</p>
       <p style="margin:0;font-size:12px;color:#64748b;font-family:${F};">
@@ -293,11 +275,5 @@ export function factuurMailHtml(params: {
       </p>
     </div>`
 
-  return mailWrapper({
-    accentColor: GREEN,
-    headerBg: BRAND,
-    badgeLabel: 'Factuur',
-    badgeValue: `${factuurNr} &nbsp;·&nbsp; ${bedrag}`,
-    body,
-  })
+  return mailWrapper({ accentColor: GREEN, headerBg: BRAND, body })
 }
