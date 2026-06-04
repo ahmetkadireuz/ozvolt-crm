@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import RegelEditor from '@/components/RegelEditor'
-import type { RegelItem } from '@/lib/db'
+import type { RegelItem } from '@/lib/utils'
 
 export default function FactuurForm({ factuur, klanten, factuurId }: { factuur: any; klanten: any[]; factuurId: number }) {
   const router = useRouter()

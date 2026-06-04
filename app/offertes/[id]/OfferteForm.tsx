@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import RegelEditor from '@/components/RegelEditor'
-import type { RegelItem } from '@/lib/db'
+import type { RegelItem } from '@/lib/utils'
 
 export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: any; klanten: any[]; offerteId: number }) {
   const router = useRouter()
