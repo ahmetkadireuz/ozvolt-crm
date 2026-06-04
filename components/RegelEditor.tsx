@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { RegelItem } from '@/lib/db'
-import { berekenTotalen, formatEuro } from '@/lib/db'
+import type { RegelItem } from '@/lib/utils'
+import { berekenTotalen, formatEuro } from '@/lib/utils'
 
 interface Props {
   initialRegels?: RegelItem[]

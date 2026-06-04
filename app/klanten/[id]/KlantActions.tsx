@@ -22,6 +22,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
   async function deleteKlant() {
     if (!confirm(`${klant.naam} verwijderen? Alle klussen, offertes en facturen worden ook verwijderd.`)) return
     await fetch(`/api/klanten/${klantId}`, { method: 'DELETE' })
+    router.refresh()
     router.push('/klanten')
   }
 
