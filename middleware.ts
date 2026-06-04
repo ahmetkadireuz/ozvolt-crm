@@ -8,7 +8,12 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p))
-  if (isPublic) return NextResponse.next()
+
+  // Altijd het pad doorgeven aan de layout via header
+  const res = NextResponse.next()
+  res.headers.set('x-pathname', pathname)
+
+  if (isPublic) return res
 
   const token = req.cookies.get(SESSION_COOKIE)?.value
   if (!token) {
@@ -18,11 +23,11 @@ export async function middleware(req: NextRequest) {
   try {
     const secret = new TextEncoder().encode(process.env.SESSION_SECRET || 'dev-secret-change-in-production')
     await jwtVerify(token, secret)
-    return NextResponse.next()
-  } catch {
-    const res = NextResponse.redirect(new URL('/login', req.url))
-    res.cookies.delete(SESSION_COOKIE)
     return res
+  } catch {
+    const redirect = NextResponse.redirect(new URL('/login', req.url))
+    redirect.cookies.delete(SESSION_COOKIE)
+    return redirect
   }
 }
 

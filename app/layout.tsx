@@ -13,10 +13,14 @@ export const metadata: Metadata = {
 }
 
 const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte', '/werkafspraak']
+const BARE_PATHS = ['/offerte', '/werkafspraak'] // volledig kaal — geen html wrapper
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers()
   const pathname = headersList.get('x-pathname') ?? headersList.get('x-invoke-path') ?? ''
+
+  const isBare = BARE_PATHS.some(p => pathname.startsWith(p))
+  if (isBare) return <>{children}</>
 
   const showSidebar = !NO_SIDEBAR_PATHS.some(p => pathname.startsWith(p))
 
