@@ -118,6 +118,10 @@ CREATE TABLE IF NOT EXISTS admin_notifications (
   aangemaakt_op TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Migraties (voer uit via Neon console als kolommen nog niet bestaan)
+-- ALTER TABLE offertes ADD COLUMN IF NOT EXISTS status_notitie TEXT;
+-- ALTER TABLE klanten ADD COLUMN IF NOT EXISTS status_notitie TEXT;
+
 -- Indexen voor snelheid
 CREATE INDEX IF NOT EXISTS idx_klussen_status    ON klussen(status);
 CREATE INDEX IF NOT EXISTS idx_klussen_klant_id  ON klussen(klant_id);

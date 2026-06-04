@@ -130,7 +130,7 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
               placeholder="Extra omschrijving / toelichting (optioneel)"
               value={regel.beschrijving ?? ''}
               onChange={e => update(i, 'beschrijving', e.target.value)}
-              style={{ padding: '5px 10px', fontSize: '.8rem', color: '#5b7fa6', background: '#fff', borderStyle: 'dashed' }}
+              style={{ padding: '5px 10px', fontSize: '.8rem', color: '#94a3b8', background: '#fff', borderStyle: 'dashed', fontStyle: 'italic' }}
             />
           </div>
 

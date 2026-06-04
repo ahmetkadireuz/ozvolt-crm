@@ -64,6 +64,14 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
             </div>
           </div>
 
+          {/* Status notitie */}
+          {klant.status_notitie && (
+            <div className="card" style={{ borderLeft: '3px solid #4c7191' }}>
+              <div className="section-label" style={{ marginBottom: 6 }}>Situatie</div>
+              <p style={{ fontSize: '.84rem', color: '#374151', lineHeight: 1.75, whiteSpace: 'pre-wrap', margin: 0 }}>{klant.status_notitie}</p>
+            </div>
+          )}
+
           {/* Klussen */}
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>

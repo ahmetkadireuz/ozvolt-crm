@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const validStatuses = ['concept','gestuurd','geaccepteerd','verlopen','geweigerd']
 
   if (body.status && validStatuses.includes(body.status)) {
-    await sql`UPDATE offertes SET status = ${body.status}, bijgewerkt_op = NOW() WHERE id = ${offerteId}`
+    await sql`UPDATE offertes SET status = ${body.status}, status_notitie = ${body.status_notitie ?? null}, bijgewerkt_op = NOW() WHERE id = ${offerteId}`
     return NextResponse.json({ ok: true })
   }
 
@@ -35,6 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       korting_pct = ${korting},
       btw_pct = ${btw},
       notities = ${body.notities || null},
+      status_notitie = ${body.status_notitie || null},
       accept_token = ${token},
       bijgewerkt_op = NOW()
     WHERE id = ${offerteId}

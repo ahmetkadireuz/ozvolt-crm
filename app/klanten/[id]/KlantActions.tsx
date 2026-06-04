@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 export default function KlantActions({ klant, klantId }: { klant: any; klantId: number }) {
   const router = useRouter()
-  const [form, setForm] = useState({ naam: klant.naam, email: klant.email ?? '', telefoon: klant.telefoon ?? '', locatie: klant.locatie ?? '', type: klant.type ?? 'Particulier' })
+  const [form, setForm] = useState({ naam: klant.naam, email: klant.email ?? '', telefoon: klant.telefoon ?? '', locatie: klant.locatie ?? '', type: klant.type ?? 'Particulier', status_notitie: klant.status_notitie ?? '' })
   const [saving, setSaving] = useState(false)
 
   async function save() {
@@ -51,6 +51,17 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
             <option>Particulier</option>
             <option>Zakelijk</option>
           </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Situatie / notitie</label>
+          <textarea
+            className="form-ctrl"
+            rows={3}
+            placeholder="bijv. Wachten op akkoord woningcorporatie..."
+            value={form.status_notitie}
+            onChange={e => setForm(prev => ({ ...prev, status_notitie: e.target.value }))}
+            style={{ resize: 'vertical', fontSize: '.82rem' }}
+          />
         </div>
         <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center' }}>
           {saving ? 'Opslaan…' : 'Wijzigingen opslaan'}

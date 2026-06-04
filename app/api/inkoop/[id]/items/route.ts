@@ -5,10 +5,18 @@ import { requireSession } from '@/lib/session'
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await requireSession()
   if (!session) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
-  const { omschrijving, aantal, eenheid, leverancier } = await req.json()
+  const { omschrijving, artikelnummer, aantal, eenheid, leverancier, prijs_ex_btw } = await req.json()
   const rows = await sql`
-    INSERT INTO inkoop_items (lijst_id, omschrijving, aantal, eenheid, leverancier)
-    VALUES (${Number(params.id)}, ${omschrijving}, ${aantal}, ${eenheid}, ${leverancier || null})
+    INSERT INTO inkoop_items (lijst_id, omschrijving, artikelnummer, aantal, eenheid, leverancier, prijs_ex_btw)
+    VALUES (
+      ${Number(params.id)},
+      ${omschrijving},
+      ${artikelnummer || null},
+      ${aantal},
+      ${eenheid},
+      ${leverancier || null},
+      ${prijs_ex_btw ?? null}
+    )
     RETURNING *
   `
   return NextResponse.json({ item: rows[0] })

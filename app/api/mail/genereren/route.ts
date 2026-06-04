@@ -20,8 +20,7 @@ Bedrijfsinfo:
 - Naam: Ozvolt Elektrotechniek
 - Elektricien in Culemborg, Utrecht & omstreken
 - NEN 1010, NEN 3140 en VCA gecertificeerd
-- Tel: 06 449 98 789
-- Email: info@ozvoltelektro.nl
+- Email: financien@ozvoltelektro.nl
 
 ${klant_naam ? `Klant: ${klant_naam}` : ''}
 ${klus_info ? `Klus: ${klus_info}` : ''}
@@ -31,13 +30,16 @@ ${context ? `Extra context: ${context}` : ''}
 
 Schrijf de mail in het Nederlands. Gebruik een professionele aanhef en afsluiting. Onderteken met "Met vriendelijke groet, Ahmed Öz / Ozvolt Elektrotechniek".`
 
-  const completion = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
-    max_tokens: 600,
-    temperature: 0.7,
-  })
-
-  const mail = completion.choices[0].message.content ?? ''
-  return NextResponse.json({ mail })
+  try {
+    const completion = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 600,
+      temperature: 0.7,
+    })
+    const mail = completion.choices[0].message.content ?? ''
+    return NextResponse.json({ mail })
+  } catch (err: any) {
+    return NextResponse.json({ error: 'OpenAI fout: ' + (err?.message ?? String(err)) }, { status: 500 })
+  }
 }

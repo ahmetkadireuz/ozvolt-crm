@@ -10,6 +10,7 @@ const navMain = [
   { key: '/agenda',     icon: 'calendar_month',    label: 'Agenda' },
   { key: '/klanten',    icon: 'groups',            label: 'Klanten' },
   { key: '/offertes',   icon: 'description',       label: 'Offertes' },
+  { key: '/afspraken',  icon: 'handshake',          label: 'Werkafspraken' },
   { key: '/facturen',   icon: 'receipt_long',      label: 'Facturen' },
   { key: '/whatsapp',     icon: 'chat',          label: 'WhatsApp' },
   { key: '/notificaties', icon: 'notifications', label: 'Notificaties' },

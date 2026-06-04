@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout', '/api/webhooks']
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout', '/api/webhooks', '/offerte', '/werkafspraak', '/api/offertes/accepteren', '/api/afspraken/accepteren']
 const SESSION_COOKIE = 'ozvolt_crm_session'
 
 export async function middleware(req: NextRequest) {

@@ -35,7 +35,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }),
     })
     return NextResponse.json({ ok: true })
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+  } catch (err: any) {
+    console.error('[mail/offerte versturen]', err)
+    const msg = err?.message ?? String(err)
+    return NextResponse.json({ error: msg, detail: 'Controleer SMTP_HOST, SMTP_USER, SMTP_PASS env vars in Vercel' }, { status: 500 })
   }
 }

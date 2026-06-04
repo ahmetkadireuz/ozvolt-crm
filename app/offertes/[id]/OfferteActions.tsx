@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/utils'
@@ -42,6 +43,16 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
   const STATUSES = ['concept','gestuurd','geaccepteerd','verlopen','geweigerd']
   const STATUS_LABELS: Record<string, string> = {
     concept: 'Concept', gestuurd: 'Gestuurd', geaccepteerd: 'Geaccepteerd', verlopen: 'Verlopen', geweigerd: 'Geweigerd',
+  }
+  const [statusNotitie, setStatusNotitie] = useState(offerte.status_notitie ?? '')
+
+  async function saveStatusNotitie() {
+    await fetch(`/api/offertes/${offerteId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: offerte.status, status_notitie: statusNotitie }),
+    })
+    router.refresh()
   }
 
   return (
@@ -128,6 +139,22 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Status notitie */}
+      <div className="card">
+        <div className="section-label">Situatie / notitie</div>
+        <textarea
+          value={statusNotitie}
+          onChange={e => setStatusNotitie(e.target.value)}
+          placeholder="bijv. Wachten op akkoord woningcorporatie..."
+          className="form-ctrl"
+          rows={3}
+          style={{ width: '100%', resize: 'vertical', fontSize: '.82rem' }}
+        />
+        <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, width: '100%', justifyContent: 'center' }} onClick={saveStatusNotitie}>
+          Opslaan
+        </button>
       </div>
 
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteOfferte} style={{ width: '100%', justifyContent: 'center' }}>

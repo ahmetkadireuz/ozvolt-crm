@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 type Lijst = { id: number; titel: string; klant_id: number | null; klant_naam: string | null; klus_naam: string | null; klus_id: number | null; aangemaakt_op: string }
-type Item = { id: number; lijst_id: number; omschrijving: string; aantal: number; eenheid: string; leverancier: string | null; prijs_ex_btw: number | null; afgevinkt: boolean }
+type Item = { id: number; lijst_id: number; omschrijving: string; artikelnummer: string | null; aantal: number; eenheid: string; leverancier: string | null; prijs_ex_btw: number | null; afgevinkt: boolean }
 
 export default function InkoopClient({ lijsten, items, klanten, klussen }: {
   lijsten: Lijst[]; items: Item[]; klanten: any[]; klussen: any[]
@@ -12,7 +12,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
   const [localItems, setLocalItems] = useState<Item[]>(items)
   const [activeLijst, setActiveLijst] = useState<Lijst | null>(null)
   const [showNieuweLijst, setShowNieuweLijst] = useState(false)
-  const [nieuwItem, setNieuwItem] = useState({ omschrijving: '', aantal: '1', eenheid: 'stuk', leverancier: '', prijs_ex_btw: '', prijs_per_stuk: '' })
+  const [nieuwItem, setNieuwItem] = useState({ omschrijving: '', artikelnummer: '', aantal: '1', eenheid: 'stuk', leverancier: '', prijs_ex_btw: '' })
   const [lijstForm, setLijstForm] = useState({ titel: '', klant_id: '', klus_id: '' })
   const [saving, setSaving] = useState(false)
 
@@ -51,7 +51,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
     if (res.ok) {
       const { item } = await res.json()
       setLocalItems(prev => [...prev, item])
-      setNieuwItem({ omschrijving: '', aantal: '1', eenheid: 'stuk', leverancier: '', prijs_ex_btw: '', prijs_per_stuk: '' })
+      setNieuwItem({ omschrijving: '', artikelnummer: '', aantal: '1', eenheid: 'stuk', leverancier: '', prijs_ex_btw: '' })
     }
   }
 
