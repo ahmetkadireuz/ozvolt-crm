@@ -40,6 +40,17 @@ export async function POST(req: NextRequest) {
   const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4, '0')}`
   const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
 
+  // Notificatie aanmaken zodat admin direct ziet dat offerte getekend is
+  await sql`
+    INSERT INTO admin_notifications (type, titel, bericht, link)
+    VALUES (
+      'offerte_geaccepteerd',
+      ${`✅ ${offerte.klant_naam} heeft offerte ${offerteNr} geaccepteerd`},
+      ${`Ondertekend door: ${naam}${email ? ` (${email})` : ''}`},
+      ${`/offertes/${offerte.id}`}
+    )
+  `
+
   // Maak automatisch Moneybird betaallink(s) aan na ondertekening
   let betaalUrl: string | null = null
   let betaalUrl2: string | null = null

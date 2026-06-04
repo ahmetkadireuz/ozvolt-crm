@@ -84,12 +84,15 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
         </nav>
 
         <div className="sb-foot">
-          <form action="/api/auth/logout" method="POST">
-            <button type="submit" className="logout-link" style={{ width: '100%', cursor: 'pointer', background: 'none', border: 'none' }}>
-              <span className="material-symbols-outlined nav-ico">logout</span>
-              Uitloggen
-            </button>
-          </form>
+          <button
+            type="button"
+            className="logout-link"
+            style={{ width: '100%', cursor: 'pointer', background: 'none', border: 'none' }}
+            onClick={() => fetch('/api/auth/logout', { method: 'POST' }).then(() => { window.location.href = '/login' })}
+          >
+            <span className="material-symbols-outlined nav-ico">logout</span>
+            Uitloggen
+          </button>
         </div>
       </aside>
 
