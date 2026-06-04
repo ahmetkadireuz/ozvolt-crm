@@ -7,7 +7,8 @@ const SESSION_COOKIE = 'ozvolt_crm_session'
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p))
+  const isStaticFile = /\.(png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf)$/i.test(pathname)
+  const isPublic = isStaticFile || PUBLIC_PATHS.some(p => pathname.startsWith(p))
 
   // Altijd het pad doorgeven aan de layout via header
   const res = NextResponse.next()
