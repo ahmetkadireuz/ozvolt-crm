@@ -208,7 +208,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     <div class="header-right">
       <div>
         <div class="doc-type">Offerte</div>
-        <div class="doc-nr">${offerteNr}</div>
       </div>
       <div class="doc-status">${statusLabel[o.status] ?? o.status}</div>
     </div>
@@ -294,7 +293,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   <div class="footer">
     <p><strong style="color:var(--navy)">Ozvolt Elektrotechniek</strong> · KVK 99837366 · financien@ozvoltelektro.nl</p>
-    <p>${offerteNr}</p>
   </div>
 
 </div>
