@@ -34,56 +34,74 @@ export async function sendMail(opts: {
 }
 
 const LOGO_URL = 'https://portaal.ozvoltelektro.nl/logo-wit.png'
-const BRAND = '#1d2f4c'
-const F = `-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif`
+const BRAND = '#1b2d4a'
+const GREEN = '#1a7a3c'
+const F = `'Helvetica Neue',Helvetica,Arial,sans-serif`
 
-function mailWrapper(headerColor: string, headerContent: string, bodyContent: string) {
+// ── Gedeelde wrapper ──────────────────────────────────────────────────────────
+
+function mailWrapper(opts: {
+  accentColor: string
+  headerBg: string
+  badgeLabel: string
+  badgeValue: string
+  body: string
+}) {
+  const { accentColor, headerBg, badgeLabel, badgeValue, body } = opts
   return `<!DOCTYPE html>
-<html lang="nl">
+<html lang="nl" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Ozvolt Elektrotechniek</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f6f9;font-family:${F};">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 16px;">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+<body style="margin:0;padding:0;background:#eef1f6;font-family:${F};-webkit-text-size-adjust:100%;mso-line-height-rule:exactly;">
 
-  <!-- Document card -->
-  <tr><td style="background:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 24px rgba(0,0,0,0.06);">
-  <table width="100%" cellpadding="0" cellspacing="0">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef1f6;">
+<tr><td align="center" style="padding:48px 16px 56px;">
 
-    <!-- Header met logo -->
-    <tr><td style="background:${headerColor};padding:32px 44px 28px;">
-      <table width="100%" cellpadding="0" cellspacing="0">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+
+    <!-- Kleur accent balk bovenaan -->
+    <tr><td style="background:${accentColor};height:4px;border-radius:6px 6px 0 0;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+    <!-- Header -->
+    <tr><td style="background:${headerBg};padding:36px 48px 32px;border-radius:0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td><img src="${LOGO_URL}" alt="Ozvolt Elektrotechniek" height="40" style="display:block;height:40px;width:auto;"></td>
-        <td style="text-align:right;vertical-align:bottom;">
-          ${headerContent}
+        <td style="vertical-align:middle;">
+          <img src="${LOGO_URL}" alt="Ozvolt Elektrotechniek" height="42" width="auto"
+               style="display:block;height:42px;width:auto;border:0;outline:none;text-decoration:none;">
+        </td>
+        <td style="text-align:right;vertical-align:middle;">
+          <p style="margin:0 0 3px 0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.5);
+             text-transform:uppercase;letter-spacing:0.13em;font-family:${F};">${badgeLabel}</p>
+          <p style="margin:0;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;
+             font-family:${F};">${badgeValue}</p>
         </td>
       </tr>
       </table>
     </td></tr>
 
-    <!-- Body -->
-    <tr><td style="padding:36px 44px 32px;">
-      ${bodyContent}
+    <!-- Witte card body -->
+    <tr><td style="background:#ffffff;padding:44px 48px 40px;">
+      ${body}
     </td></tr>
 
     <!-- Footer -->
-    <tr><td style="background:#f8fafc;border-top:1px solid #e8edf3;padding:20px 44px;">
-      <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="background:#f7f9fc;border-top:1px solid #e4e9f0;padding:22px 48px;border-radius:0 0 6px 6px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td style="vertical-align:top;">
-          <p style="margin:0;font-size:13px;font-weight:700;color:#0f172a;font-family:${F};">Ozvolt Elektrotechniek</p>
-          <p style="margin:4px 0 0;font-size:11px;color:#94a3b8;font-family:${F};">KVK 99837366 · BTW NL005413208B33</p>
+          <p style="margin:0;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">Ozvolt Elektrotechniek</p>
+          <p style="margin:3px 0 0;font-size:11px;color:#9daab8;font-family:${F};">KVK 99837366 &nbsp;·&nbsp; BTW NL005413208B33</p>
         </td>
         <td style="text-align:right;vertical-align:top;">
-          <p style="margin:0;font-size:11px;color:#94a3b8;font-family:${F};line-height:1.8;">
+          <p style="margin:0;font-size:11px;color:#9daab8;font-family:${F};line-height:1.9;">
             financien@ozvoltelektro.nl<br>
-            06 449 98 789
+            06 449 98 789 &nbsp;·&nbsp; ozvoltelektro.nl
           </p>
         </td>
       </tr>
@@ -91,24 +109,42 @@ function mailWrapper(headerColor: string, headerContent: string, bodyContent: st
     </td></tr>
 
   </table>
-  </td></tr>
 
-</table>
 </td></tr>
 </table>
 </body>
 </html>`
 }
 
-function btn(href: string, label: string, color = BRAND) {
-  return `<table cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
-  <tr><td style="background:${color};border-radius:4px;">
-    <a href="${href}" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;font-family:${F};">${label}</a>
+function primaryBtn(href: string, label: string, bg = BRAND) {
+  return `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
+  <tr><td style="border-radius:6px;background:${bg};">
+    <a href="${href}" target="_blank"
+       style="display:inline-block;padding:15px 32px;font-size:15px;font-weight:700;
+              color:#ffffff;text-decoration:none;letter-spacing:-0.2px;font-family:${F};
+              border-radius:6px;mso-padding-alt:15px 32px;">${label}</a>
   </td></tr>
   </table>`
 }
 
-// ── Offerte mail ──────────────────────────────────────────────────────────────
+function infoBox(rows: { label: string; value: string; valueColor?: string; borderRight?: boolean }[]) {
+  const cells = rows.map(r => `
+    <td style="padding:16px 20px;${r.borderRight ? 'border-right:1px solid #e4e9f0;' : ''}vertical-align:top;">
+      <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:#9daab8;text-transform:uppercase;
+         letter-spacing:0.12em;font-family:${F};">${r.label}</p>
+      <p style="margin:0;font-size:15px;font-weight:700;color:${r.valueColor ?? '#1b2d4a'};
+         font-family:${F};">${r.value}</p>
+    </td>`).join('')
+
+  return `
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+         style="border:1px solid #e4e9f0;border-radius:6px;overflow:hidden;margin-bottom:20px;">
+  <tr>${cells}</tr>
+  </table>`
+}
+
+// ── Offerte mail (naar klant) ─────────────────────────────────────────────────
 
 export function offerteMailHtml(params: {
   klantNaam: string
@@ -120,42 +156,50 @@ export function offerteMailHtml(params: {
   const { klantNaam, offerteNr, acceptUrl, betaalUrl, totaal } = params
   const voornaam = klantNaam.split(' ')[0]
 
-  const header = `
-    <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.12em;font-family:${F};">Persoonlijke offerte</p>
-    <p style="margin:0;font-size:20px;font-weight:800;color:#fff;font-family:${F};">${offerteNr}</p>`
-
   const body = `
-    <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;font-family:${F};">Beste <strong>${voornaam}</strong>,</p>
-    <p style="margin:0 0 28px;font-size:14px;color:#4b5563;line-height:1.8;font-family:${F};">
-      Wij hebben een offerte voor u klaarstaan. Bekijk de offerte via onderstaande knop en onderteken digitaal als u akkoord gaat.
+    <p style="margin:0 0 8px;font-size:16px;color:#1b2d4a;line-height:1.5;font-family:${F};">
+      Beste <strong>${voornaam}</strong>,
+    </p>
+    <p style="margin:0 0 32px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
+      Wij hebben een offerte voor u klaarstaan. Bekijk en onderteken de offerte digitaal
+      via onderstaande knop als u akkoord gaat met de werkzaamheden.
     </p>
 
-    ${btn(acceptUrl, 'Offerte bekijken &amp; ondertekenen →')}
-    ${betaalUrl ? btn(betaalUrl, 'Direct online betalen →', '#16a34a') : ''}
+    ${primaryBtn(acceptUrl, 'Offerte bekijken &amp; ondertekenen &nbsp;→')}
+    ${betaalUrl ? primaryBtn(betaalUrl, 'Direct online betalen &nbsp;→', GREEN) : ''}
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 28px;background:#f8fafc;border-radius:4px;border:1px solid #e8edf3;">
-    <tr>
-      <td style="padding:14px 18px;border-right:1px solid #e8edf3;">
-        <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-family:${F};">Offerte</p>
-        <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;font-family:${F};">${offerteNr}</p>
-      </td>
-      ${totaal ? `<td style="padding:14px 18px;">
-        <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-family:${F};">Totaalbedrag</p>
-        <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;font-family:${F};">${totaal}</p>
-      </td>` : ''}
-    </tr>
-    </table>
+    <div style="height:28px;"></div>
 
-    <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;font-family:${F};">Link werkt niet? Kopieer:</p>
-    <p style="margin:0 0 28px;font-size:12px;font-family:${F};"><a href="${acceptUrl}" style="color:#4c7191;word-break:break-all;">${acceptUrl}</a></p>
+    ${infoBox([
+      { label: 'Offerte', value: offerteNr, borderRight: !!totaal },
+      ...(totaal ? [{ label: 'Totaalbedrag', value: totaal }] : []),
+    ])}
 
-    <hr style="margin:0 0 24px;border:none;border-top:1px solid #e8edf3;">
-    <p style="margin:0;font-size:13px;color:#374151;line-height:1.7;font-family:${F};">Met vriendelijke groet,<br><strong style="color:#0f172a;">Ahmet Öz — Ozvolt Elektrotechniek</strong></p>`
+    <p style="margin:0 0 4px;font-size:12px;color:#9daab8;font-family:${F};">
+      Knop werkt niet? Kopieer de link hieronder:
+    </p>
+    <p style="margin:0 0 36px;font-family:${F};">
+      <a href="${acceptUrl}" style="font-size:12px;color:#3b6fa0;word-break:break-all;">${acceptUrl}</a>
+    </p>
 
-  return mailWrapper(BRAND, header, body)
+    <div style="border-top:1px solid #e4e9f0;padding-top:24px;">
+      <p style="margin:0;font-size:13px;color:#4a5568;line-height:1.7;font-family:${F};">
+        Met vriendelijke groet,<br>
+        <strong style="color:#1b2d4a;font-size:14px;">Ahmet Öz</strong><br>
+        <span style="color:#9daab8;">Ozvolt Elektrotechniek</span>
+      </p>
+    </div>`
+
+  return mailWrapper({
+    accentColor: GREEN,
+    headerBg: BRAND,
+    badgeLabel: 'Persoonlijke offerte',
+    badgeValue: offerteNr,
+    body,
+  })
 }
 
-// ── Offerte bevestiging (intern) ──────────────────────────────────────────────
+// ── Offerte bevestiging (intern naar Ozvolt) ──────────────────────────────────
 
 export function offerteBevestigingMailHtml(params: {
   klantNaam: string
@@ -166,25 +210,35 @@ export function offerteBevestigingMailHtml(params: {
 }) {
   const { klantNaam, offerteNr, acceptedName, acceptUrl, totaal } = params
 
-  const header = `
-    <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.12em;font-family:${F};">Offerte geaccepteerd ✓</p>
-    <p style="margin:0;font-size:18px;font-weight:800;color:#fff;font-family:${F};">${klantNaam}</p>`
-
   const body = `
-    <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;font-family:${F};">
-      <strong>${acceptedName}</strong> heeft zojuist offerte <strong>${offerteNr}</strong> ondertekend.<br>
-      Totaalbedrag: <strong>${totaal}</strong>
+    <p style="margin:0 0 20px;font-size:16px;color:#1b2d4a;line-height:1.6;font-family:${F};">
+      <strong>${acceptedName}</strong> heeft zojuist offerte <strong>${offerteNr}</strong> geaccepteerd.
     </p>
 
-    ${btn(acceptUrl, 'Offerte bekijken in CRM →')}
+    ${infoBox([
+      { label: 'Klant', value: klantNaam, borderRight: true },
+      { label: 'Offerte', value: offerteNr, borderRight: true },
+      { label: 'Bedrag', value: totaal, valueColor: GREEN },
+    ])}
 
-    <hr style="margin:16px 0 20px;border:none;border-top:1px solid #e8edf3;">
-    <p style="margin:0;font-size:12px;color:#94a3b8;font-family:${F};">Automatische melding van het CRM systeem</p>`
+    ${primaryBtn(acceptUrl, 'Offerte openen in CRM &nbsp;→')}
 
-  return mailWrapper('#15803d', header, body)
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e4e9f0;">
+      <p style="margin:0;font-size:11px;color:#9daab8;font-family:${F};">
+        Automatische melding van het Ozvolt CRM systeem
+      </p>
+    </div>`
+
+  return mailWrapper({
+    accentColor: GREEN,
+    headerBg: '#15622e',
+    badgeLabel: 'Offerte geaccepteerd ✓',
+    badgeValue: klantNaam,
+    body,
+  })
 }
 
-// ── Factuur mail ──────────────────────────────────────────────────────────────
+// ── Factuur mail (naar klant) ─────────────────────────────────────────────────
 
 export function factuurMailHtml(params: {
   klantNaam: string
@@ -196,46 +250,54 @@ export function factuurMailHtml(params: {
   const { klantNaam, factuurNr, bedrag, vervaldatum, betaalUrl } = params
   const voornaam = klantNaam.split(' ')[0]
 
-  const header = `
-    <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.12em;font-family:${F};">Factuur</p>
-    <p style="margin:0;font-size:20px;font-weight:800;color:#fff;font-family:${F};">${factuurNr} · ${bedrag}</p>`
-
   const body = `
-    <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;font-family:${F};">Beste <strong>${voornaam}</strong>,</p>
-    <p style="margin:0 0 28px;font-size:14px;color:#4b5563;line-height:1.8;font-family:${F};">
-      Hierbij ontvangt u factuur <strong>${factuurNr}</strong> voor een bedrag van <strong>${bedrag}</strong>.<br>
-      Wij verzoeken u vriendelijk dit bedrag vóór <strong>${vervaldatum}</strong> te voldoen.
+    <p style="margin:0 0 8px;font-size:16px;color:#1b2d4a;line-height:1.5;font-family:${F};">
+      Beste <strong>${voornaam}</strong>,
+    </p>
+    <p style="margin:0 0 12px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
+      Hierbij ontvangt u factuur <strong>${factuurNr}</strong> voor een totaalbedrag van
+      <strong>${bedrag}</strong>.
+    </p>
+    <p style="margin:0 0 32px;font-size:14px;color:#4a5568;line-height:1.85;font-family:${F};">
+      Gelieve dit bedrag vóór <strong>${vervaldatum}</strong> te voldoen.
     </p>
 
-    ${betaalUrl ? btn(betaalUrl, 'Direct online betalen →', '#16a34a') : ''}
+    ${betaalUrl ? primaryBtn(betaalUrl, 'Direct online betalen &nbsp;→', GREEN) : ''}
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;background:#f8fafc;border-radius:4px;border:1px solid #e8edf3;">
-    <tr>
-      <td style="padding:14px 18px;border-right:1px solid #e8edf3;">
-        <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-family:${F};">Factuurnummer</p>
-        <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;font-family:${F};">${factuurNr}</p>
-      </td>
-      <td style="padding:14px 18px;border-right:1px solid #e8edf3;">
-        <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-family:${F};">Bedrag</p>
-        <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;font-family:${F};">${bedrag}</p>
-      </td>
-      <td style="padding:14px 18px;">
-        <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-family:${F};">Vervaldatum</p>
-        <p style="margin:0;font-size:15px;font-weight:700;color:#dc2626;font-family:${F};">${vervaldatum}</p>
-      </td>
-    </tr>
-    </table>
+    <div style="height:${betaalUrl ? '28' : '0'}px;"></div>
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:#f8fafc;border-radius:4px;border:1px solid #e8edf3;">
-    <tr><td style="padding:16px 18px;">
-      <p style="margin:0 0 2px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-family:${F};">Betalen via bankoverschrijving</p>
-      <p style="margin:6px 0 0;font-size:14px;font-weight:700;color:#0f172a;font-family:${F};">NL04 ABNA 0154 5811 43</p>
-      <p style="margin:2px 0 0;font-size:12px;color:#475569;font-family:${F};">t.n.v. Ozvolt Elektrotechniek · o.v.v. ${factuurNr}</p>
+    ${infoBox([
+      { label: 'Factuurnummer', value: factuurNr, borderRight: true },
+      { label: 'Bedrag', value: bedrag, borderRight: true },
+      { label: 'Vervaldatum', value: vervaldatum, valueColor: '#c0392b' },
+    ])}
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="border:1px solid #e4e9f0;border-radius:6px;overflow:hidden;margin-bottom:36px;">
+    <tr><td style="padding:18px 20px;background:#f7f9fc;">
+      <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#9daab8;text-transform:uppercase;
+         letter-spacing:0.12em;font-family:${F};">Bankoverschrijving</p>
+      <p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#1b2d4a;
+         letter-spacing:0.02em;font-family:${F};">NL04 ABNA 0154 5811 43</p>
+      <p style="margin:0;font-size:12px;color:#64748b;font-family:${F};">
+        T.n.v. Ozvolt Elektrotechniek &nbsp;·&nbsp; o.v.v. ${factuurNr}
+      </p>
     </td></tr>
     </table>
 
-    <hr style="margin:0 0 24px;border:none;border-top:1px solid #e8edf3;">
-    <p style="margin:0;font-size:13px;color:#374151;line-height:1.7;font-family:${F};">Met vriendelijke groet,<br><strong style="color:#0f172a;">Ahmet Öz — Ozvolt Elektrotechniek</strong></p>`
+    <div style="border-top:1px solid #e4e9f0;padding-top:24px;">
+      <p style="margin:0;font-size:13px;color:#4a5568;line-height:1.7;font-family:${F};">
+        Met vriendelijke groet,<br>
+        <strong style="color:#1b2d4a;font-size:14px;">Ahmet Öz</strong><br>
+        <span style="color:#9daab8;">Ozvolt Elektrotechniek</span>
+      </p>
+    </div>`
 
-  return mailWrapper('#14532d', header, body)
+  return mailWrapper({
+    accentColor: GREEN,
+    headerBg: BRAND,
+    badgeLabel: 'Factuur',
+    badgeValue: `${factuurNr} &nbsp;·&nbsp; ${bedrag}`,
+    body,
+  })
 }
