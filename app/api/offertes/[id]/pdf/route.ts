@@ -284,26 +284,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       <p>${o.notities}</p>
     </div>` : ''}
 
-    ${o.accept_token ? `
-    <div class="akkoord">
-      <div class="akkoord-title">Digitaal akkoord gaan</div>
-      <p>U kunt deze offerte digitaal ondertekenen via onderstaande link. Na ondertekening ontvangt Ozvolt automatisch een bevestiging.</p>
-      <div style="margin-top: 18px; background: #f0f4f8; border-radius: 10px; padding: 16px 20px;">
-        <div style="font-size: 10px; font-weight: 700; color: #4c7191; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 8px;">Akkoord-link (digitaal ondertekenen)</div>
-        <a href="${siteUrl}/offerte/${o.accept_token}" style="color: #1d2f4c; font-size: 12px; word-break: break-all;">${siteUrl}/offerte/${o.accept_token}</a>
-      </div>
-      ${o.accepted_at ? `<div style="margin-top: 12px; color: #16a34a; font-size: 12px; font-weight: 600;">✓ Digitaal geaccepteerd door ${o.accepted_name ?? ''} op ${new Date(o.accepted_at).toLocaleString('nl-NL')}</div>` : ''}
-    </div>` : `
+    ${o.accepted_at ? `
     <div class="akkoord">
       <div class="akkoord-title">Akkoordverklaring</div>
-      <p>Door ondertekening gaat u akkoord met de uitvoering van bovenstaande werkzaamheden door
-      Ozvolt Elektrotechniek tegen de vermelde bedragen (incl. ${btwPct}% BTW).
-      Op al onze werkzaamheden zijn onze algemene voorwaarden van toepassing.</p>
-      <div class="sign-grid">
-        <div><div class="sign-line"></div><div class="sign-lbl">Naam &amp; handtekening opdrachtgever</div></div>
-        <div><div class="sign-line"></div><div class="sign-lbl">Datum &amp; plaats</div></div>
-      </div>
-    </div>`}
+      <div style="color: #16a34a; font-size: 12px; font-weight: 600;">✓ Digitaal geaccepteerd door ${o.accepted_name ?? ''} op ${new Date(o.accepted_at).toLocaleString('nl-NL')}</div>
+    </div>` : ''}
 
   </div>
 
