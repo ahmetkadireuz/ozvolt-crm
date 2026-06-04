@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: 'Ozvolt Elektrotechniek CRM-portaal',
 }
 
-const NO_SIDEBAR_PATHS = ['/login', '/api']
+const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte', '/werkafspraak']
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers()
