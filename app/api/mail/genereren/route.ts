@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/session'
-import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
 
 export async function POST(req: NextRequest) {
   const session = await requireSession()
@@ -8,11 +8,11 @@ export async function POST(req: NextRequest) {
 
   const { klant_naam, klus_info, onderwerp, context, toon } = await req.json()
 
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json({ error: 'OPENAI_API_KEY niet ingesteld' }, { status: 503 })
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json({ error: 'ANTHROPIC_API_KEY niet ingesteld in Vercel' }, { status: 503 })
   }
 
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   const prompt = `Schrijf een professionele e-mail namens Ozvolt Elektrotechniek.
 
@@ -28,18 +28,17 @@ Onderwerp: ${onderwerp || 'Niet opgegeven'}
 Toon: ${toon}
 ${context ? `Extra context: ${context}` : ''}
 
-Schrijf de mail in het Nederlands. Gebruik een professionele aanhef en afsluiting. Onderteken met "Met vriendelijke groet, Ahmed Öz / Ozvolt Elektrotechniek".`
+Schrijf de mail in het Nederlands. Gebruik een professionele aanhef en afsluiting. Onderteken met "Met vriendelijke groet, Ahmed Öz / Ozvolt Elektrotechniek". Geef alleen de e-mailtekst terug, geen extra uitleg.`
 
   try {
-    const completion = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5',
       max_tokens: 600,
-      temperature: 0.7,
+      messages: [{ role: 'user', content: prompt }],
     })
-    const mail = completion.choices[0].message.content ?? ''
+    const mail = message.content[0].type === 'text' ? message.content[0].text : ''
     return NextResponse.json({ mail })
   } catch (err: any) {
-    return NextResponse.json({ error: 'OpenAI fout: ' + (err?.message ?? String(err)) }, { status: 500 })
+    return NextResponse.json({ error: 'Claude API fout: ' + (err?.message ?? String(err)) }, { status: 500 })
   }
 }
