@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const token = offerte.accept_token || crypto.randomBytes(32).toString('hex')
   const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
-  const acceptUrl = `${siteUrl}/api/offertes/${offerteId}/accepteren?token=${token}`
+  const acceptUrl = `${siteUrl}/offerte/${token}`
 
   await sql`UPDATE offertes SET accept_token = ${token}, sent_at = NOW(), status = 'gestuurd', bijgewerkt_op = NOW() WHERE id = ${offerteId}`
 
