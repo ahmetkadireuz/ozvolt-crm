@@ -33,13 +33,34 @@ export async function sendMail(opts: {
   })
 }
 
+// Gedeelde logo header (tekst-gebaseerd, werkt altijd)
+function mailLogo() {
+  return `
+  <tr><td style="padding-bottom:20px;text-align:center;">
+    <table cellpadding="0" cellspacing="0" style="display:inline-table;">
+    <tr><td style="background:#1d2f4c;border-radius:10px;padding:10px 24px;text-align:center;">
+      <span style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">OZVOLT</span>
+      <span style="display:block;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">Elektrotechniek</span>
+    </td></tr>
+    </table>
+  </td></tr>`
+}
+
+function mailFooter() {
+  return `
+  <tr><td style="padding:20px 0;text-align:center;">
+    <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">Ozvolt Elektrotechniek · KVK 99837366</p>
+    <p style="margin:0;font-size:12px;color:#9ca3af;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">financien@ozvoltelektro.nl</p>
+  </td></tr>`
+}
+
 export function offerteMailHtml(params: {
   klantNaam: string
   offerteNr: string
   acceptUrl: string
-  bedrijfsnaam?: string
+  betaalUrl?: string
 }) {
-  const { klantNaam, offerteNr, acceptUrl, bedrijfsnaam = 'Ozvolt Elektrotechniek' } = params
+  const { klantNaam, offerteNr, acceptUrl, betaalUrl } = params
   const voornaam = klantNaam.split(' ')[0]
 
   return `<!DOCTYPE html>
@@ -50,24 +71,17 @@ export function offerteMailHtml(params: {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 
-  <!-- LOGO BALK -->
-  <tr><td style="padding-bottom:24px;text-align:center;">
-    <img src="https://portaal.ozvoltelektro.nl/logo-wit-site.png" alt="Ozvolt Elektrotechniek" height="48" style="height:48px;display:inline-block;" onerror="this.style.display='none'">
-  </td></tr>
+  ${mailLogo()}
 
-  <!-- KAART -->
   <tr><td style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-
-    <!-- GEKLEURDE BOVENKANT -->
     <table width="100%" cellpadding="0" cellspacing="0">
-    <tr><td style="background:linear-gradient(135deg,#1d2f4c 0%,#2d4a7a 100%);padding:36px 40px 32px;text-align:left;">
+    <tr><td style="background:linear-gradient(135deg,#1d2f4c 0%,#2d4a7a 100%);padding:36px 40px 32px;">
       <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;">Persoonlijke offerte</p>
       <h1 style="margin:0 0 8px;font-size:28px;font-weight:900;color:#ffffff;line-height:1.2;">Uw offerte staat klaar</h1>
       <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);">${offerteNr}</p>
     </td></tr>
     </table>
 
-    <!-- INHOUD -->
     <table width="100%" cellpadding="0" cellspacing="0">
     <tr><td style="padding:36px 40px;">
       <p style="margin:0 0 20px;font-size:16px;color:#374151;line-height:1.7;">Beste <strong>${voornaam}</strong>,</p>
@@ -75,14 +89,19 @@ export function offerteMailHtml(params: {
         Wij hebben een offerte voor u klaarstaan. Klik op onderstaande knop om de offerte te bekijken en — als u akkoord gaat — digitaal te ondertekenen.
       </p>
 
-      <!-- KNOP -->
-      <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:${betaalUrl ? '16px' : '28px'};">
       <tr><td style="background:#1d2f4c;border-radius:10px;">
-        <a href="${acceptUrl}" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">Offerte bekijken &amp; ondertekenen →</a>
+        <a href="${acceptUrl}" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">Offerte bekijken &amp; ondertekenen →</a>
       </td></tr>
       </table>
 
-      <!-- INFO BLOKJE -->
+      ${betaalUrl ? `
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr><td style="background:#16a34a;border-radius:10px;">
+        <a href="${betaalUrl}" style="display:inline-block;padding:15px 36px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">Direct online betalen →</a>
+      </td></tr>
+      </table>` : ''}
+
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
       <tr><td style="padding:16px 20px;">
         <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Offerte</p>
@@ -95,19 +114,12 @@ export function offerteMailHtml(params: {
 
       <hr style="margin:0 0 24px;border:none;border-top:1px solid #e5e7eb;">
       <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">Met vriendelijke groet,<br>
-      <strong style="color:#1d2f4c;">Ahmed Öz</strong><br>
-      <span style="color:#6b7280;">Ozvolt Elektrotechniek</span></p>
+      <strong style="color:#1d2f4c;">Ozvolt Elektrotechniek</strong></p>
     </td></tr>
     </table>
-
   </td></tr>
 
-  <!-- FOOTER -->
-  <tr><td style="padding:20px 0;text-align:center;">
-    <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;">Ozvolt Elektrotechniek · KVK 99837366</p>
-    <p style="margin:0;font-size:12px;color:#9ca3af;">financien@ozvoltelektro.nl</p>
-  </td></tr>
-
+  ${mailFooter()}
 </table>
 </td></tr>
 </table>
@@ -121,9 +133,8 @@ export function factuurMailHtml(params: {
   bedrag: string
   vervaldatum: string
   betaalUrl?: string
-  bedrijfsnaam?: string
 }) {
-  const { klantNaam, factuurNr, bedrag, vervaldatum, betaalUrl, bedrijfsnaam = 'Ozvolt Elektrotechniek' } = params
+  const { klantNaam, factuurNr, bedrag, vervaldatum, betaalUrl } = params
   const voornaam = klantNaam.split(' ')[0]
 
   return `<!DOCTYPE html>
@@ -134,14 +145,11 @@ export function factuurMailHtml(params: {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 
-  <tr><td style="padding-bottom:24px;text-align:center;">
-    <img src="https://portaal.ozvoltelektro.nl/logo-wit-site.png" alt="Ozvolt Elektrotechniek" height="48" style="height:48px;display:inline-block;" onerror="this.style.display='none'">
-  </td></tr>
+  ${mailLogo()}
 
   <tr><td style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-
     <table width="100%" cellpadding="0" cellspacing="0">
-    <tr><td style="background:linear-gradient(135deg,#14532d 0%,#166534 100%);padding:36px 40px 32px;text-align:left;">
+    <tr><td style="background:linear-gradient(135deg,#14532d 0%,#166534 100%);padding:36px 40px 32px;">
       <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;">Factuur</p>
       <h1 style="margin:0 0 8px;font-size:28px;font-weight:900;color:#ffffff;line-height:1.2;">Uw factuur staat klaar</h1>
       <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);">${factuurNr} · ${bedrag}</p>
@@ -180,7 +188,6 @@ export function factuurMailHtml(params: {
       </tr>
       </table>
 
-      <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">Betaling overmaken? Gebruik de volgende gegevens:</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
       <tr><td style="padding:14px 18px;">
         <p style="margin:0 0 2px;font-size:12px;color:#6b7280;">IBAN</p>
@@ -192,18 +199,12 @@ export function factuurMailHtml(params: {
 
       <hr style="margin:0 0 24px;border:none;border-top:1px solid #e5e7eb;">
       <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">Met vriendelijke groet,<br>
-      <strong style="color:#1d2f4c;">Ahmed Öz</strong><br>
-      <span style="color:#6b7280;">Ozvolt Elektrotechniek</span></p>
+      <strong style="color:#1d2f4c;">Ozvolt Elektrotechniek</strong></p>
     </td></tr>
     </table>
-
   </td></tr>
 
-  <tr><td style="padding:20px 0;text-align:center;">
-    <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;">Ozvolt Elektrotechniek · KVK 99837366</p>
-    <p style="margin:0;font-size:12px;color:#9ca3af;">financien@ozvoltelektro.nl · IBAN: NL04 ABNA 0154 5811 43</p>
-  </td></tr>
-
+  ${mailFooter()}
 </table>
 </td></tr>
 </table>

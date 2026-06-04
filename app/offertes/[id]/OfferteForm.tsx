@@ -24,6 +24,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         datum: fd.get('datum'),
         geldig_tot: fd.get('geldig_tot'),
         notities: fd.get('notities'),
+        betaal_url: fd.get('betaal_url'),
         regels,
         korting_pct: kortingPct,
         btw_pct: btwPct,
@@ -56,6 +57,11 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         <div className="form-group" style={{ marginTop: 12, marginBottom: 0 }}>
           <label className="form-label">Notities (intern)</label>
           <textarea className="form-ctrl" name="notities" defaultValue={offerte.notities ?? ''} rows={3} />
+        </div>
+        <div className="form-group" style={{ marginTop: 12, marginBottom: 0 }}>
+          <label className="form-label">Betaallink (optioneel)</label>
+          <input className="form-ctrl" type="url" name="betaal_url" defaultValue={offerte.betaal_url ?? ''} placeholder="https://betalen.ozvoltelektro.nl/..." />
+          <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 4 }}>Wordt als knop getoond in de mail en op de offerte-pagina</div>
         </div>
       </div>
 

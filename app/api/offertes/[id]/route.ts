@@ -42,6 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         btw_pct = ${btw},
         notities = ${body.notities || null},
         status_notitie = ${body.status_notitie || null},
+        betaal_url = ${body.betaal_url || null},
         accept_token = ${token},
         bijgewerkt_op = NOW()
       WHERE id = ${offerteId}

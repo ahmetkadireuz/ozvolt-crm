@@ -32,6 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         klantNaam: offerte.klant_naam,
         offerteNr: `OZVT-${String(offerte.offertenummer).padStart(4,"0")}`,
         acceptUrl,
+        betaalUrl: offerte.betaal_url || undefined,
       }),
     })
     return NextResponse.json({ ok: true })
