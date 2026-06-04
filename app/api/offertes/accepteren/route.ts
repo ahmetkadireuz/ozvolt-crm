@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen, formatEuro } from '@/lib/db'
 import { sendMail, offerteBevestigingMailHtml } from '@/lib/mail'
+import { mbHaalOfMaakContact, mbMaakBetaalLink } from '@/lib/moneybird'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -12,7 +13,8 @@ export async function POST(req: NextRequest) {
 
   const rows = await sql`
     SELECT o.id, o.status, o.accepted_at, o.klant_id, o.offertenummer, o.regels, o.korting_pct, o.btw_pct, o.accept_token,
-           k.naam AS klant_naam
+           o.betaling_50_50, o.datum,
+           k.naam AS klant_naam, k.email AS klant_email, k.telefoon AS klant_telefoon, k.type AS klant_type
     FROM offertes o JOIN klanten k ON k.id = o.klant_id
     WHERE o.accept_token = ${token}
   `
@@ -33,13 +35,47 @@ export async function POST(req: NextRequest) {
     WHERE accept_token = ${token}
   `
 
+  const regels = Array.isArray(offerte.regels) ? offerte.regels : JSON.parse(offerte.regels ?? '[]')
+  const totalen = berekenTotalen(regels, Number(offerte.korting_pct ?? 0), Number(offerte.btw_pct ?? 21))
+  const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4, '0')}`
+  const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
+
+  // Maak automatisch Moneybird betaallink(s) aan na ondertekening
+  let betaalUrl: string | null = null
+  let betaalUrl2: string | null = null
+  try {
+    const contact = await mbHaalOfMaakContact({
+      id: offerte.klant_id,
+      naam: offerte.klant_naam,
+      email: offerte.klant_email,
+      telefoon: offerte.klant_telefoon,
+      type: offerte.klant_type,
+    })
+    const datum = offerte.datum?.slice(0, 10) ?? new Date().toISOString().slice(0, 10)
+    const btwPct = Number(offerte.btw_pct ?? 21)
+
+    if (offerte.betaling_50_50) {
+      const halveBedrag = totalen.inclBtw / 2
+      const [r1, r2] = await Promise.all([
+        mbMaakBetaalLink({ contactId: contact.id, omschrijving: `${offerteNr} — eerste termijn (50%)`, bedrag: halveBedrag, btwPct, referentie: `${offerteNr}-T1`, datum }),
+        mbMaakBetaalLink({ contactId: contact.id, omschrijving: `${offerteNr} — tweede termijn (50%)`, bedrag: halveBedrag, btwPct, referentie: `${offerteNr}-T2`, datum }),
+      ])
+      betaalUrl = r1.betaalUrl
+      betaalUrl2 = r2.betaalUrl
+      await sql`UPDATE offertes SET betaal_url = ${betaalUrl}, betaal_url_2 = ${betaalUrl2}, bijgewerkt_op = NOW() WHERE id = ${offerte.id}`
+    } else {
+      const r = await mbMaakBetaalLink({ contactId: contact.id, omschrijving: `${offerteNr} — ${offerte.klant_naam}`, bedrag: totalen.inclBtw, btwPct, referentie: offerteNr, datum })
+      betaalUrl = r.betaalUrl
+      await sql`UPDATE offertes SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${offerte.id}`
+    }
+  } catch (err) {
+    console.error('[moneybird betaallink]', err)
+    // Niet fataal — offerte is al geaccepteerd, betaallink verschijnt later via handmatige knop
+  }
+
   // Stuur bevestigingsemail naar Ozvolt
   try {
     const notifEmail = process.env.NOTIF_EMAIL ?? 'financien@ozvoltelektro.nl'
-    const regels = Array.isArray(offerte.regels) ? offerte.regels : JSON.parse(offerte.regels ?? '[]')
-    const totalen = berekenTotalen(regels, Number(offerte.korting_pct ?? 0), Number(offerte.btw_pct ?? 21))
-    const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4, '0')}`
-    const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
     const crmUrl = `${siteUrl}/offertes/${offerte.id}`
     await sendMail({
       to: notifEmail,
@@ -56,7 +92,12 @@ export async function POST(req: NextRequest) {
     console.error('[bevestiging mail]', err)
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({
+    ok: true,
+    betaal_url: betaalUrl,
+    betaal_url_2: betaalUrl2,
+    betaling_50_50: !!offerte.betaling_50_50,
+  })
 }
 
 export async function GET(req: NextRequest) {

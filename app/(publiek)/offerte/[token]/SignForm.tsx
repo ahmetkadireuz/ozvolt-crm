@@ -2,6 +2,37 @@
 
 import { useState, useRef } from 'react'
 
+function BetaalLinks({ betaalUrl, betaalUrl2, is50_50, totaal, eersteTermijn }: {
+  betaalUrl: string | null; betaalUrl2: string | null; is50_50: boolean; totaal: string; eersteTermijn: string
+}) {
+  if (!betaalUrl) return null
+  if (is50_50) {
+    return (
+      <div style={{ marginTop: 20 }}>
+        <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>U kunt nu de betaling voldoen:</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <a href={betaalUrl} style={{ flex: 1, minWidth: 160, display: 'block', background: '#1d2f4c', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
+            Eerste termijn betalen<br /><strong>{eersteTermijn}</strong>
+          </a>
+          {betaalUrl2 && (
+            <a href={betaalUrl2} style={{ flex: 1, minWidth: 160, display: 'block', background: '#4c7191', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
+              Tweede termijn betalen<br /><strong>{eersteTermijn}</strong>
+            </a>
+          )}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{ marginTop: 20 }}>
+      <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>U kunt nu direct betalen:</div>
+      <a href={betaalUrl} style={{ display: 'inline-block', background: '#16a34a', color: '#fff', borderRadius: 10, padding: '13px 28px', textDecoration: 'none', fontWeight: 700, fontSize: 15 }}>
+        Nu betalen → {totaal}
+      </a>
+    </div>
+  )
+}
+
 interface Props {
   token: string
   isGeaccepteerd: boolean
@@ -21,6 +52,9 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
   const [email, setEmail] = useState(klantEmail)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(isGeaccepteerd)
+  const [dynamischeBetaalUrl, setDynamischeBetaalUrl] = useState<string | null>(null)
+  const [dynamischeBetaalUrl2, setDynamischeBetaalUrl2] = useState<string | null>(null)
+  const [dynamisch50_50, setDynamisch50_50] = useState(false)
   const [error, setError] = useState('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -80,7 +114,12 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
         body: JSON.stringify({ token, naam: naam.trim(), email: email.trim() || undefined }),
       })
       const data = await res.json()
-      if (data.ok) setDone(true)
+      if (data.ok) {
+        if (data.betaal_url) setDynamischeBetaalUrl(data.betaal_url)
+        if (data.betaal_url_2) setDynamischeBetaalUrl2(data.betaal_url_2)
+        if (data.betaling_50_50) setDynamisch50_50(true)
+        setDone(true)
+      }
       else setError(data.error ?? 'Er ging iets mis')
     } catch {
       setError('Verbinding mislukt, probeer opnieuw')
@@ -102,24 +141,13 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
           <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Ozvolt neemt spoedig contact met u op om de werkzaamheden in te plannen.</div>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#1d2f4c' }}>financien@ozvoltelektro.nl</div>
         </div>
-        {(betaalUrl || betaling50_50) && (
-          <div style={{ marginTop: 20 }}>
-            {betaling50_50 ? (
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <a href={betaalUrl ?? '#'} style={{ flex: 1, minWidth: 160, display: 'block', background: '#1d2f4c', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
-                  Eerste termijn betalen<br /><strong>{eersteTermijn}</strong>
-                </a>
-                <a href={betaalUrl2 ?? '#'} style={{ flex: 1, minWidth: 160, display: 'block', background: '#4c7191', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
-                  Tweede termijn betalen<br /><strong>{eersteTermijn}</strong>
-                </a>
-              </div>
-            ) : (
-              <a href={betaalUrl ?? '#'} style={{ display: 'inline-block', background: '#16a34a', color: '#fff', borderRadius: 10, padding: '12px 28px', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
-                Online betalen → {totaal}
-              </a>
-            )}
-          </div>
-        )}
+        <BetaalLinks
+          betaalUrl={dynamischeBetaalUrl ?? betaalUrl ?? null}
+          betaalUrl2={dynamischeBetaalUrl2 ?? betaalUrl2 ?? null}
+          is50_50={dynamisch50_50 || !!betaling50_50}
+          totaal={totaal}
+          eersteTermijn={eersteTermijn ?? ''}
+        />
       </div>
     )
   }
