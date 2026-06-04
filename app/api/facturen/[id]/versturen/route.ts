@@ -9,7 +9,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const factuurId = parseInt(id)
 
   const rows = await sql`
-    SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email, f.betaal_url
+    SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email
     FROM facturen f JOIN klanten kt ON kt.id = f.klant_id
     WHERE f.id = ${factuurId}
   `
