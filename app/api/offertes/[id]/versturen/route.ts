@@ -25,14 +25,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   await sql`UPDATE offertes SET accept_token = ${token}, sent_at = NOW(), status = 'gestuurd', bijgewerkt_op = NOW() WHERE id = ${offerteId}`
 
   try {
+    const regels = Array.isArray(offerte.regels) ? offerte.regels : []
+    const { berekenTotalen, formatEuro } = await import('@/lib/db')
+    const totalen = berekenTotalen(regels, Number(offerte.korting_pct ?? 0), Number(offerte.btw_pct ?? 21))
+    const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4,'0')}`
+
     await sendMail({
       to: offerte.klant_email,
-      subject: `Uw offerte OZVT-${String(offerte.offertenummer).padStart(4,'0')} — Ozvolt Elektrotechniek`,
+      subject: `Uw offerte ${offerteNr} — Ozvolt Elektrotechniek`,
       html: offerteMailHtml({
         klantNaam: offerte.klant_naam,
-        offerteNr: `OZVT-${String(offerte.offertenummer).padStart(4,"0")}`,
+        offerteNr,
         acceptUrl,
         betaalUrl: offerte.betaal_url || undefined,
+        totaal: formatEuro(totalen.inclBtw),
       }),
     })
     return NextResponse.json({ ok: true })

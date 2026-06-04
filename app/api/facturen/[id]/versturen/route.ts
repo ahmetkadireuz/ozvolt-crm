@@ -9,7 +9,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const factuurId = parseInt(id)
 
   const rows = await sql`
-    SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email
+    SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email, f.betaal_url
     FROM facturen f JOIN klanten kt ON kt.id = f.klant_id
     WHERE f.id = ${factuurId}
   `
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         factuurNr: factuur.factuurnummer,
         bedrag: formatEuro(totalen.inclBtw),
         vervaldatum: vervalDatum.toLocaleDateString('nl-NL'),
+        betaalUrl: factuur.betaal_url || undefined,
       }),
     })
     return NextResponse.json({ ok: true })
