@@ -12,7 +12,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const validStatuses = ['concept','gestuurd','geaccepteerd','verlopen','geweigerd']
 
   if (body.status && validStatuses.includes(body.status)) {
-    await sql`UPDATE offertes SET status = ${body.status}, status_notitie = ${body.status_notitie ?? null}, bijgewerkt_op = NOW() WHERE id = ${offerteId}`
+    // Probeer met status_notitie, val terug zonder als kolom nog niet bestaat
+    try {
+      await sql`UPDATE offertes SET status = ${body.status}, status_notitie = ${body.status_notitie ?? null}, bijgewerkt_op = NOW() WHERE id = ${offerteId}`
+    } catch {
+      await sql`UPDATE offertes SET status = ${body.status}, bijgewerkt_op = NOW() WHERE id = ${offerteId}`
+    }
     return NextResponse.json({ ok: true })
   }
 
@@ -21,25 +26,41 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const korting = Number(body.korting_pct ?? 0)
   const btw = Number(body.btw_pct ?? 21)
 
-  // Zorg voor accept_token als nog niet aangemaakt
   const rows = await sql`SELECT accept_token FROM offertes WHERE id = ${offerteId}`
   const currentToken = rows[0]?.accept_token
   const token = currentToken || crypto.randomBytes(32).toString('hex')
 
-  await sql`
-    UPDATE offertes SET
-      klant_id = ${body.klant_id},
-      datum = ${body.datum},
-      geldig_tot = ${body.geldig_tot || null},
-      regels = ${JSON.stringify(regels)}::jsonb,
-      korting_pct = ${korting},
-      btw_pct = ${btw},
-      notities = ${body.notities || null},
-      status_notitie = ${body.status_notitie || null},
-      accept_token = ${token},
-      bijgewerkt_op = NOW()
-    WHERE id = ${offerteId}
-  `
+  // Probeer met status_notitie, val terug zonder
+  try {
+    await sql`
+      UPDATE offertes SET
+        klant_id = ${body.klant_id},
+        datum = ${body.datum},
+        geldig_tot = ${body.geldig_tot || null},
+        regels = ${JSON.stringify(regels)}::jsonb,
+        korting_pct = ${korting},
+        btw_pct = ${btw},
+        notities = ${body.notities || null},
+        status_notitie = ${body.status_notitie || null},
+        accept_token = ${token},
+        bijgewerkt_op = NOW()
+      WHERE id = ${offerteId}
+    `
+  } catch {
+    await sql`
+      UPDATE offertes SET
+        klant_id = ${body.klant_id},
+        datum = ${body.datum},
+        geldig_tot = ${body.geldig_tot || null},
+        regels = ${JSON.stringify(regels)}::jsonb,
+        korting_pct = ${korting},
+        btw_pct = ${btw},
+        notities = ${body.notities || null},
+        accept_token = ${token},
+        bijgewerkt_op = NOW()
+      WHERE id = ${offerteId}
+    `
+  }
   return NextResponse.json({ ok: true })
 }
 

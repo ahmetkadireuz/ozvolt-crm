@@ -9,11 +9,17 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { title: 'Werkafspraken' }
 
 export default async function AfsprakenPage() {
-  const afspraken = await sql`
-    SELECT w.*, k.naam AS klant_naam
-    FROM werkafspraken w JOIN klanten k ON k.id = w.klant_id
-    ORDER BY w.aangemaakt_op DESC
-  `
+  let afspraken: any[] = []
+  let dbMissing = false
+  try {
+    afspraken = await sql`
+      SELECT w.*, k.naam AS klant_naam
+      FROM werkafspraken w JOIN klanten k ON k.id = w.klant_id
+      ORDER BY w.aangemaakt_op DESC
+    `
+  } catch {
+    dbMissing = true
+  }
 
   return (
     <div>
@@ -24,6 +30,12 @@ export default async function AfsprakenPage() {
           Nieuw document
         </Link>
       </div>
+
+      {dbMissing && (
+        <div className="alert alert-err" style={{ marginBottom: 16 }}>
+          ⚠️ De database tabel <strong>werkafspraken</strong> bestaat nog niet. Voer de SQL uit in Neon console (<code>db/afspraken.sql</code>) om dit te activeren.
+        </div>
+      )}
 
       <div className="card">
         {afspraken.length === 0 ? (
