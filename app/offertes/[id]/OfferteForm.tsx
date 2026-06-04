@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import RegelEditor from '@/components/RegelEditor'
 import WerkafsprakenEditor, { type WaItem, type Bijlage } from '@/components/WerkafsprakenEditor'
@@ -16,10 +16,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
   const [waItems, setWaItems] = useState<WaItem[]>(offerte.wa_items ?? [])
   const [bijlagen, setBijlagen] = useState<Bijlage[]>(offerte.bijlagen ?? [])
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setSaving(true)
-    const fd = new FormData(e.currentTarget)
+  async function saveForm(fd: FormData) {
     await fetch(`/api/offertes/${offerteId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -37,12 +34,30 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         wa_items: waItems,
       }),
     })
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setSaving(true)
+    const fd = new FormData(e.currentTarget)
+    await saveForm(fd)
     setSaving(false)
     router.refresh()
   }
 
+  const formRef = useRef<HTMLFormElement>(null)
+
+  async function handlePdf() {
+    if (!formRef.current) return
+    setSaving(true)
+    await saveForm(new FormData(formRef.current))
+    setSaving(false)
+    window.open(`/api/offertes/${offerteId}/pdf`, '_blank')
+    router.refresh()
+  }
+
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} ref={formRef}>
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="section-label">Gegevens</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -108,10 +123,16 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         />
       </div>
 
-      <button type="submit" className="btn btn-primary" disabled={saving}>
-        <span className="nav-ico" style={{ fontSize: 18 }}>save</span>
-        {saving ? 'Opslaan…' : 'Offerte opslaan'}
-      </button>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button type="submit" className="btn btn-primary" disabled={saving}>
+          <span className="nav-ico" style={{ fontSize: 18 }}>save</span>
+          {saving ? 'Opslaan…' : 'Offerte opslaan'}
+        </button>
+        <button type="button" className="btn btn-ghost" disabled={saving} onClick={handlePdf}>
+          <span className="nav-ico" style={{ fontSize: 18 }}>print</span>
+          {saving ? 'Opslaan…' : 'PDF bekijken'}
+        </button>
+      </div>
     </form>
   )
 }

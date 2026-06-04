@@ -76,12 +76,7 @@ export default async function OfferteDetailPage({
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Link href={`/api/offertes/${offerteId}/pdf`} target="_blank" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>print</span>
-            PDF
-          </Link>
-        </div>
+        <div style={{ display: 'flex', gap: 8 }}></div>
       </div>
 
       {msg && <div className="alert alert-ok">{decodeURIComponent(msg)}</div>}
