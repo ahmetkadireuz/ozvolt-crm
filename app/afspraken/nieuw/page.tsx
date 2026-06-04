@@ -4,7 +4,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
-import crypto from 'crypto'
 
 export const metadata: Metadata = { title: 'Nieuwe werkafspraken' }
 
@@ -18,7 +17,9 @@ export default async function NieuweAfspraakPage() {
 
     const maxRow = await sql`SELECT COALESCE(MAX(afspraaknummer),0)+1 AS nr FROM werkafspraken`
     const nr = maxRow[0].nr
-    const token = crypto.randomBytes(32).toString('hex')
+    const tokenBytes = new Uint8Array(32)
+    globalThis.crypto.getRandomValues(tokenBytes)
+    const token = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('')
 
     const result = await sql`
       INSERT INTO werkafspraken (afspraaknummer, klant_id, datum, afspraken, accept_token, bijgewerkt_op)
