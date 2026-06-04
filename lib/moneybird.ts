@@ -110,3 +110,45 @@ export async function mbMarkeerBetaald(mbFactuurId: string, bedrag: number, datu
     }),
   })
 }
+
+// Maakt concept-factuur in Moneybird en geeft de publieke betaallink terug
+export async function mbMaakBetaalLink(params: {
+  contactId: string
+  omschrijving: string
+  bedrag: number
+  btwPct: number
+  referentie: string
+  datum: string
+}): Promise<{ mbFactuurId: string; betaalUrl: string }> {
+  const vervaldatum = new Date(params.datum)
+  vervaldatum.setDate(vervaldatum.getDate() + 14)
+
+  const nettoBedrag = params.bedrag / (1 + params.btwPct / 100)
+
+  const payload = {
+    sales_invoice: {
+      contact_id: params.contactId,
+      invoice_date: params.datum.slice(0, 10),
+      due_date: vervaldatum.toISOString().slice(0, 10),
+      reference: params.referentie,
+      details_attributes: [{
+        description: params.omschrijving,
+        amount: '1',
+        price: nettoBedrag.toFixed(2),
+      }],
+    },
+  }
+
+  const factuur = await mbFetch('/sales_invoices', { method: 'POST', body: JSON.stringify(payload) })
+
+  return {
+    mbFactuurId: factuur.id,
+    betaalUrl: factuur.public_view_url ?? `https://moneybird.com/${adminId()}/sales_invoices/${factuur.id}`,
+  }
+}
+
+// Haal of maak contact op basis van klantdata
+export async function mbZoekContactOpNaam(naam: string) {
+  const results = await mbFetch(`/contacts?query=${encodeURIComponent(naam)}`)
+  return Array.isArray(results) ? results[0] ?? null : null
+}
