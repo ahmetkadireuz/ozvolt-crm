@@ -22,6 +22,14 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
   if (Array.isArray(o.regels)) regels = o.regels
   else if (typeof o.regels === 'string') { try { regels = JSON.parse(o.regels) } catch {} }
 
+  let waItems: any[] = []
+  if (Array.isArray(o.wa_items)) waItems = o.wa_items
+  else if (typeof o.wa_items === 'string') { try { waItems = JSON.parse(o.wa_items) } catch {} }
+
+  let bijlagen: any[] = []
+  if (Array.isArray(o.bijlagen)) bijlagen = o.bijlagen
+  else if (typeof o.bijlagen === 'string') { try { bijlagen = JSON.parse(o.bijlagen) } catch {} }
+
   const korting = Number(o.korting_pct ?? 0)
   const btwPct = Number(o.btw_pct ?? 21)
   const totalen = berekenTotalen(regels, korting, btwPct)
@@ -36,6 +44,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Offerte {offerteNr} — Ozvolt Elektrotechniek</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
         <style>{`
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           html, body { min-height: 100%; }
@@ -102,6 +111,26 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
           .pay-btn { display: inline-flex; align-items: center; gap: 8px; background: #16a34a; color: #fff; border-radius: 4px; padding: 14px 28px; text-decoration: none; font-weight: 700; font-size: 15px; }
           .pay-btn-secondary { background: #1d2f4c; }
           .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+          /* Werkafspraken */
+          .wa-section { margin-bottom: 36px; }
+          .wa-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+          .wa-table thead tr { background: #f8fafc; border-bottom: 1px solid #e8edf3; }
+          .wa-table thead th { padding: 8px 14px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #94a3b8; }
+          .wa-table tbody tr { border-bottom: 1px solid #f1f5f9; }
+          .wa-table tbody tr:last-child { border-bottom: none; }
+          .wa-table tbody td { padding: 12px 14px; vertical-align: top; }
+          .wa-door { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+          .wa-door-ozvolt      { background: #e8edf5; color: #1d2f4c; }
+          .wa-door-klant       { background: #f3f0ff; color: #6d28d9; }
+          .wa-door-gezamenlijk { background: #f0fdf4; color: #15803d; }
+
+          /* Bijlagen */
+          .bijlagen-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+          .bijlage-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e8edf3; border-radius: 4px; text-decoration: none; color: #0f172a; }
+          .bijlage-icon { font-size: 20px; color: #dc2626; flex-shrink: 0; }
+          .bijlage-naam { font-size: 13px; font-weight: 600; flex: 1; }
+          .bijlage-type { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
 
           /* Akkoord */
           .sign-section { border: 1.5px solid #e8edf3; border-radius: 4px; padding: 28px 32px; }
@@ -240,6 +269,54 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                     <a href={o.betaal_url} className="pay-btn">
                       Betalen — {formatEuro(totalen.inclBtw)} →
                     </a>
+                  )}
+                </div>
+              )}
+
+              {/* Werkafspraken sectie */}
+              {waItems.length > 0 && (
+                <div className="wa-section">
+                  <div style={{ borderTop: '2px solid #e8edf3', margin: '8px 0 28px' }} />
+                  <div className="sec" style={{ marginBottom: 16 }}>Werkafspraken</div>
+                  <div className="tbl-wrap" style={{ marginBottom: bijlagen.length > 0 ? 20 : 0 }}>
+                    <table className="wa-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: '60%' }}>Afspraak</th>
+                          <th style={{ width: '40%' }}>Uitgevoerd door</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {waItems.map((item: any, i: number) => (
+                          <tr key={i}>
+                            <td>
+                              <div style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>{item.omschrijving || '—'}</div>
+                              {item.toelichting && <div style={{ fontSize: 12, color: '#64748b', marginTop: 3 }}>{item.toelichting}</div>}
+                            </td>
+                            <td>
+                              <span className={`wa-door wa-door-${item.door ?? 'ozvolt'}`}>
+                                {item.door === 'klant' ? 'Klant' : item.door === 'gezamenlijk' ? 'Gezamenlijk' : 'Ozvolt'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {bijlagen.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Bijlagen</div>
+                      <div className="bijlagen-list">
+                        {bijlagen.map((b: any, i: number) => (
+                          <a key={i} href={b.url} target="_blank" rel="noreferrer" className="bijlage-item">
+                            <span className="bijlage-icon material-symbols-outlined">picture_as_pdf</span>
+                            <span className="bijlage-naam">{b.naam}</span>
+                            <span className="bijlage-type">{b.type}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

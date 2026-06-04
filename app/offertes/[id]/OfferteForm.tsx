@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import RegelEditor from '@/components/RegelEditor'
+import WerkafsprakenEditor, { type WaItem, type Bijlage } from '@/components/WerkafsprakenEditor'
 import type { RegelItem } from '@/lib/utils'
 
 export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: any; klanten: any[]; offerteId: number }) {
@@ -12,6 +13,8 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
   const [kortingPct, setKortingPct] = useState(Number(offerte.korting_pct))
   const [btwPct, setBtwPct] = useState(Number(offerte.btw_pct))
   const [betaling50, setBetaling50] = useState(!!offerte.betaling_50_50)
+  const [waItems, setWaItems] = useState<WaItem[]>(offerte.wa_items ?? [])
+  const [bijlagen, setBijlagen] = useState<Bijlage[]>(offerte.bijlagen ?? [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -31,6 +34,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         regels,
         korting_pct: kortingPct,
         btw_pct: btwPct,
+        wa_items: waItems,
       }),
     })
     setSaving(false)
@@ -88,6 +92,19 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
           kortingBedrag={Number(offerte.korting_pct)}
           btwPct={Number(offerte.btw_pct)}
           onChange={(r, k, b) => { setRegels(r); setKortingPct(k); setBtwPct(b) }}
+        />
+      </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="section-label">Werkafspraken</div>
+        <div style={{ fontSize: '.78rem', color: '#8ba8c4', marginBottom: 12 }}>
+          Wat doet Ozvolt, wat doet de klant? Voeg per punt toe wie verantwoordelijk is.
+        </div>
+        <WerkafsprakenEditor
+          initialItems={waItems}
+          initialBijlagen={bijlagen}
+          offerteId={offerteId}
+          onChange={(items, bijen) => { setWaItems(items); setBijlagen(bijen) }}
         />
       </div>
 

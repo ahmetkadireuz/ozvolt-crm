@@ -30,7 +30,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const currentToken = rows[0]?.accept_token
   const token = currentToken || crypto.randomBytes(32).toString('hex')
 
-  // Probeer met status_notitie, val terug zonder
+  const waItems = Array.isArray(body.wa_items) ? body.wa_items : []
+
   try {
     await sql`
       UPDATE offertes SET
@@ -45,6 +46,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         betaal_url = ${body.betaal_url || null},
         betaling_50_50 = ${!!body.betaling_50_50},
         betaal_url_2 = ${body.betaal_url_2 || null},
+        wa_items = ${JSON.stringify(waItems)}::jsonb,
         accept_token = ${token},
         bijgewerkt_op = NOW()
       WHERE id = ${offerteId}
