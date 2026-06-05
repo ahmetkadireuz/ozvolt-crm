@@ -11,7 +11,7 @@ export default async function KlantDashboard() {
   const [klantRows, klussen, offertes, facturen, rapporten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
-    sql`SELECT id, offertenummer, status, datum, regels, korting_pct, btw_pct FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
+    sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct, mollie_status FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
   ])
@@ -48,17 +48,38 @@ export default async function KlantDashboard() {
 
       {/* Klussen */}
       <Section titel="Uw projecten">
-        {klussen.length === 0 ? <Leeg tekst="Geen lopende projecten" /> : klussen.map((k: any) => (
-          <Kaart key={k.id}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: '#0d1b3e' }}>{k.type_werk || 'Project'}</div>
-                {k.omschrijving && <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{k.omschrijving}</div>}
+        {klussen.length === 0 ? <Leeg tekst="Geen lopende projecten" /> : klussen.map((k: any) => {
+          // Zoek offerte gekoppeld aan deze klus met werkzaamheden
+          const gekoppeldeOfferte = offertes.find((o: any) =>
+            o.klus_id === k.id && Array.isArray(o.wa_items) && o.wa_items.length > 0
+          ) ?? offertes.find((o: any) => Array.isArray(o.wa_items) && o.wa_items.length > 0)
+          const waItems: any[] = gekoppeldeOfferte?.wa_items ?? []
+          return (
+            <Kaart key={k.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: '#0d1b3e' }}>{k.type_werk || 'Project'}</div>
+                  {k.omschrijving && <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{k.omschrijving}</div>}
+                </div>
+                <Badge tekst={k.status} kleur={statusKleur[k.status] ?? '#64748b'} />
               </div>
-              <Badge tekst={k.status} kleur={statusKleur[k.status] ?? '#64748b'} />
-            </div>
-          </Kaart>
-        ))}
+              {waItems.length > 0 && (
+                <div style={{ marginTop: 12, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Afgesproken werkzaamheden</div>
+                  {waItems.map((w: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4, fontSize: 12 }}>
+                      <span style={{ color: '#3b82f6', marginTop: 1 }}>•</span>
+                      <div>
+                        <span style={{ fontWeight: 600, color: '#0d1b3e' }}>{w.omschrijving}</span>
+                        {w.toelichting && <span style={{ color: '#64748b' }}> — {w.toelichting}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Kaart>
+          )
+        })}
       </Section>
 
       {/* Offertes */}
