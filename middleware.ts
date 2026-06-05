@@ -16,8 +16,8 @@ export async function middleware(req: NextRequest) {
 
   if (isPublic) return res
 
-  // Klantportaal routes — aparte cookie check
-  if (pathname.startsWith('/klant')) {
+  // Klantportaal routes — aparte cookie check (/klant/ maar NIET /klanten)
+  if (pathname.startsWith('/klant/') || pathname === '/klant') {
     const klantToken = req.cookies.get('ozvolt_klant')?.value
     if (!klantToken) return NextResponse.redirect(new URL('/klant/geen-toegang', req.url))
     return res
