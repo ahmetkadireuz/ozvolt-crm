@@ -12,15 +12,27 @@ function headers() {
 }
 
 async function mbFetch(path: string, options?: RequestInit) {
-  const res = await fetch(`${BASE}/${adminId()}${path}`, {
-    ...options,
-    headers: { ...headers(), ...(options?.headers ?? {}) },
-  })
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Moneybird API fout ${res.status}: ${text}`)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 8000) // 8 seconden timeout
+  try {
+    const res = await fetch(`${BASE}/${adminId()}${path}`, {
+      ...options,
+      headers: { ...headers(), ...(options?.headers ?? {}) },
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      const text = await res.text()
+      if (res.status === 401) throw new Error('Moneybird: ongeldige API token — controleer MONEYBIRD_API_TOKEN in Vercel')
+      if (res.status === 404) throw new Error('Moneybird: administratie niet gevonden — controleer MONEYBIRD_ADMIN_ID in Vercel')
+      throw new Error(`Moneybird API fout ${res.status}: ${text}`)
+    }
+    return res.status === 204 ? null : res.json()
+  } catch (err: any) {
+    if (err.name === 'AbortError') throw new Error('Moneybird reageert niet (timeout) — controleer je API token en admin ID in Vercel')
+    throw err
+  } finally {
+    clearTimeout(timeout)
   }
-  return res.status === 204 ? null : res.json()
 }
 
 // ── Contacten ────────────────────────────────────────────────────────────────
