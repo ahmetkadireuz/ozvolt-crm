@@ -7,6 +7,7 @@ import { notFound, redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
 import StatusBadge from '@/components/StatusBadge'
 import KlusActions from './KlusActions'
+import WerkafspraakInlineEditor from './WerkafspraakInlineEditor'
 
 export const metadata: Metadata = { title: 'Klus detail' }
 
@@ -38,7 +39,7 @@ export default async function KlusDetailPage({
     `,
     sql`SELECT id, offertenummer, status, datum FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum FROM facturen WHERE klus_id = ${klusId} ORDER BY factuurdatum DESC`,
-    sql`SELECT id, afspraaknummer, status, datum FROM werkafspraken WHERE klus_id = ${klusId} ORDER BY datum DESC`,
+    sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klus_id = ${klusId} ORDER BY datum DESC`,
     sql`SELECT id, type_werk, status, aangemaakt_op FROM klussen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) AND id != ${klusId} ORDER BY aangemaakt_op DESC LIMIT 5`,
   ])
 
@@ -145,13 +146,25 @@ export default async function KlusDetailPage({
             ))}
 
             {afsprakenRows.map((a: any) => (
-              <Link key={a.id} href={`/afspraken/${a.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
-                <div>
-                  <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Werkafspraken OZWA-{String(a.afspraaknummer).padStart(4,'0')}</span>
-                  <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(a.datum).toLocaleDateString('nl-NL')}</span>
+              <div key={a.id} style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <Link href={`/afspraken/${a.id}`} style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem', textDecoration: 'none' }}>
+                      {a.titel || `OZWA-${String(a.afspraaknummer).padStart(4,'0')}`}
+                    </Link>
+                    <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(a.datum).toLocaleDateString('nl-NL')}</span>
+                  </div>
+                  <StatusBadge status={a.status} />
                 </div>
-                <StatusBadge status={a.status} />
-              </Link>
+                <WerkafspraakInlineEditor
+                  afspraakId={a.id}
+                  klantId={klus.klant_id}
+                  klusId={klusId}
+                  initialItems={Array.isArray(a.afspraken) ? a.afspraken : []}
+                  titel={a.titel ?? ''}
+                  datum={String(a.datum).slice(0, 10)}
+                />
+              </div>
             ))}
 
             <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
