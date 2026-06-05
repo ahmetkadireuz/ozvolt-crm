@@ -9,7 +9,15 @@ const securityHeaders = [
 
 const nextConfig = {
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }]
+    return [
+      { source: '/(.*)', headers: securityHeaders },
+      {
+        source: '/klant/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
+        ],
+      },
+    ]
   },
   experimental: {
     serverComponentsExternalPackages: ['@neondatabase/serverless'],

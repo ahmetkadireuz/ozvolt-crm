@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 import { redirect, notFound } from 'next/navigation'
 import { getKlantSessie } from '@/lib/klant-sessie'
