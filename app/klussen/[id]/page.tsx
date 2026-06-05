@@ -7,7 +7,7 @@ import { notFound, redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
 import StatusBadge from '@/components/StatusBadge'
 import KlusActions from './KlusActions'
-import WerkafspraakInlineEditor from './WerkafspraakInlineEditor'
+import PuntenEditor from './PuntenEditor'
 
 export const metadata: Metadata = { title: 'Klus detail' }
 
@@ -37,7 +37,7 @@ export default async function KlusDetailPage({
       FROM klussen k JOIN klanten kt ON kt.id = k.klant_id
       WHERE k.id = ${klusId}
     `,
-    sql`SELECT id, offertenummer, status, datum FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC`,
+    sql`SELECT id, offertenummer, status, datum, wa_items FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum FROM facturen WHERE klus_id = ${klusId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klus_id = ${klusId} ORDER BY datum DESC`,
     sql`SELECT id, type_werk, status, aangemaakt_op FROM klussen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) AND id != ${klusId} ORDER BY aangemaakt_op DESC LIMIT 5`,
@@ -182,6 +182,14 @@ export default async function KlusDetailPage({
               </Link>
             </div>
           </div>
+
+          {/* Punten voor klant portaal */}
+          {offertesRows.length > 0 && (
+            <PuntenEditor
+              offerteId={offertesRows[0].id}
+              initialPunten={Array.isArray(offertesRows[0].wa_items) ? offertesRows[0].wa_items : []}
+            />
+          )}
 
           {/* Andere klussen van klant */}
           {siblingRows.length > 0 && (

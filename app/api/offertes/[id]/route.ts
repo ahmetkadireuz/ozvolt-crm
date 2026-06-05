@@ -9,6 +9,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const offerteId = parseInt(id)
   const body = await req.json()
 
+  // Alleen wa_items updaten (punten editor klussenpagina)
+  if (body.wa_items !== undefined && Object.keys(body).length === 1) {
+    await sql`UPDATE offertes SET wa_items = ${JSON.stringify(body.wa_items)}::jsonb, bijgewerkt_op = NOW() WHERE id = ${offerteId}`
+    return NextResponse.json({ ok: true })
+  }
+
   const validStatuses = ['concept','gestuurd','geaccepteerd','verlopen','geweigerd']
 
   if (body.status && validStatuses.includes(body.status)) {
