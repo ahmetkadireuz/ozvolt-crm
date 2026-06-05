@@ -278,7 +278,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                 <div className="wa-section">
                   <div style={{ borderTop: '2px solid #e8edf3', margin: '8px 0 28px' }} />
                   <div className="sec" style={{ marginBottom: 16 }}>Werkafspraken</div>
-                  <div className="tbl-wrap" style={{ marginBottom: bijlagen.length > 0 ? 20 : 0 }}>
+                  <div className="tbl-wrap" style={{ marginBottom: 0 }}>
                     <table className="wa-table">
                       <thead>
                         <tr>
@@ -303,21 +303,23 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                       </tbody>
                     </table>
                   </div>
+                </div>
+              )}
 
-                  {bijlagen.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Bijlagen</div>
-                      <div className="bijlagen-list">
-                        {bijlagen.map((b: any, i: number) => (
-                          <a key={i} href={b.url} target="_blank" rel="noreferrer" className="bijlage-item">
-                            <span className="bijlage-icon material-symbols-outlined">picture_as_pdf</span>
-                            <span className="bijlage-naam">{b.naam}</span>
-                            <span className="bijlage-type">{b.type}</span>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              {/* Bijlagen — altijd tonen als ze er zijn */}
+              {bijlagen.length > 0 && (
+                <div style={{ marginBottom: 28 }}>
+                  <div style={{ borderTop: waItems.length === 0 ? '2px solid #e8edf3' : 'none', margin: waItems.length === 0 ? '8px 0 28px' : '20px 0 0' }} />
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Bijlagen</div>
+                  <div className="bijlagen-list">
+                    {bijlagen.map((b: any, i: number) => (
+                      <a key={i} href={b.url} target="_blank" rel="noreferrer" className="bijlage-item">
+                        <span className="bijlage-icon material-symbols-outlined">picture_as_pdf</span>
+                        <span className="bijlage-naam">{b.naam}</span>
+                        <span className="bijlage-type">{b.type}</span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 
