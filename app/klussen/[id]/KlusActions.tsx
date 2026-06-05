@@ -118,6 +118,29 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
     router.push('/klussen')
   }
 
+  const [portaalLink, setPortaalLink] = useState<string | null>(null)
+  const [portaalLaden, setPortaalLaden] = useState(false)
+  const [portaalGekopieerd, setPortaalGekopieerd] = useState(false)
+
+  async function genereerPortaalLink() {
+    setPortaalLaden(true)
+    const res = await fetch('/api/klant/sessie-aanmaken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ klantId: klus.klant_id }),
+    })
+    const data = await res.json()
+    setPortaalLaden(false)
+    if (data.link) setPortaalLink(data.link)
+  }
+
+  async function kopieerLink() {
+    if (!portaalLink) return
+    await navigator.clipboard.writeText(portaalLink)
+    setPortaalGekopieerd(true)
+    setTimeout(() => setPortaalGekopieerd(false), 2500)
+  }
+
   const BEL_COLORS: Record<string, string> = {
     niet_gebeld: '#8ba8c4', opgenomen: '#16a34a', niet_opgenomen: '#ea580c', voicemail: '#7c3aed',
   }
@@ -328,6 +351,48 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
                 style={{ justifyContent: 'center' }}
               >
                 Annuleer
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Klanten portaal link */}
+      <div className="card">
+        <div className="section-label">Klanten portaal</div>
+        {!portaalLink ? (
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={genereerPortaalLink}
+            disabled={portaalLaden}
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            <span className="nav-ico" style={{ fontSize: 16 }}>link</span>
+            {portaalLaden ? 'Link aanmaken…' : 'Genereer portaal link'}
+          </button>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ background: '#f1f5f9', borderRadius: 8, padding: '8px 10px', fontSize: '.75rem', color: '#374151', wordBreak: 'break-all', lineHeight: 1.5 }}>
+              {portaalLink}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={kopieerLink}
+                style={{ flex: 1, justifyContent: 'center' }}
+              >
+                <span className="nav-ico" style={{ fontSize: 16 }}>{portaalGekopieerd ? 'check' : 'content_copy'}</span>
+                {portaalGekopieerd ? 'Gekopieerd!' : 'Kopieer link'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setPortaalLink(null)}
+                style={{ justifyContent: 'center' }}
+              >
+                Nieuw
               </button>
             </div>
           </div>
