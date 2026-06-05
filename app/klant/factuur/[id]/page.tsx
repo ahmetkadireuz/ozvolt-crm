@@ -99,8 +99,13 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
 
         {/* Betaal / download */}
         <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {!isBetaald && (
+          {!isBetaald && totaal > 0 && (
             <BetaalKnop factuurId={f.id} totaal={formatEuro(totaal)} />
+          )}
+          {!isBetaald && totaal <= 0 && (
+            <div style={{ padding: 14, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, color: '#64748b', textAlign: 'center' }}>
+              Betaling beschikbaar zodra de factuur een bedrag heeft.
+            </div>
           )}
           <a
             href={`/api/facturen/${f.id}/pdf`}
