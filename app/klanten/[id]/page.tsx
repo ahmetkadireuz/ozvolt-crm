@@ -92,10 +92,17 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
           </div>
 
           {/* Offertes */}
-          {offertes.length > 0 && (
-            <div className="card">
-              <div className="section-label">Offertes</div>
-              {offertes.map((o: any) => (
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div className="section-label" style={{ margin: 0 }}>Offertes ({offertes.length})</div>
+              <Link href={`/offertes/nieuw?klant=${klantId}`} className="btn btn-primary btn-sm">
+                <span className="nav-ico" style={{ fontSize: 14 }}>add</span>
+                Nieuwe offerte
+              </Link>
+            </div>
+            {offertes.length === 0
+              ? <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: 0 }}>Geen offertes.</p>
+              : offertes.map((o: any) => (
                 <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
                   <div>
                     <div style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>OZVT-{String(o.offertenummer).padStart(4,'0')}</div>
@@ -104,14 +111,20 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
                   <StatusBadge status={o.status} />
                 </Link>
               ))}
-            </div>
-          )}
+          </div>
 
           {/* Facturen */}
-          {facturen.length > 0 && (
-            <div className="card">
-              <div className="section-label">Facturen</div>
-              {facturen.map((f: any) => (
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div className="section-label" style={{ margin: 0 }}>Facturen ({facturen.length})</div>
+              <Link href={`/facturen/nieuw?klant=${klantId}`} className="btn btn-ghost btn-sm">
+                <span className="nav-ico" style={{ fontSize: 14 }}>add</span>
+                Nieuwe factuur
+              </Link>
+            </div>
+            {facturen.length === 0
+              ? <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: 0 }}>Geen facturen.</p>
+              : facturen.map((f: any) => (
                 <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
                   <div>
                     <div style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>{f.factuurnummer}</div>
@@ -120,8 +133,7 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
                   <StatusBadge status={f.status} />
                 </Link>
               ))}
-            </div>
-          )}
+          </div>
         </div>
 
         <KlantActions klant={klant} klantId={klantId} />

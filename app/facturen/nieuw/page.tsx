@@ -8,12 +8,25 @@ import { sql } from '@/lib/db'
 
 export const metadata: Metadata = { title: 'Nieuwe factuur' }
 
-export default async function NieuweFactuurPage() {
+export default async function NieuweFactuurPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ klant?: string; klus?: string }>
+}) {
+  const { klant: klantParam, klus: klusParam } = await searchParams
   const klanten = await sql`SELECT id, naam FROM klanten ORDER BY naam`
+
+  let vooringevuldKlantId = klantParam ? parseInt(klantParam) : 0
+  let vooringevuldKlusId = klusParam ? parseInt(klusParam) : 0
+  if (vooringevuldKlusId && !vooringevuldKlantId) {
+    const rows = await sql`SELECT klant_id FROM klussen WHERE id = ${vooringevuldKlusId}`
+    if (rows[0]) vooringevuldKlantId = rows[0].klant_id
+  }
 
   async function createFactuur(formData: FormData) {
     'use server'
     let klantId = parseInt(String(formData.get('klant_id') ?? '0'))
+    const klusId = parseInt(String(formData.get('klus_id') ?? '0')) || null
     const nieuweNaam = String(formData.get('nieuwe_naam') ?? '').trim()
 
     if (!klantId && nieuweNaam) {
@@ -31,17 +44,23 @@ export default async function NieuweFactuurPage() {
     const maxRow = await sql`SELECT MAX(CAST(REGEXP_REPLACE(factuurnummer, '[^0-9]', '', 'g') AS INTEGER)) AS max_nr FROM facturen`
     const nextNr = (maxRow[0]?.max_nr ?? 1000) + 1
     const result = await sql`
-      INSERT INTO facturen (factuurnummer, klant_id, status, factuurdatum, betalingstermijn, regels, btw_pct)
-      VALUES (${`OZVT-${String(nextNr).padStart(4,'0')}`}, ${klantId}, 'concept', CURRENT_DATE, 14, '[]'::jsonb, 21)
+      INSERT INTO facturen (factuurnummer, klant_id, klus_id, status, factuurdatum, betalingstermijn, regels, btw_pct)
+      VALUES (${`OZVT-${String(nextNr).padStart(4,'0')}`}, ${klantId}, ${klusId}, 'concept', CURRENT_DATE, 14, '[]'::jsonb, 21)
       RETURNING id`
     redirect(`/facturen/${result[0].id}`)
   }
+
+  const terugUrl = vooringevuldKlusId
+    ? `/klussen/${vooringevuldKlusId}`
+    : vooringevuldKlantId
+    ? `/klanten/${vooringevuldKlantId}`
+    : '/facturen'
 
   return (
     <div>
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Link href="/facturen" className="btn btn-ghost btn-sm">
+          <Link href={terugUrl} className="btn btn-ghost btn-sm">
             <span className="material-symbols-outlined nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
           </Link>
           <h1 className="page-title">Nieuwe factuur</h1>
@@ -49,16 +68,18 @@ export default async function NieuweFactuurPage() {
       </div>
       <div style={{ maxWidth: 480 }}>
         <form action={createFactuur} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <input type="hidden" name="klus_id" value={vooringevuldKlusId || ''} />
 
           <div>
-            <label className="form-label">Bestaande klant kiezen</label>
+            <label className="form-label">Klant</label>
             <select className="form-ctrl" name="klant_id">
-              <option value="">— Kies een klant ({(klanten as any[]).length} beschikbaar) —</option>
-              {(klanten as any[]).map((k) => <option key={k.id} value={k.id}>{k.naam}</option>)}
+              <option value="">— Kies een klant —</option>
+              {(klanten as any[]).map((k) => (
+                <option key={k.id} value={k.id} selected={k.id === vooringevuldKlantId}>
+                  {k.naam}
+                </option>
+              ))}
             </select>
-            <Link href="/klanten/nieuw" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: '.75rem' }}>
-              + Klant beheren
-            </Link>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -69,8 +90,8 @@ export default async function NieuweFactuurPage() {
 
           <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>
-              <label className="form-label">Naam</label>
-              <input className="form-ctrl" name="nieuwe_naam" placeholder="Voor- en achternaam of bedrijf" />
+              <label className="form-label">Naam nieuwe klant</label>
+              <input className="form-ctrl" name="nieuwe_naam" placeholder="Voor- en achternaam of bedrijfsnaam" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
@@ -93,7 +114,7 @@ export default async function NieuweFactuurPage() {
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="submit" className="btn btn-primary">Factuur aanmaken</button>
-            <Link href="/facturen" className="btn btn-ghost">Annuleren</Link>
+            <Link href={terugUrl} className="btn btn-ghost">Annuleren</Link>
           </div>
         </form>
       </div>

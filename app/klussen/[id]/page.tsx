@@ -137,20 +137,33 @@ export default async function KlusDetailPage({
                   <StatusBadge status={f.status} />
                 </Link>
               ))}
-              <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>
-                <span className="nav-ico" style={{ fontSize: 16 }}>add</span>
-                Nieuwe offerte
-              </Link>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
+                  <span className="nav-ico" style={{ fontSize: 16 }}>description</span>
+                  Nieuwe offerte
+                </Link>
+                <Link href={`/facturen/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
+                  <span className="nav-ico" style={{ fontSize: 16 }}>receipt</span>
+                  Nieuwe factuur
+                </Link>
+              </div>
             </div>
           )}
 
           {offertesRows.length === 0 && facturenRows.length === 0 && (
-            <div className="card" style={{ textAlign: 'center' }}>
-              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen offerte voor deze klus.</p>
-              <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary">
-                <span className="nav-ico" style={{ fontSize: 18 }}>description</span>
-                Offerte aanmaken
-              </Link>
+            <div className="card">
+              <div className="section-label">Documenten</div>
+              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen offerte of factuur voor deze klus.</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
+                  <span className="nav-ico" style={{ fontSize: 16 }}>description</span>
+                  Offerte aanmaken
+                </Link>
+                <Link href={`/facturen/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
+                  <span className="nav-ico" style={{ fontSize: 16 }}>receipt</span>
+                  Factuur aanmaken
+                </Link>
+              </div>
             </div>
           )}
 
