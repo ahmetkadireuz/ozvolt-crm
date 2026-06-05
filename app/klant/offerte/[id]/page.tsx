@@ -36,6 +36,8 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
   ` : []
 
   const isGeaccepteerd = o.status === 'geaccepteerd'
+  const waItems: { omschrijving: string; door: string; toelichting: string }[] = o.wa_items ?? []
+  const bijlagen: { naam: string; url: string; type: string }[] = o.bijlagen ?? []
 
   return (
     <div>
@@ -103,20 +105,47 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
           </div>
         )}
 
-        {/* Werkafspraken */}
-        {afspraken.length > 0 && (
+        {/* Werkzaamheden */}
+        {waItems.length > 0 && (
           <div style={{ marginTop: 24 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0d1b3e', margin: '0 0 12px' }}>Geplande werkafspraken</h3>
-            {afspraken.map((a: any, i: number) => (
-              <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
-                <div style={{ minWidth: 100, color: '#64748b' }}>
-                  {new Date(a.datum_start).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0d1b3e', margin: '0 0 12px' }}>Afgesproken werkzaamheden</h3>
+            {waItems.map((w, i) => {
+              const doorKleur: Record<string, { bg: string; fg: string }> = {
+                ozvolt:      { bg: '#e8edf5', fg: '#1b2d4a' },
+                klant:       { bg: '#f3f0ff', fg: '#7c3aed' },
+                gezamenlijk: { bg: '#f0fdf4', fg: '#0f7a3a' },
+              }
+              const d = doorKleur[w.door] ?? { bg: '#f1f5f9', fg: '#64748b' }
+              return (
+                <div key={i} style={{ padding: '10px 12px', marginBottom: 6, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ fontWeight: 600, color: '#0d1b3e' }}>{w.omschrijving}</div>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 12, background: d.bg, color: d.fg, fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 8 }}>
+                      {w.door === 'ozvolt' ? 'Door Ozvolt' : w.door === 'klant' ? 'Door klant' : 'Gezamenlijk'}
+                    </span>
+                  </div>
+                  {w.toelichting && <div style={{ color: '#64748b', marginTop: 4 }}>{w.toelichting}</div>}
                 </div>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#0d1b3e' }}>{a.titel}</div>
-                  {a.notities && <div style={{ color: '#64748b', marginTop: 2 }}>{a.notities}</div>}
-                </div>
-              </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Bijlagen */}
+        {bijlagen.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0d1b3e', margin: '0 0 12px' }}>Bijgevoegde documenten</h3>
+            {bijlagen.map((b, i) => (
+              <a key={i} href={b.url} target="_blank" rel="noopener noreferrer" style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 12px', marginBottom: 6,
+                background: '#f8fafc', borderRadius: 8,
+                border: '1px solid #e2e8f0', textDecoration: 'none',
+              }}>
+                <span style={{ fontSize: 20 }}>{b.type?.includes('pdf') ? '📄' : '📎'}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e' }}>{b.naam}</span>
+                <span style={{ fontSize: 11, color: '#64748b', marginLeft: 'auto' }}>Downloaden ↓</span>
+              </a>
             ))}
           </div>
         )}

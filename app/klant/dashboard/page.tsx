@@ -81,6 +81,28 @@ export default async function KlantDashboard() {
         ))}
       </Section>
 
+      {/* Financieel overzicht */}
+      {facturen.length > 0 && (() => {
+        const totaalOpen = facturen
+          .filter((f: any) => f.mollie_status !== 'paid' && f.status !== 'betaald')
+          .reduce((s: number, f: any) => s + f.regels.reduce((r: number, l: any) => r + l.aantal * l.prijs, 0) * (1 + f.btw_pct / 100), 0)
+        const totaalBetaald = facturen
+          .filter((f: any) => f.mollie_status === 'paid' || f.status === 'betaald')
+          .reduce((s: number, f: any) => s + f.regels.reduce((r: number, l: any) => r + l.aantal * l.prijs, 0) * (1 + f.btw_pct / 100), 0)
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 32 }}>
+            <div style={{ background: '#fff', borderRadius: 12, padding: '14px 16px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Openstaand</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: totaalOpen > 0 ? '#dc2626' : '#16a34a', marginTop: 4 }}>{formatEuro(totaalOpen)}</div>
+            </div>
+            <div style={{ background: '#fff', borderRadius: 12, padding: '14px 16px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Betaald</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#16a34a', marginTop: 4 }}>{formatEuro(totaalBetaald)}</div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Facturen */}
       <Section titel="Facturen">
         {facturen.length === 0 ? <Leeg tekst="Geen facturen" /> : facturen.map((f: any) => (
