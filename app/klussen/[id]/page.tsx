@@ -28,7 +28,7 @@ export default async function KlusDetailPage({
   const klusId = parseInt(id)
   if (isNaN(klusId)) notFound()
 
-  const [klusRows, offertesRows, facturenRows, siblingRows] = await Promise.all([
+  const [klusRows, offertesRows, facturenRows, afsprakenRows, siblingRows] = await Promise.all([
     sql`
       SELECT k.*, kt.id AS klant_id, kt.naam AS klant_naam,
              kt.email AS klant_email, kt.telefoon AS klant_tel,
@@ -38,6 +38,7 @@ export default async function KlusDetailPage({
     `,
     sql`SELECT id, offertenummer, status, datum FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum FROM facturen WHERE klus_id = ${klusId} ORDER BY factuurdatum DESC`,
+    sql`SELECT id, afspraaknummer, status, datum FROM werkafspraken WHERE klus_id = ${klusId} ORDER BY datum DESC`,
     sql`SELECT id, type_werk, status, aangemaakt_op FROM klussen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) AND id != ${klusId} ORDER BY aangemaakt_op DESC LIMIT 5`,
   ])
 
@@ -115,57 +116,59 @@ export default async function KlusDetailPage({
             </div>
           </div>
 
-          {/* Offertes & Facturen */}
-          {(offertesRows.length > 0 || facturenRows.length > 0) && (
-            <div className="card">
-              <div className="section-label">Gekoppelde documenten</div>
-              {offertesRows.map((o: any) => (
-                <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
-                  <div>
-                    <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Offerte OZVT-{String(o.offertenummer).padStart(4,'0')}</span>
-                    <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</span>
-                  </div>
-                  <StatusBadge status={o.status} />
-                </Link>
-              ))}
-              {facturenRows.map((f: any) => (
-                <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
-                  <div>
-                    <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Factuur {f.factuurnummer}</span>
-                    <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</span>
-                  </div>
-                  <StatusBadge status={f.status} />
-                </Link>
-              ))}
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
-                  <span className="nav-ico" style={{ fontSize: 16 }}>description</span>
-                  Nieuwe offerte
-                </Link>
-                <Link href={`/facturen/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
-                  <span className="nav-ico" style={{ fontSize: 16 }}>receipt</span>
-                  Nieuwe factuur
-                </Link>
-              </div>
-            </div>
-          )}
+          {/* Documenten: Offertes, Facturen & Werkafspraken */}
+          <div className="card">
+            <div className="section-label">Gekoppelde documenten</div>
 
-          {offertesRows.length === 0 && facturenRows.length === 0 && (
-            <div className="card">
-              <div className="section-label">Documenten</div>
-              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen offerte of factuur voor deze klus.</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
-                  <span className="nav-ico" style={{ fontSize: 16 }}>description</span>
-                  Offerte aanmaken
-                </Link>
-                <Link href={`/facturen/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
-                  <span className="nav-ico" style={{ fontSize: 16 }}>receipt</span>
-                  Factuur aanmaken
-                </Link>
-              </div>
+            {offertesRows.length === 0 && facturenRows.length === 0 && afsprakenRows.length === 0 && (
+              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen documenten voor deze klus.</p>
+            )}
+
+            {offertesRows.map((o: any) => (
+              <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
+                <div>
+                  <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Offerte OZVT-{String(o.offertenummer).padStart(4,'0')}</span>
+                  <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</span>
+                </div>
+                <StatusBadge status={o.status} />
+              </Link>
+            ))}
+
+            {facturenRows.map((f: any) => (
+              <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
+                <div>
+                  <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Factuur {f.factuurnummer}</span>
+                  <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</span>
+                </div>
+                <StatusBadge status={f.status} />
+              </Link>
+            ))}
+
+            {afsprakenRows.map((a: any) => (
+              <Link key={a.id} href={`/afspraken/${a.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
+                <div>
+                  <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Werkafspraken OZWA-{String(a.afspraaknummer).padStart(4,'0')}</span>
+                  <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(a.datum).toLocaleDateString('nl-NL')}</span>
+                </div>
+                <StatusBadge status={a.status} />
+              </Link>
+            ))}
+
+            <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+              <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>
+                <span className="nav-ico" style={{ fontSize: 15 }}>description</span>
+                Offerte
+              </Link>
+              <Link href={`/facturen/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>
+                <span className="nav-ico" style={{ fontSize: 15 }}>receipt</span>
+                Factuur
+              </Link>
+              <Link href={`/afspraken/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>
+                <span className="nav-ico" style={{ fontSize: 15 }}>handshake</span>
+                Werkafspraken
+              </Link>
             </div>
-          )}
+          </div>
 
           {/* Andere klussen van klant */}
           {siblingRows.length > 0 && (
