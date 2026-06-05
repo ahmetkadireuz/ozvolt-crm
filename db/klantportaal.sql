@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS opleveringsrapporten (
   bijgewerkt_op TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Migratie: eenmalige magic link beveiliging
+ALTER TABLE klant_sessies ADD COLUMN IF NOT EXISTS link_gebruikt BOOLEAN NOT NULL DEFAULT FALSE;
+
 CREATE INDEX IF NOT EXISTS idx_klant_sessies_token ON klant_sessies(token_hash);
 CREATE INDEX IF NOT EXISTS idx_klant_sessies_klant ON klant_sessies(klant_id);
 CREATE INDEX IF NOT EXISTS idx_oplever_klus        ON opleveringsrapporten(klus_id);

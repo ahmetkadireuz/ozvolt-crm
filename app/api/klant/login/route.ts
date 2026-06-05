@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { valideerKlantToken, KLANT_COOKIE } from '@/lib/klant-sessie'
+import { valideerEnGebruikKlantToken, KLANT_COOKIE } from '@/lib/klant-sessie'
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/klant/geen-toegang', req.url))
   }
 
-  const klantId = await valideerKlantToken(token)
+  const klantId = await valideerEnGebruikKlantToken(token)
   if (!klantId) {
     return NextResponse.redirect(new URL('/klant/geen-toegang', req.url))
   }
