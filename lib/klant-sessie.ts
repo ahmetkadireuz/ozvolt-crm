@@ -11,7 +11,7 @@ function hashToken(token: string) {
 }
 
 export async function maakKlantSessie(klantId: number): Promise<string> {
-  const token = randomBytes(36).toString('hex')
+  const token = randomBytes(16).toString('base64url')
   const hash = hashToken(token)
   const verlopen = new Date(Date.now() + SESSIE_DAGEN * 86400_000)
 
