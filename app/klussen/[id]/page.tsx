@@ -8,6 +8,7 @@ import { sql } from '@/lib/db'
 import StatusBadge from '@/components/StatusBadge'
 import KlusActions from './KlusActions'
 import PuntenEditor from './PuntenEditor'
+import WerkafspraakInlineEditor from './WerkafspraakInlineEditor'
 
 export const metadata: Metadata = { title: 'Klus detail' }
 
