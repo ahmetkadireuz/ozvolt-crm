@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 interface Props {
   klusId: number
-  offertes: { id: number; offertenummer: number }[]
+  offertes: any[]
 }
 
 export default function OfferteKoppelen({ klusId, offertes }: Props) {
