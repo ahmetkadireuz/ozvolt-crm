@@ -13,7 +13,7 @@ function headers() {
 
 async function mbFetch(path: string, options?: RequestInit) {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 8000) // 8 seconden timeout
+  const timeout = setTimeout(() => controller.abort(), 5000) // 5 seconden timeout
   try {
     const res = await fetch(`${BASE}/${adminId()}${path}`, {
       ...options,

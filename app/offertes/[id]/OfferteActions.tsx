@@ -68,11 +68,12 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ betaling_50_50: offerte.betaling_50_50 }),
       })
-      const data = await res.json()
+      const text = await res.text()
+      const data = text ? JSON.parse(text) : {}
       if (data.ok) { alert('Betaallinks aangemaakt!'); router.refresh() }
-      else alert('Fout: ' + (data.error ?? 'Onbekend'))
+      else alert('Fout: ' + (data.error ?? `Server error ${res.status} — controleer Moneybird API token en admin ID in Vercel`))
     } catch (err: any) {
-      alert('Verbindingsfout: ' + (err?.message ?? 'Onbekend'))
+      alert('Fout: ' + (err?.message ?? 'Onbekend'))
     } finally {
       setMollieLoading(false)
     }
