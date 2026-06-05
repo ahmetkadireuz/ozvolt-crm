@@ -19,9 +19,7 @@ const nextConfig = {
       },
     ]
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@neondatabase/serverless'],
-  },
+  serverExternalPackages: ['@neondatabase/serverless'],
 }
 
 export default nextConfig
