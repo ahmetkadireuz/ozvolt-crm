@@ -155,7 +155,7 @@ export async function mbMaakBetaalLink(params: {
 
   return {
     mbFactuurId: factuur.id,
-    betaalUrl: factuur.public_view_url ?? `https://moneybird.com/${adminId()}/sales_invoices/${factuur.id}`,
+    betaalUrl: factuur.url ?? factuur.payment_url ?? factuur.public_view_url ?? `https://moneybird.com/${adminId()}/sales_invoices/${factuur.id}`,
   }
 }
 

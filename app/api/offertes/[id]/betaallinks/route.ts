@@ -83,6 +83,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
   } catch (err: any) {
     console.error('[betaallinks]', err)
-    return NextResponse.json({ error: err.message ?? 'Moneybird fout' }, { status: 500 })
+    const msg = err?.message ?? String(err) ?? 'Moneybird fout'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

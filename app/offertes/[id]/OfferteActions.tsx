@@ -71,7 +71,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
       const text = await res.text()
       const data = text ? JSON.parse(text) : {}
       if (data.ok) { alert('Betaallinks aangemaakt!'); router.refresh() }
-      else alert('Fout: ' + (data.error ?? `Server error ${res.status} — controleer Moneybird API token en admin ID in Vercel`))
+      else alert('Fout: ' + (data.error || `Server error ${res.status}`))
     } catch (err: any) {
       alert('Fout: ' + (err?.message ?? 'Onbekend'))
     } finally {
