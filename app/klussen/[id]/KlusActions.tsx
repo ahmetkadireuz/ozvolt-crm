@@ -15,6 +15,14 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
   const router = useRouter()
   const [notities, setNotities] = useState(klus.notities ?? '')
   const [saving, setSaving] = useState(false)
+  const [editForm, setEditForm] = useState({
+    type_werk: klus.type_werk ?? '',
+    omschrijving: klus.omschrijving ?? '',
+    product: klus.product ?? '',
+    locatie: klus.klant_locatie ?? '',
+  })
+  const [editSaving, setEditSaving] = useState(false)
+  const [editOk, setEditOk] = useState(false)
 
   async function updateStatus(status: string) {
     await fetch(`/api/klussen/${klusId}`, {
@@ -45,6 +53,19 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
     router.refresh()
   }
 
+  async function saveEdit() {
+    setEditSaving(true)
+    await fetch(`/api/klussen/${klusId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editForm),
+    })
+    setEditSaving(false)
+    setEditOk(true)
+    setTimeout(() => setEditOk(false), 3000)
+    router.refresh()
+  }
+
   async function deleteKlus() {
     if (!confirm('Klus verwijderen? Dit kan niet ongedaan worden gemaakt.')) return
     await fetch(`/api/klussen/${klusId}`, { method: 'DELETE' })
@@ -57,6 +78,44 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Klus bewerken */}
+      <div className="card">
+        <div className="section-label">Klus bewerken</div>
+        {[
+          { label: 'Type werk', key: 'type_werk' },
+          { label: 'Product', key: 'product' },
+        ].map(f => (
+          <div key={f.key} className="form-group">
+            <label className="form-label">{f.label}</label>
+            <input
+              className="form-ctrl"
+              value={(editForm as any)[f.key]}
+              onChange={e => setEditForm(p => ({ ...p, [f.key]: e.target.value }))}
+            />
+          </div>
+        ))}
+        <div className="form-group">
+          <label className="form-label">Omschrijving</label>
+          <textarea
+            className="form-ctrl"
+            rows={3}
+            value={editForm.omschrijving}
+            onChange={e => setEditForm(p => ({ ...p, omschrijving: e.target.value }))}
+            style={{ resize: 'vertical', fontSize: '.82rem' }}
+          />
+        </div>
+        {editOk && <p style={{ color: '#16a34a', fontSize: 12, margin: '0 0 6px' }}>✓ Opgeslagen</p>}
+        <button
+          type="button"
+          className="btn btn-primary btn-sm"
+          onClick={saveEdit}
+          disabled={editSaving}
+          style={{ width: '100%', justifyContent: 'center' }}
+        >
+          {editSaving ? 'Opslaan…' : 'Wijzigingen opslaan'}
+        </button>
+      </div>
+
       {/* Status */}
       <div className="card">
         <div className="section-label">Status</div>

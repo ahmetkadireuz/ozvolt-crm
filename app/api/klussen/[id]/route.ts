@@ -31,6 +31,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await sql`UPDATE klussen SET notities = ${notities}, bijgewerkt_op = NOW() WHERE id = ${klusId}`
   }
 
+  if (typeof body.type_werk === 'string' || typeof body.omschrijving === 'string' || typeof body.product === 'string') {
+    await sql`
+      UPDATE klussen SET
+        type_werk     = CASE WHEN ${body.type_werk    ?? null} IS NOT NULL THEN ${body.type_werk    ?? ''} ELSE type_werk END,
+        omschrijving  = CASE WHEN ${body.omschrijving ?? null} IS NOT NULL THEN ${body.omschrijving ?? ''} ELSE omschrijving END,
+        product       = CASE WHEN ${body.product      ?? null} IS NOT NULL THEN ${body.product      ?? ''} ELSE product END,
+        bijgewerkt_op = NOW()
+      WHERE id = ${klusId}
+    `
+  }
+
   return NextResponse.json({ ok: true })
 }
 
