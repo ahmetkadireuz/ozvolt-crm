@@ -19,6 +19,7 @@ interface Props {
   initialItems?: WaItem[]
   initialBijlagen?: Bijlage[]
   offerteId: number
+  showBijlagen?: boolean
   onChange?: (items: WaItem[], bijlagen: Bijlage[]) => void
 }
 
@@ -28,7 +29,7 @@ const DOOR_LABELS: Record<string, { label: string; color: string; bg: string }> 
   gezamenlijk: { label: 'Gezamenlijk', color: '#0f7a3a', bg: '#f0fdf4' },
 }
 
-export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen = [], offerteId, onChange }: Props) {
+export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen = [], offerteId, showBijlagen = false, onChange }: Props) {
   const [items, setItems] = useState<WaItem[]>(
     initialItems.length > 0 ? initialItems : []
   )
@@ -148,7 +149,7 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
       </div>
 
       {/* Bijlagen */}
-      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14, marginTop: 6 }}>
+      {showBijlagen && <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14, marginTop: 6 }}>
         <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
           Bijlagen (KLIC, goedkeuringen, etc.)
         </div>
@@ -182,7 +183,7 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
           <span className="material-symbols-outlined" style={{ fontSize: 16 }}>upload_file</span>
           {uploading ? 'Uploaden…' : 'Bijlage uploaden'}
         </button>
-      </div>
+      </div>}
     </div>
   )
 }

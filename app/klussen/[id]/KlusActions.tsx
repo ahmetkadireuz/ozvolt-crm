@@ -7,11 +7,10 @@ interface Props {
   klus: any
   statuses: string[]
   statusLabels: Record<string, string>
-  belLabels: Record<string, string>
   klusId: number
 }
 
-export default function KlusActions({ klus, statuses, statusLabels, belLabels, klusId }: Props) {
+export default function KlusActions({ klus, statuses, statusLabels, klusId }: Props) {
   const router = useRouter()
   const [notities, setNotities] = useState(klus.notities ?? '')
   const [saving, setSaving] = useState(false)
@@ -33,6 +32,18 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
   const [rapportSaving, setRapportSaving] = useState(false)
   const [rapportId, setRapportId] = useState<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Document upload (groenverklaring / KLIC / etc.)
+  const docFileRef = useRef<HTMLInputElement>(null)
+  const [docNaam, setDocNaam] = useState('')
+  const [docUploading, setDocUploading] = useState(false)
+  const [docOk, setDocOk] = useState(false)
+  const [docFout, setDocFout] = useState('')
+
+  // Klanten portaal
+  const [portaalLink, setPortaalLink] = useState<string | null>(null)
+  const [portaalLaden, setPortaalLaden] = useState(false)
+  const [portaalGekopieerd, setPortaalGekopieerd] = useState(false)
 
   async function uploadFotos(files: FileList) {
     setUploadBezig(true)
@@ -70,20 +81,30 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
     }
   }
 
+  async function uploadDocument(file: File) {
+    setDocUploading(true)
+    setDocFout('')
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('klant_id', String(klus.klant_id))
+    fd.append('naam', docNaam || file.name)
+    const res = await fetch('/api/groenverklaring', { method: 'POST', body: fd })
+    if (res.ok) {
+      setDocOk(true)
+      setDocNaam('')
+      setTimeout(() => setDocOk(false), 3000)
+      router.refresh()
+    } else {
+      setDocFout('Upload mislukt')
+    }
+    setDocUploading(false)
+  }
+
   async function updateStatus(status: string) {
     await fetch(`/api/klussen/${klusId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
-    })
-    router.refresh()
-  }
-
-  async function updateBelStatus(gebeld_status: string) {
-    await fetch(`/api/klussen/${klusId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gebeld_status }),
     })
     router.refresh()
   }
@@ -118,10 +139,6 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
     router.push('/klussen')
   }
 
-  const [portaalLink, setPortaalLink] = useState<string | null>(null)
-  const [portaalLaden, setPortaalLaden] = useState(false)
-  const [portaalGekopieerd, setPortaalGekopieerd] = useState(false)
-
   async function genereerPortaalLink() {
     setPortaalLaden(true)
     const res = await fetch('/api/klant/sessie-aanmaken', {
@@ -139,10 +156,6 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
     await navigator.clipboard.writeText(portaalLink)
     setPortaalGekopieerd(true)
     setTimeout(() => setPortaalGekopieerd(false), 2500)
-  }
-
-  const BEL_COLORS: Record<string, string> = {
-    niet_gebeld: '#8ba8c4', opgenomen: '#16a34a', niet_opgenomen: '#ea580c', voicemail: '#7c3aed',
   }
 
   return (
@@ -205,33 +218,6 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
         </div>
       </div>
 
-      {/* Belstatus */}
-      <div className="card">
-        <div className="section-label">Belstatus</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {Object.entries(belLabels).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => updateBelStatus(key)}
-              className={`btn ${klus.gebeld_status === key ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ justifyContent: 'space-between', width: '100%' }}
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: BEL_COLORS[key], display: 'inline-block' }} />
-                {label}
-              </span>
-              {klus.gebeld_status === key && <span className="nav-ico" style={{ fontSize: 16 }}>check</span>}
-            </button>
-          ))}
-        </div>
-        {klus.gebeld_op && (
-          <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 8 }}>
-            Laatst gebeld: {new Date(klus.gebeld_op).toLocaleString('nl-NL')}
-          </div>
-        )}
-      </div>
-
       {/* Notities */}
       <div className="card">
         <div className="section-label">Interne notities</div>
@@ -251,6 +237,42 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
         >
           {saving ? 'Opslaan…' : 'Notities opslaan'}
         </button>
+      </div>
+
+      {/* Documenten voor klant (groenverklaring / KLIC / etc.) */}
+      <div className="card">
+        <div className="section-label">Documenten voor klant</div>
+        <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 10px' }}>
+          Upload bijlagen die de klant ziet in het portaal (KLIC, groenverklaring, goedkeuringen, etc.).
+        </p>
+        <div className="form-group">
+          <label className="form-label">Documentnaam (optioneel)</label>
+          <input
+            className="form-ctrl"
+            value={docNaam}
+            onChange={e => setDocNaam(e.target.value)}
+            placeholder="bijv. KLIC aanvraag 2025"
+          />
+        </div>
+        <input
+          ref={docFileRef}
+          type="file"
+          accept=".pdf,.doc,.docx,image/*"
+          style={{ display: 'none' }}
+          onChange={e => e.target.files?.[0] && uploadDocument(e.target.files[0])}
+        />
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => docFileRef.current?.click()}
+          disabled={docUploading}
+          style={{ width: '100%', justifyContent: 'center' }}
+        >
+          <span className="nav-ico" style={{ fontSize: 16 }}>upload_file</span>
+          {docUploading ? 'Uploaden…' : 'Document uploaden'}
+        </button>
+        {docOk && <p style={{ color: '#16a34a', fontSize: 12, margin: '6px 0 0' }}>✓ Document geüpload — zichtbaar in klantportaal</p>}
+        {docFout && <p style={{ color: '#dc2626', fontSize: 12, margin: '6px 0 0' }}>{docFout}</p>}
       </div>
 
       {/* Opleveringsrapport */}
@@ -316,7 +338,7 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
                 style={{ width: '100%', justifyContent: 'center', marginBottom: 6 }}
               >
                 <span className="nav-ico" style={{ fontSize: 16 }}>upload</span>
-                {uploadBezig ? 'Uploaden…' : 'Foto\'s toevoegen'}
+                {uploadBezig ? 'Uploaden…' : "Foto's toevoegen"}
               </button>
               {rapportFotos.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4 }}>
@@ -357,9 +379,12 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
         )}
       </div>
 
-      {/* Klanten portaal link */}
+      {/* Klanten portaal */}
       <div className="card">
         <div className="section-label">Klanten portaal</div>
+        <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 10px' }}>
+          Stuur de klant een beveiligde link naar zijn dossier (geldig 30 dagen).
+        </p>
         {!portaalLink ? (
           <button
             type="button"
@@ -369,11 +394,11 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
             style={{ width: '100%', justifyContent: 'center' }}
           >
             <span className="nav-ico" style={{ fontSize: 16 }}>link</span>
-            {portaalLaden ? 'Link aanmaken…' : 'Genereer portaal link'}
+            {portaalLaden ? 'Link aanmaken…' : 'Portaallink genereren'}
           </button>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ background: '#f1f5f9', borderRadius: 8, padding: '8px 10px', fontSize: '.75rem', color: '#374151', wordBreak: 'break-all', lineHeight: 1.5 }}>
+            <div style={{ background: '#f1f5f9', borderRadius: 8, padding: '8px 10px', fontSize: '.72rem', color: '#374151', wordBreak: 'break-all', lineHeight: 1.5, fontFamily: 'monospace' }}>
               {portaalLink}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -386,6 +411,23 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
                 <span className="nav-ico" style={{ fontSize: 16 }}>{portaalGekopieerd ? 'check' : 'content_copy'}</span>
                 {portaalGekopieerd ? 'Gekopieerd!' : 'Kopieer link'}
               </button>
+              {klus.klant_tel && (() => {
+                const tel = (klus.klant_tel ?? '').replace(/[^0-9+]/g, '')
+                const waNum = tel.startsWith('0') ? '31' + tel.slice(1) : tel.replace(/^\+/, '')
+                const waMsg = `Goedendag ${klus.klant_naam?.split(' ')[0]}, hier is Ozvolt Elektrotechniek. Via deze link kunt u uw dossier bekijken: ${portaalLink}`
+                return (
+                  <a
+                    href={`https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-success btn-sm"
+                    style={{ justifyContent: 'center' }}
+                  >
+                    <span className="nav-ico" style={{ fontSize: 16 }}>chat</span>
+                    WA
+                  </a>
+                )
+              })()}
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"

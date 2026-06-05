@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 import { redirect } from 'next/navigation'
 import { getKlantSessie } from '@/lib/klant-sessie'
@@ -127,22 +128,40 @@ export default async function KlantDashboard() {
 
       {/* Facturen */}
       <Section titel="Facturen">
-        {facturen.length === 0 ? <Leeg tekst="Geen facturen" /> : facturen.map((f: any) => (
-          <a key={f.id} href={`/klant/factuur/${f.id}`} style={{ textDecoration: 'none' }}>
-            <Kaart hover>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {facturen.length === 0 ? <Leeg tekst="Geen facturen" /> : facturen.map((f: any) => {
+          const isBetaald = f.mollie_status === 'paid' || f.status === 'betaald'
+          return (
+            <Kaart key={f.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isBetaald ? 0 : 12 }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14, color: '#0d1b3e' }}>Factuur {f.factuurnummer}</div>
                   <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: '#0d1b3e' }}>{formatEuro(totaalFactuur(f))}</div>
-                  <Badge tekst={f.mollie_status === 'paid' ? 'betaald' : f.status} kleur={f.mollie_status === 'paid' ? '#16a34a' : (statusKleur[f.status] ?? '#64748b')} />
+                  <Badge tekst={isBetaald ? 'betaald' : 'openstaand'} kleur={isBetaald ? '#16a34a' : '#ef4444'} />
                 </div>
               </div>
+              {!isBetaald && (
+                <a
+                  href={`/klant/factuur/${f.id}`}
+                  style={{
+                    display: 'block', textAlign: 'center', padding: '10px',
+                    borderRadius: 8, background: '#16a34a', color: '#fff',
+                    fontWeight: 700, fontSize: 14, textDecoration: 'none',
+                  }}
+                >
+                  💳 Nu betalen via iDEAL — {formatEuro(totaalFactuur(f))}
+                </a>
+              )}
+              {isBetaald && (
+                <a href={`/klant/factuur/${f.id}`} style={{ fontSize: 12, color: '#64748b', textDecoration: 'underline' }}>
+                  Factuur bekijken / downloaden
+                </a>
+              )}
             </Kaart>
-          </a>
-        ))}
+          )
+        })}
       </Section>
 
       {/* Opleveringsrapporten */}

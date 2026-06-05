@@ -15,10 +15,6 @@ const STATUS_LABELS: Record<string, string> = {
   nieuw: 'Nieuw', in_behandeling: 'In behandeling',
   offerte_gestuurd: 'Offerte gestuurd', gepland: 'Gepland', afgerond: 'Afgerond',
 }
-const BEL_LABELS: Record<string, string> = {
-  niet_gebeld: 'Nog niet gebeld', opgenomen: 'Opgenomen',
-  niet_opgenomen: 'Niet opgenomen', voicemail: 'Voicemail',
-}
 
 export default async function KlusDetailPage({
   params,
@@ -177,7 +173,6 @@ export default async function KlusDetailPage({
           klus={klus}
           statuses={STATUSES}
           statusLabels={STATUS_LABELS}
-          belLabels={BEL_LABELS}
           klusId={klusId}
         />
       </div>
