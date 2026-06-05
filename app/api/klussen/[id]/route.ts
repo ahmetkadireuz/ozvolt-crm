@@ -31,6 +31,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await sql`UPDATE klussen SET notities = ${notities}, bijgewerkt_op = NOW() WHERE id = ${klusId}`
   }
 
+  if (body.portaal_punten !== undefined) {
+    try {
+      await sql`ALTER TABLE klussen ADD COLUMN IF NOT EXISTS portaal_punten JSONB DEFAULT '[]'`
+    } catch {}
+    await sql`UPDATE klussen SET portaal_punten = ${JSON.stringify(body.portaal_punten)}::jsonb, bijgewerkt_op = NOW() WHERE id = ${klusId}`
+  }
+
+  if (body.koppel_offerte_id) {
+    await sql`UPDATE offertes SET klus_id = ${klusId}, klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}), bijgewerkt_op = NOW() WHERE id = ${parseInt(body.koppel_offerte_id)}`
+  }
+
   if (typeof body.type_werk === 'string' || typeof body.omschrijving === 'string' || typeof body.product === 'string') {
     await sql`
       UPDATE klussen SET

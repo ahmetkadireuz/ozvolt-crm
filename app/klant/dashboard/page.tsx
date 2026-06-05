@@ -22,6 +22,18 @@ export default async function KlantDashboard() {
   const klant = klantRows[0]
   if (!klant) redirect('/klant/geen-toegang')
 
+  // Portaal punten per klus — kolom bestaat mogelijk nog niet
+  const klussenIds = klussen.map((k: any) => k.id)
+  const portaalPuntenMap: Record<number, any[]> = {}
+  if (klussenIds.length > 0) {
+    try {
+      const pp = await sql`SELECT id, portaal_punten FROM klussen WHERE id = ANY(${klussenIds})`
+      for (const row of pp) {
+        portaalPuntenMap[row.id] = Array.isArray(row.portaal_punten) ? row.portaal_punten : []
+      }
+    } catch { /* kolom bestaat nog niet */ }
+  }
+
   function totaalOfferte(o: Record<string, any>) {
     const sub = o.regels.reduce((s: number, r: { aantal: number; prijs: number }) => s + r.aantal * r.prijs, 0)
     const na = sub * (1 - o.korting_pct / 100)
@@ -52,11 +64,7 @@ export default async function KlantDashboard() {
       {/* Klussen */}
       <Section titel="Uw projecten">
         {klussen.length === 0 ? <Leeg tekst="Geen lopende projecten" /> : klussen.map((k: any) => {
-          // Zoek offerte gekoppeld aan deze klus met werkzaamheden
-          const gekoppeldeOfferte = offertes.find((o: any) =>
-            o.klus_id === k.id && Array.isArray(o.wa_items) && o.wa_items.length > 0
-          ) ?? offertes.find((o: any) => Array.isArray(o.wa_items) && o.wa_items.length > 0)
-          const waItems: any[] = gekoppeldeOfferte?.wa_items ?? []
+          const punten: any[] = portaalPuntenMap[k.id] ?? []
           return (
             <Kaart key={k.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -66,15 +74,23 @@ export default async function KlantDashboard() {
                 </div>
                 <Badge tekst={k.status} kleur={statusKleur[k.status] ?? '#64748b'} />
               </div>
-              {waItems.length > 0 && (
+              {punten.length > 0 && (
                 <div style={{ marginTop: 12, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Afgesproken werkzaamheden</div>
-                  {waItems.map((w: any, i: number) => (
+                  {punten.filter((p: any) => p.omschrijving).map((p: any, i: number) => (
                     <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4, fontSize: 12 }}>
                       <span style={{ color: '#3b82f6', marginTop: 1 }}>•</span>
                       <div>
-                        <span style={{ fontWeight: 600, color: '#0d1b3e' }}>{w.omschrijving}</span>
-                        {w.toelichting && <span style={{ color: '#64748b' }}> — {w.toelichting}</span>}
+                        <span style={{ fontWeight: 600, color: '#0d1b3e' }}>{p.omschrijving}</span>
+                        {p.toelichting && <span style={{ color: '#64748b' }}> — {p.toelichting}</span>}
+                        {p.door && p.door !== 'ozvolt' && (
+                          <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
+                            background: p.door === 'klant' ? '#f3f0ff' : '#f0fdf4',
+                            color: p.door === 'klant' ? '#7c3aed' : '#15803d',
+                          }}>
+                            {p.door === 'klant' ? 'Door u' : 'Gezamenlijk'}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}

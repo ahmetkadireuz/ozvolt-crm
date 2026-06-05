@@ -8,7 +8,7 @@ import { sql } from '@/lib/db'
 import StatusBadge from '@/components/StatusBadge'
 import KlusActions from './KlusActions'
 import PuntenEditor from './PuntenEditor'
-import WerkafspraakInlineEditor from './WerkafspraakInlineEditor'
+import OfferteKoppelen from './OfferteKoppelen'
 
 export const metadata: Metadata = { title: 'Klus detail' }
 
@@ -30,7 +30,7 @@ export default async function KlusDetailPage({
   const klusId = parseInt(id)
   if (isNaN(klusId)) notFound()
 
-  const [klusRows, offertesRows, facturenRows, afsprakenRows, siblingRows] = await Promise.all([
+  const [klusRows, offertesRows, facturenRows, ongekoppeldeOffertes, siblingRows] = await Promise.all([
     sql`
       SELECT k.*, kt.id AS klant_id, kt.naam AS klant_naam,
              kt.email AS klant_email, kt.telefoon AS klant_tel,
@@ -38,11 +38,18 @@ export default async function KlusDetailPage({
       FROM klussen k JOIN klanten kt ON kt.id = k.klant_id
       WHERE k.id = ${klusId}
     `,
-    sql`SELECT id, offertenummer, status, datum, wa_items FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC`,
+    sql`SELECT id, offertenummer, status, datum FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum FROM facturen WHERE klus_id = ${klusId} ORDER BY factuurdatum DESC`,
-    sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klus_id = ${klusId} ORDER BY datum DESC`,
+    sql`SELECT id, offertenummer FROM offertes WHERE klus_id IS NULL AND klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY datum DESC`,
     sql`SELECT id, type_werk, status, aangemaakt_op FROM klussen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) AND id != ${klusId} ORDER BY aangemaakt_op DESC LIMIT 5`,
   ])
+
+  // portaal_punten kolom kan nog niet bestaan — veilig ophalen
+  let portaalPunten: any[] = []
+  try {
+    const p = await sql`SELECT portaal_punten FROM klussen WHERE id = ${klusId}`
+    portaalPunten = Array.isArray(p[0]?.portaal_punten) ? p[0].portaal_punten : []
+  } catch {}
 
   const klus = klusRows[0]
   if (!klus) notFound()
@@ -184,11 +191,14 @@ export default async function KlusDetailPage({
             </div>
           </div>
 
-          {/* Punten voor klant portaal */}
-          {offertesRows.length > 0 && (
-            <PuntenEditor
-              offerteId={offertesRows[0].id}
-              initialPunten={Array.isArray(offertesRows[0].wa_items) ? offertesRows[0].wa_items : []}
+          {/* Afspraken voor klant portaal */}
+          <PuntenEditor klusId={klusId} initialPunten={portaalPunten} />
+
+          {/* Bestaande offerte koppelen */}
+          {ongekoppeldeOffertes.length > 0 && (
+            <OfferteKoppelen
+              klusId={klusId}
+              offertes={ongekoppeldeOffertes}
             />
           )}
 

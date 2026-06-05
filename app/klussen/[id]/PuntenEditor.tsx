@@ -10,15 +10,13 @@ interface Punt {
 }
 
 interface Props {
-  offerteId: number
+  klusId: number
   initialPunten: Punt[]
 }
 
-export default function PuntenEditor({ offerteId, initialPunten }: Props) {
+export default function PuntenEditor({ klusId, initialPunten }: Props) {
   const router = useRouter()
-  const [punten, setPunten] = useState<Punt[]>(
-    initialPunten.length > 0 ? initialPunten : []
-  )
+  const [punten, setPunten] = useState<Punt[]>(initialPunten)
   const [saving, setSaving] = useState(false)
   const [ok, setOk] = useState(false)
 
@@ -36,10 +34,10 @@ export default function PuntenEditor({ offerteId, initialPunten }: Props) {
 
   async function save() {
     setSaving(true)
-    await fetch(`/api/offertes/${offerteId}`, {
+    await fetch(`/api/klussen/${klusId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ wa_items: punten }),
+      body: JSON.stringify({ portaal_punten: punten }),
     })
     setSaving(false)
     setOk(true)
@@ -48,14 +46,14 @@ export default function PuntenEditor({ offerteId, initialPunten }: Props) {
   }
 
   return (
-    <div className="card" style={{ marginTop: 16 }}>
-      <div className="section-label">Punten voor klant portaal</div>
+    <div className="card">
+      <div className="section-label">Afspraken voor klant portaal</div>
       <p style={{ fontSize: '.78rem', color: '#8ba8c4', marginBottom: 12 }}>
-        Deze punten zijn direct zichtbaar voor de klant in het portaal.
+        Alleen zichtbaar voor de klant in het portaal.
       </p>
 
       {punten.length === 0 && (
-        <p style={{ fontSize: '.82rem', color: '#94a3b8', marginBottom: 12 }}>Nog geen punten toegevoegd.</p>
+        <p style={{ fontSize: '.82rem', color: '#94a3b8', marginBottom: 12 }}>Nog geen afspraken toegevoegd.</p>
       )}
 
       {punten.map((p, i) => (
@@ -67,7 +65,7 @@ export default function PuntenEditor({ offerteId, initialPunten }: Props) {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
               <input
                 className="form-ctrl"
-                placeholder="Punt (bijv. Meterkast vervangen)"
+                placeholder="Afspraak (bijv. Meterkast vervangen)"
                 value={p.omschrijving}
                 onChange={e => update(i, 'omschrijving', e.target.value)}
                 style={{ fontWeight: 600 }}
@@ -90,11 +88,8 @@ export default function PuntenEditor({ offerteId, initialPunten }: Props) {
                 <option value="gezamenlijk">Gezamenlijk</option>
               </select>
             </div>
-            <button
-              type="button"
-              onClick={() => remove(i)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 4, marginTop: 4 }}
-            >
+            <button type="button" onClick={() => remove(i)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 4, marginTop: 4 }}>
               <span className="nav-ico" style={{ fontSize: 16 }}>delete</span>
             </button>
           </div>
@@ -103,18 +98,13 @@ export default function PuntenEditor({ offerteId, initialPunten }: Props) {
 
       <button type="button" className="btn btn-ghost btn-sm" onClick={add} style={{ marginBottom: 12 }}>
         <span className="nav-ico" style={{ fontSize: 15 }}>add</span>
-        Punt toevoegen
+        Afspraak toevoegen
       </button>
 
-      {ok && <p style={{ color: '#16a34a', fontSize: 12, margin: '0 0 8px' }}>✓ Opgeslagen — direct zichtbaar in portaal</p>}
+      {ok && <p style={{ color: '#16a34a', fontSize: 12, margin: '0 0 8px' }}>✓ Opgeslagen — zichtbaar in portaal</p>}
 
-      <button
-        type="button"
-        className="btn btn-primary btn-sm"
-        onClick={save}
-        disabled={saving}
-        style={{ width: '100%', justifyContent: 'center' }}
-      >
+      <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={saving}
+        style={{ width: '100%', justifyContent: 'center' }}>
         {saving ? 'Opslaan…' : 'Opslaan in portaal'}
       </button>
     </div>
