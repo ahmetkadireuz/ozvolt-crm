@@ -89,13 +89,14 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId }: Pr
     fd.append('klant_id', String(klus.klant_id))
     fd.append('naam', docNaam || file.name)
     const res = await fetch('/api/groenverklaring', { method: 'POST', body: fd })
+    const data = await res.json()
     if (res.ok) {
       setDocOk(true)
       setDocNaam('')
       setTimeout(() => setDocOk(false), 3000)
       router.refresh()
     } else {
-      setDocFout('Upload mislukt')
+      setDocFout(data.error ?? 'Upload mislukt')
     }
     setDocUploading(false)
   }

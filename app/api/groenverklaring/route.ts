@@ -14,13 +14,38 @@ export async function POST(req: NextRequest) {
 
   if (!file || !klant_id) return NextResponse.json({ error: 'Bestand en klant_id vereist' }, { status: 400 })
 
-  const blob = await put(`groenverklaring/${klant_id}/${Date.now()}-${file.name}`, file, { access: 'public' })
-
+  // Zorg dat de tabel bestaat
   await sql`
-    INSERT INTO groenverklaringen (klant_id, naam, url, aangemaakt_op)
-    VALUES (${Number(klant_id)}, ${naam ?? file.name}, ${blob.url}, NOW())
+    CREATE TABLE IF NOT EXISTS groenverklaringen (
+      id            SERIAL PRIMARY KEY,
+      klant_id      INTEGER NOT NULL REFERENCES klanten(id) ON DELETE CASCADE,
+      naam          VARCHAR(255) NOT NULL,
+      url           TEXT NOT NULL,
+      aangemaakt_op TIMESTAMPTZ DEFAULT NOW()
+    )
   `
-  return NextResponse.json({ url: blob.url })
+
+  let blobUrl: string
+  try {
+    const safeName = file.name.replace(/[^a-z0-9.\-_]/gi, '_')
+    const blob = await put(`groenverklaring/${klant_id}/${Date.now()}-${safeName}`, file, { access: 'public' })
+    blobUrl = blob.url
+  } catch (err: any) {
+    console.error('[groenverklaring upload]', err)
+    return NextResponse.json({ error: 'Bestandsupload mislukt: ' + (err?.message ?? 'Vercel Blob fout') }, { status: 500 })
+  }
+
+  try {
+    await sql`
+      INSERT INTO groenverklaringen (klant_id, naam, url, aangemaakt_op)
+      VALUES (${Number(klant_id)}, ${naam || file.name}, ${blobUrl}, NOW())
+    `
+  } catch (err: any) {
+    console.error('[groenverklaring db]', err)
+    return NextResponse.json({ error: 'Opslaan in database mislukt: ' + (err?.message ?? 'DB fout') }, { status: 500 })
+  }
+
+  return NextResponse.json({ url: blobUrl })
 }
 
 export async function GET(req: NextRequest) {
