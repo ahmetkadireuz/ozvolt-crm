@@ -24,7 +24,7 @@ export default function KlantLayout({ children }: { children: React.ReactNode })
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-wit.png" alt="Ozvolt" height={28} style={{ objectFit: 'contain' }} />
+            <img src="/logo-wit.png" alt="Ozvolt" style={{ height: 28, width: 'auto', display: 'block', objectFit: 'contain' }} />
             <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 13 }}>Klantportaal</span>
           </div>
           <a href="mailto:info@ozvoltelektro.nl" style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, textDecoration: 'none' }}>
