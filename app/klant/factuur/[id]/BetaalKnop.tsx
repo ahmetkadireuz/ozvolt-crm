@@ -14,7 +14,7 @@ export default function BetaalKnop({ factuurId, totaal }: { factuurId: number; t
     if (data.url) {
       window.location.href = data.url
     } else {
-      setError('Betaallink kon niet worden aangemaakt. Probeer het opnieuw.')
+      setError(data.error ?? 'Betaallink kon niet worden aangemaakt.')
       setBezig(false)
     }
   }
