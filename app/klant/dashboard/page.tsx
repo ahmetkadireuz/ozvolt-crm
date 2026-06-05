@@ -8,12 +8,13 @@ export default async function KlantDashboard() {
   const klantId = await getKlantSessie()
   if (!klantId) redirect('/klant/geen-toegang')
 
-  const [klantRows, klussen, offertes, facturen, rapporten] = await Promise.all([
+  const [klantRows, klussen, offertes, facturen, rapporten, documenten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct, mollie_status FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
+    sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
   ])
 
   const klant = klantRows[0]
@@ -153,6 +154,28 @@ export default async function KlantDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontWeight: 600, fontSize: 14, color: '#0d1b3e' }}>{r.titel}</div>
                   <div style={{ fontSize: 12, color: '#64748b' }}>{new Date(r.aangemaakt_op).toLocaleDateString('nl-NL')}</div>
+                </div>
+              </Kaart>
+            </a>
+          ))}
+        </Section>
+      )}
+
+      {/* Documenten / groenverklaring */}
+      {documenten.length > 0 && (
+        <Section titel="Documenten">
+          {documenten.map((d: any) => (
+            <a key={d.id} href={d.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+              <Kaart hover>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 20 }}>📄</span>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: '#0d1b3e' }}>{d.naam}</div>
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{new Date(d.aangemaakt_op).toLocaleDateString('nl-NL')}</div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, color: '#3b82f6', fontWeight: 600 }}>Downloaden ↗</span>
                 </div>
               </Kaart>
             </a>

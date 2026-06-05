@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 interface Props {
   klus: any
@@ -23,6 +23,52 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
   })
   const [editSaving, setEditSaving] = useState(false)
   const [editOk, setEditOk] = useState(false)
+
+  // Opleveringsrapport
+  const [rapportOpen, setRapportOpen] = useState(false)
+  const [rapportTitel, setRapportTitel] = useState('Opleveringsrapport')
+  const [rapportNotities, setRapportNotities] = useState('')
+  const [rapportFotos, setRapportFotos] = useState<{ url: string; caption?: string }[]>([])
+  const [uploadBezig, setUploadBezig] = useState(false)
+  const [rapportSaving, setRapportSaving] = useState(false)
+  const [rapportId, setRapportId] = useState<number | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function uploadFotos(files: FileList) {
+    setUploadBezig(true)
+    const nieuweUrls: { url: string }[] = []
+    for (const file of Array.from(files)) {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/opleveringsrapporten/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (data.url) nieuweUrls.push({ url: data.url })
+    }
+    setRapportFotos(prev => [...prev, ...nieuweUrls])
+    setUploadBezig(false)
+  }
+
+  async function slaRapportOp() {
+    setRapportSaving(true)
+    const res = await fetch('/api/opleveringsrapporten', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        klus_id: klusId,
+        klant_id: klus.klant_id,
+        titel: rapportTitel,
+        notities: rapportNotities,
+        fotos: rapportFotos,
+      }),
+    })
+    const data = await res.json()
+    setRapportSaving(false)
+    if (data.id) {
+      setRapportId(data.id)
+      setRapportOpen(false)
+      router.refresh()
+    }
+  }
 
   async function updateStatus(status: string) {
     await fetch(`/api/klussen/${klusId}`, {
@@ -182,6 +228,110 @@ export default function KlusActions({ klus, statuses, statusLabels, belLabels, k
         >
           {saving ? 'Opslaan…' : 'Notities opslaan'}
         </button>
+      </div>
+
+      {/* Opleveringsrapport */}
+      <div className="card">
+        <div className="section-label">Opleveringsrapport</div>
+        {rapportId ? (
+          <a
+            href={`/klant/rapport/${rapportId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-ghost btn-sm"
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            <span className="nav-ico" style={{ fontSize: 16 }}>open_in_new</span>
+            Rapport bekijken (klantportaal)
+          </a>
+        ) : !rapportOpen ? (
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => setRapportOpen(true)}
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            <span className="nav-ico" style={{ fontSize: 16 }}>add_photo_alternate</span>
+            Opleveringsrapport aanmaken
+          </button>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="form-group">
+              <label className="form-label">Titel</label>
+              <input
+                className="form-ctrl"
+                value={rapportTitel}
+                onChange={e => setRapportTitel(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Notities</label>
+              <textarea
+                className="form-ctrl"
+                rows={3}
+                value={rapportNotities}
+                onChange={e => setRapportNotities(e.target.value)}
+                placeholder="Bijv. werkzaamheden uitgevoerd, opmerkingen…"
+                style={{ resize: 'vertical', fontSize: '.82rem' }}
+              />
+            </div>
+            <div>
+              <label className="form-label">Foto&apos;s</label>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={e => e.target.files && uploadFotos(e.target.files)}
+              />
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploadBezig}
+                style={{ width: '100%', justifyContent: 'center', marginBottom: 6 }}
+              >
+                <span className="nav-ico" style={{ fontSize: 16 }}>upload</span>
+                {uploadBezig ? 'Uploaden…' : 'Foto\'s toevoegen'}
+              </button>
+              {rapportFotos.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4 }}>
+                  {rapportFotos.map((f, i) => (
+                    <div key={i} style={{ position: 'relative' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={f.url} alt="" style={{ width: '100%', height: 60, objectFit: 'cover', borderRadius: 4, display: 'block' }} />
+                      <button
+                        type="button"
+                        onClick={() => setRapportFotos(prev => prev.filter((_, j) => j !== i))}
+                        style={{ position: 'absolute', top: 2, right: 2, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: 16, height: 16, fontSize: 10, cursor: 'pointer', lineHeight: 1, padding: 0 }}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={slaRapportOp}
+                disabled={rapportSaving || uploadBezig}
+                style={{ flex: 1, justifyContent: 'center' }}
+              >
+                {rapportSaving ? 'Opslaan…' : 'Rapport opslaan'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setRapportOpen(false)}
+                style={{ justifyContent: 'center' }}
+              >
+                Annuleer
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Verwijderen */}
