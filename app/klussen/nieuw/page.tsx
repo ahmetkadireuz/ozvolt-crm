@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
 
-export const metadata: Metadata = { title: 'Nieuwe klus' }
+export const metadata: Metadata = { title: 'Nieuw project' }
 
 export default async function NieuweKlusPage() {
   const klanten = await sql`SELECT id, naam, telefoon, locatie FROM klanten ORDER BY naam ASC`
@@ -50,7 +50,7 @@ export default async function NieuweKlusPage() {
           <Link href="/klussen" className="btn btn-ghost btn-sm">
             <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
           </Link>
-          <h1 className="page-title">Nieuwe klus</h1>
+          <h1 className="page-title">Nieuw project</h1>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ export default async function NieuweKlusPage() {
           </div>
 
           <div className="card" style={{ marginBottom: 16 }}>
-            <div className="section-label">Klus details</div>
+            <div className="section-label">Project details</div>
             <div className="form-group">
               <label className="form-label">Type werk</label>
               <select className="form-ctrl" name="type_werk">
@@ -127,7 +127,7 @@ export default async function NieuweKlusPage() {
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="submit" className="btn btn-primary">
               <span className="nav-ico" style={{ fontSize: 18 }}>save</span>
-              Klus aanmaken
+              Project aanmaken
             </button>
             <Link href="/klussen" className="btn btn-ghost">Annuleren</Link>
           </div>

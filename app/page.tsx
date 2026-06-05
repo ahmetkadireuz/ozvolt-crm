@@ -64,7 +64,7 @@ export default async function Dashboard() {
         <h1 className="page-title">Overzicht</h1>
         <Link href="/klussen/nieuw" className="btn btn-primary">
           <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
-          Nieuwe klus
+          Nieuw project
         </Link>
       </div>
 
@@ -79,7 +79,7 @@ export default async function Dashboard() {
         </Link>
         <Link href="/klussen" style={{ textDecoration: 'none' }}>
           <div className="stat-card" style={{ borderLeft: '3px solid #ea580c' }}>
-            <div className="stat-label">Open klussen</div>
+            <div className="stat-label">Open projecten</div>
             <div className="stat-value">{s.open}</div>
             <div className="stat-sub">In behandeling</div>
           </div>
@@ -113,7 +113,7 @@ export default async function Dashboard() {
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div className="section-label">Nieuwe aanvragen</div>
-              <Link href="/klussen?status=nieuw" style={{ fontSize: '.78rem', color: '#3b82f6', textDecoration: 'none' }}>Alle klussen →</Link>
+              <Link href="/klussen?status=nieuw" style={{ fontSize: '.78rem', color: '#3b82f6', textDecoration: 'none' }}>Alle projecten →</Link>
             </div>
             {nieuweKlussen.length === 0 ? (
               <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: 0 }}>Geen nieuwe aanvragen.</p>

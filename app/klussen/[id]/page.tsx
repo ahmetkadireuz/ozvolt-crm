@@ -10,7 +10,7 @@ import KlusActions from './KlusActions'
 import PuntenEditor from './PuntenEditor'
 import OfferteKoppelen from './OfferteKoppelen'
 
-export const metadata: Metadata = { title: 'Klus detail' }
+export const metadata: Metadata = { title: 'Project detail' }
 
 const STATUSES = ['nieuw','in_behandeling','offerte_gestuurd','gepland','afgerond']
 const STATUS_LABELS: Record<string, string> = {
@@ -67,7 +67,7 @@ export default async function KlusDetailPage({
           </Link>
           <div>
             <h1 className="page-title" style={{ marginBottom: 2 }}>{klus.klant_naam}</h1>
-            <span className="mono" style={{ color: '#8ba8c4' }}>Klus #{klus.id} · {new Date(klus.aangemaakt_op).toLocaleDateString('nl-NL')}</span>
+            <span className="mono" style={{ color: '#8ba8c4' }}>Project #{klus.id} · {new Date(klus.aangemaakt_op).toLocaleDateString('nl-NL')}</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -129,7 +129,7 @@ export default async function KlusDetailPage({
           <div className="card">
             <div className="section-label">Gekoppelde documenten</div>
 
-            {offertesRows.length === 0 && facturenRows.length === 0 && afsprakenRows.length === 0 && (
+            {offertesRows.length === 0 && facturenRows.length === 0 && (
               <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen documenten voor deze klus.</p>
             )}
 
@@ -153,27 +153,6 @@ export default async function KlusDetailPage({
               </Link>
             ))}
 
-            {afsprakenRows.map((a: any) => (
-              <div key={a.id} style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #f1f5f9' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <Link href={`/afspraken/${a.id}`} style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem', textDecoration: 'none' }}>
-                      {a.titel || `OZWA-${String(a.afspraaknummer).padStart(4,'0')}`}
-                    </Link>
-                    <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(a.datum).toLocaleDateString('nl-NL')}</span>
-                  </div>
-                  <StatusBadge status={a.status} />
-                </div>
-                <WerkafspraakInlineEditor
-                  afspraakId={a.id}
-                  klantId={klus.klant_id}
-                  klusId={klusId}
-                  initialItems={Array.isArray(a.afspraken) ? a.afspraken : []}
-                  titel={a.titel ?? ''}
-                  datum={String(a.datum).slice(0, 10)}
-                />
-              </div>
-            ))}
 
             <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
               <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>

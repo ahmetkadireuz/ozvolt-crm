@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { sql } from '@/lib/db'
 import KlussenTable from './KlussenTable'
 
-export const metadata: Metadata = { title: 'Klussen' }
+export const metadata: Metadata = { title: 'Projecten' }
 
 const STATUS_TABS = [
   { key: 'alles', label: 'Alles' },
@@ -59,10 +59,10 @@ export default async function KlussenPage({
   return (
     <div>
       <div className="topbar">
-        <h1 className="page-title">Klussen</h1>
+        <h1 className="page-title">Projecten</h1>
         <Link href="/klussen/nieuw" className="btn btn-primary">
           <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
-          Nieuwe klus
+          Nieuw project
         </Link>
       </div>
 

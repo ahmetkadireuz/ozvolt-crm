@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 
 const navMain = [
   { key: '/',           icon: 'dashboard',        label: 'Overzicht' },
-  { key: '/klussen',    icon: 'construction',      label: 'Klussen' },
+  { key: '/klussen',    icon: 'construction',      label: 'Projecten' },
   { key: '/agenda',     icon: 'calendar_month',    label: 'Agenda' },
   { key: '/klanten',    icon: 'groups',            label: 'Klanten' },
   { key: '/offertes',   icon: 'description',       label: 'Offertes' },
@@ -99,7 +99,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
       <nav className="mobile-tab-bar">
         {[
           { href: '/',             icon: 'dashboard',     label: 'Overzicht' },
-          { href: '/klussen',      icon: 'construction',  label: 'Klussen' },
+          { href: '/klussen',      icon: 'construction',  label: 'Projecten' },
           { href: '/agenda',       icon: 'calendar_month',label: 'Agenda' },
           { href: '/whatsapp',     icon: 'chat',          label: 'WhatsApp' },
           { href: '/notificaties', icon: 'notifications', label: 'Meldingen' },
