@@ -19,6 +19,21 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
     router.refresh()
   }
 
+  const [portaalLink, setPortaalLink] = useState('')
+  const [linkBezig, setLinkBezig] = useState(false)
+
+  async function maakPortaalLink() {
+    setLinkBezig(true)
+    const res = await fetch('/api/klant/sessie-aanmaken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ klantId }),
+    })
+    const data = await res.json()
+    setPortaalLink(data.link ?? '')
+    setLinkBezig(false)
+  }
+
   async function deleteKlant() {
     if (!confirm(`${klant.naam} verwijderen? Alle klussen, offertes en facturen worden ook verwijderd.`)) return
     await fetch(`/api/klanten/${klantId}`, { method: 'DELETE' })
@@ -67,6 +82,34 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
         <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center' }}>
           {saving ? 'Opslaan…' : 'Wijzigingen opslaan'}
         </button>
+      </div>
+
+      {/* Klantportaal link */}
+      <div className="card">
+        <div className="section-label">Klantportaal</div>
+        <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 10px' }}>
+          Stuur de klant een beveiligde link zodat hij zijn dossier kan bekijken (geldig 30 dagen).
+        </p>
+        <button type="button" className="btn btn-primary btn-sm" onClick={maakPortaalLink} disabled={linkBezig} style={{ width: '100%', justifyContent: 'center' }}>
+          {linkBezig ? 'Aanmaken...' : '🔗 Portaallink aanmaken'}
+        </button>
+        {portaalLink && (
+          <div style={{ marginTop: 10 }}>
+            <input
+              readOnly
+              value={portaalLink}
+              onClick={e => (e.target as HTMLInputElement).select()}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 11, fontFamily: 'monospace', boxSizing: 'border-box' }}
+            />
+            <button
+              type="button"
+              onClick={() => { navigator.clipboard.writeText(portaalLink); alert('Link gekopieerd!') }}
+              style={{ marginTop: 6, width: '100%', padding: '7px', borderRadius: 6, background: '#f1f5f9', border: '1px solid #cbd5e1', fontSize: 12, cursor: 'pointer' }}
+            >
+              📋 Kopiëren
+            </button>
+          </div>
+        )}
       </div>
 
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteKlant} style={{ width: '100%', justifyContent: 'center' }}>

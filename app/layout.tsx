@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   description: 'Ozvolt Elektrotechniek CRM-portaal',
 }
 
-const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte/', '/werkafspraak/']
-const BARE_PATHS = ['/offerte/', '/werkafspraak/'] // volledig kaal — geen html wrapper
+const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte/', '/werkafspraak/', '/klant']
+const BARE_PATHS = ['/offerte/', '/werkafspraak/', '/klant'] // volledig kaal — eigen layout
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers()

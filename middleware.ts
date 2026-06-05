@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout', '/api/webhooks', '/offerte', '/werkafspraak', '/api/offertes/accepteren', '/api/afspraken/accepteren']
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout', '/api/webhooks', '/offerte', '/werkafspraak', '/api/offertes/accepteren', '/api/afspraken/accepteren', '/klant/login', '/api/klant/login']
 const SESSION_COOKIE = 'ozvolt_crm_session'
 
 export async function middleware(req: NextRequest) {
@@ -15,6 +15,13 @@ export async function middleware(req: NextRequest) {
   res.headers.set('x-pathname', pathname)
 
   if (isPublic) return res
+
+  // Klantportaal routes — aparte cookie check
+  if (pathname.startsWith('/klant')) {
+    const klantToken = req.cookies.get('ozvolt_klant')?.value
+    if (!klantToken) return NextResponse.redirect(new URL('/klant/geen-toegang', req.url))
+    return res
+  }
 
   const token = req.cookies.get(SESSION_COOKIE)?.value
   if (!token) {
