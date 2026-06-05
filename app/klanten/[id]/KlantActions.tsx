@@ -7,6 +7,8 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
   const router = useRouter()
   const [form, setForm] = useState({ naam: klant.naam, email: klant.email ?? '', telefoon: klant.telefoon ?? '', locatie: klant.locatie ?? '', type: klant.type ?? 'Particulier', status_notitie: klant.status_notitie ?? '' })
   const [saving, setSaving] = useState(false)
+  const [portaalLink, setPortaalLink] = useState('')
+  const [linkBezig, setLinkBezig] = useState(false)
 
   async function save() {
     setSaving(true)
@@ -18,9 +20,6 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
     setSaving(false)
     router.refresh()
   }
-
-  const [portaalLink, setPortaalLink] = useState('')
-  const [linkBezig, setLinkBezig] = useState(false)
 
   async function maakPortaalLink() {
     setLinkBezig(true)
