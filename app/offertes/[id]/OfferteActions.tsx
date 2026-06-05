@@ -62,15 +62,20 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
   async function maakMollieBetaallinks() {
     if (!confirm('Moneybird betaallinks aanmaken? Factuur wordt aangemaakt in Moneybird en gekoppeld aan ABN AMRO via Ponto.')) return
     setMollieLoading(true)
-    const res = await fetch(`/api/offertes/${offerteId}/betaallinks`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ betaling_50_50: offerte.betaling_50_50 }),
-    })
-    const data = await res.json()
-    setMollieLoading(false)
-    if (data.ok) { alert('Betaallinks aangemaakt!'); router.refresh() }
-    else alert('Fout: ' + (data.error ?? 'Onbekend'))
+    try {
+      const res = await fetch(`/api/offertes/${offerteId}/betaallinks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ betaling_50_50: offerte.betaling_50_50 }),
+      })
+      const data = await res.json()
+      if (data.ok) { alert('Betaallinks aangemaakt!'); router.refresh() }
+      else alert('Fout: ' + (data.error ?? 'Onbekend'))
+    } catch (err: any) {
+      alert('Verbindingsfout: ' + (err?.message ?? 'Onbekend'))
+    } finally {
+      setMollieLoading(false)
+    }
   }
 
   async function deleteOfferte() {
