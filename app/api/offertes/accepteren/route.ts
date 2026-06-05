@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen, formatEuro } from '@/lib/db'
 import { sendMail, offerteBevestigingMailHtml } from '@/lib/mail'
-import { mbHaalOfMaakContact, mbMaakBetaalLink } from '@/lib/moneybird'
+import { maakBetaalLink } from '@/lib/mollie'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -51,37 +51,48 @@ export async function POST(req: NextRequest) {
     )
   `
 
-  // Maak automatisch Moneybird betaallink(s) aan na ondertekening
+  // Maak automatisch Mollie betaallink(s) aan na ondertekening
   let betaalUrl: string | null = null
   let betaalUrl2: string | null = null
-  try {
-    const contact = await mbHaalOfMaakContact({
-      id: offerte.klant_id,
-      naam: offerte.klant_naam,
-      email: offerte.klant_email,
-      telefoon: offerte.klant_telefoon,
-      type: offerte.klant_type,
-    })
-    const datum = offerte.datum?.slice(0, 10) ?? new Date().toISOString().slice(0, 10)
-    const btwPct = Number(offerte.btw_pct ?? 21)
+  if (process.env.MOLLIE_API_KEY) {
+    try {
+      const webhookUrl = `${siteUrl}/api/mollie/webhook`
 
-    if (offerte.betaling_50_50) {
-      const halveBedrag = totalen.inclBtw / 2
-      const [r1, r2] = await Promise.all([
-        mbMaakBetaalLink({ contactId: contact.id, omschrijving: `${offerteNr} — eerste termijn (50%)`, bedrag: halveBedrag, btwPct, referentie: `${offerteNr}-T1`, datum }),
-        mbMaakBetaalLink({ contactId: contact.id, omschrijving: `${offerteNr} — tweede termijn (50%)`, bedrag: halveBedrag, btwPct, referentie: `${offerteNr}-T2`, datum }),
-      ])
-      betaalUrl = r1.betaalUrl
-      betaalUrl2 = r2.betaalUrl
-      await sql`UPDATE offertes SET betaal_url = ${betaalUrl}, betaal_url_2 = ${betaalUrl2}, bijgewerkt_op = NOW() WHERE id = ${offerte.id}`
-    } else {
-      const r = await mbMaakBetaalLink({ contactId: contact.id, omschrijving: `${offerteNr} — ${offerte.klant_naam}`, bedrag: totalen.inclBtw, btwPct, referentie: offerteNr, datum })
-      betaalUrl = r.betaalUrl
-      await sql`UPDATE offertes SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${offerte.id}`
+      if (offerte.betaling_50_50) {
+        const halveBedrag = totalen.inclBtw / 2
+        const [url1, url2] = await Promise.all([
+          maakBetaalLink({
+            bedrag: halveBedrag,
+            omschrijving: `${offerteNr} — eerste termijn (50%) — ${offerte.klant_naam}`,
+            redirectUrl: `${siteUrl}/betaling-ontvangen`,
+            webhookUrl,
+            metadata: { offerteId: String(offerte.id), termijn: '1', offerteNr },
+          }),
+          maakBetaalLink({
+            bedrag: halveBedrag,
+            omschrijving: `${offerteNr} — tweede termijn (50%) — ${offerte.klant_naam}`,
+            redirectUrl: `${siteUrl}/betaling-ontvangen`,
+            webhookUrl,
+            metadata: { offerteId: String(offerte.id), termijn: '2', offerteNr },
+          }),
+        ])
+        betaalUrl = url1
+        betaalUrl2 = url2
+        await sql`UPDATE offertes SET betaal_url = ${betaalUrl}, betaal_url_2 = ${betaalUrl2}, bijgewerkt_op = NOW() WHERE id = ${offerte.id}`
+      } else {
+        betaalUrl = await maakBetaalLink({
+          bedrag: totalen.inclBtw,
+          omschrijving: `${offerteNr} — ${offerte.klant_naam}`,
+          redirectUrl: `${siteUrl}/betaling-ontvangen`,
+          webhookUrl,
+          metadata: { offerteId: String(offerte.id), offerteNr },
+        })
+        await sql`UPDATE offertes SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${offerte.id}`
+      }
+    } catch (err) {
+      console.error('[mollie betaallink na acceptatie]', err)
+      // Niet fataal — betaallink kan later handmatig aangemaakt worden
     }
-  } catch (err) {
-    console.error('[moneybird betaallink]', err)
-    // Niet fataal — offerte is al geaccepteerd, betaallink verschijnt later via handmatige knop
   }
 
   // Stuur bevestigingsemail naar Ozvolt

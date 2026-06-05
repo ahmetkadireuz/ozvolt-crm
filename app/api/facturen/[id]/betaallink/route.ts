@@ -25,6 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       bedrag: totalen.inclBtw,
       omschrijving: `Betaalnota ${factuur.factuurnummer} — ${factuur.klant_naam}`,
       redirectUrl: `${siteUrl}/betaling-ontvangen`,
+      webhookUrl: `${siteUrl}/api/mollie/webhook`,
       metadata: { factuurId: String(factuurId), factuurNr: factuur.factuurnummer },
     })
 

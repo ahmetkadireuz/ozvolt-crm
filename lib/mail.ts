@@ -311,3 +311,155 @@ export function factuurMailHtml(params: {
 
   return mailWrapper({ accentColor: BRAND, headerBg: BRAND, tagline: 'Betaalnota', body })
 }
+
+// ── Betaald bevestiging (naar klant) — betaalnota PDF + werkafspraken ─────────
+
+export function betaaldBevestigingMailHtml(params: {
+  klantNaam: string
+  factuurNr: string
+  bedrag: string
+  afspraakNr?: string
+  afspraken?: Array<{ omschrijving: string; toelichting?: string; verantwoordelijke?: string }>
+  afspraakDatum?: string
+}) {
+  const { klantNaam, factuurNr, bedrag, afspraakNr, afspraken, afspraakDatum } = params
+  const voornaam = klantNaam.split(' ')[0]
+
+  const afsprakenLijst = afspraken && afspraken.length > 0
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+              style="border:1px solid #e4e9f0;border-radius:8px;overflow:hidden;margin-bottom:24px;">
+        ${afspraken.map((a, i) => `
+          <tr style="border-bottom:1px solid #e4e9f0;">
+            <td style="padding:12px 16px;background:${i % 2 === 1 ? '#f8fafd' : '#ffffff'};">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="vertical-align:top;padding-right:12px;">
+                  <div style="width:24px;height:24px;border-radius:50%;background:#1b2d4a;color:#fff;
+                       font-size:11px;font-weight:700;text-align:center;line-height:24px;font-family:${F};">${i + 1}</div>
+                </td>
+                <td style="vertical-align:top;">
+                  <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">${a.omschrijving}</p>
+                  ${a.toelichting ? `<p style="margin:0 0 4px;font-size:12px;color:#64748b;font-family:${F};line-height:1.6;">${a.toelichting}</p>` : ''}
+                  ${a.verantwoordelijke === 'klant' ? `<span style="display:inline-block;background:#fef9c3;color:#92400e;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:${F};">Regelt u zelf</span>` : ''}
+                  ${a.verantwoordelijke === 'ozvolt' ? `<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:${F};">Regelt Ozvolt</span>` : ''}
+                </td>
+              </tr>
+              </table>
+            </td>
+          </tr>`).join('')}
+       </table>`
+    : ''
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;
+       letter-spacing:0.16em;font-family:${F};">✓ Betaling ontvangen</p>
+    <p style="margin:0 0 28px;font-size:30px;font-weight:900;color:#1b2d4a;letter-spacing:-0.8px;
+       font-family:${F};line-height:1.1;">Bedankt, ${voornaam}!</p>
+
+    <p style="margin:0 0 10px;font-size:15px;color:#1b2d4a;line-height:1.5;font-family:${F};">
+      Uw betaling is in goede orde ontvangen.
+    </p>
+    <p style="margin:0 0 32px;font-size:14.5px;color:#4a5568;line-height:1.9;font-family:${F};">
+      De <strong style="color:#1b2d4a;">betaalnota</strong> vindt u als bijlage bij deze e-mail.
+      ${afspraakNr ? `Hieronder ziet u een overzicht van de gemaakte werkafspraken.` : ''}
+    </p>
+
+    ${infoBox([
+      { label: 'Betaalnota', value: factuurNr, borderRight: true },
+      { label: 'Ontvangen bedrag', value: bedrag, valueColor: '#16a34a', borderRight: !!afspraakNr },
+      ...(afspraakNr ? [{ label: 'Werkafspraken', value: afspraakNr }] : []),
+    ])}
+
+    ${afspraken && afspraken.length > 0 ? `
+    <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:#7b92b2;text-transform:uppercase;
+       letter-spacing:0.14em;font-family:${F};">Overzicht werkafspraken${afspraakDatum ? ` — ${afspraakDatum}` : ''}</p>
+    ${afsprakenLijst}
+    ` : ''}
+
+    ${divider()}
+
+    <p style="margin:0 0 6px;font-size:14px;color:#1b2d4a;font-family:${F};">
+      Heeft u nog vragen? Neem gerust contact op.
+    </p>
+    <p style="margin:0;font-size:13.5px;color:#4a5568;line-height:1.8;font-family:${F};">
+      Met vriendelijke groet,<br>
+      <strong style="color:#1b2d4a;font-size:15px;">Ahmet Öz</strong><br>
+      <span style="color:#9daab8;font-size:12px;">Ozvolt Elektrotechniek &nbsp;·&nbsp; 06 449 98 789</span>
+    </p>`
+
+  return mailWrapper({ accentColor: GREEN, headerBg: '#15622e', tagline: 'Betaling bevestigd', body })
+}
+
+// ── Werkafspraken bevestiging (naar klant na ondertekening) ───────────────────
+
+export function werkafspraakBevestigingMailHtml(params: {
+  klantNaam: string
+  afspraakNr: string
+  afspraken: Array<{ omschrijving: string; toelichting?: string; verantwoordelijke?: string }>
+  datum?: string
+}) {
+  const { klantNaam, afspraakNr, afspraken, datum } = params
+  const voornaam = klantNaam.split(' ')[0]
+
+  const afsprakenLijst = afspraken.length > 0
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+              style="border:1px solid #e4e9f0;border-radius:8px;overflow:hidden;margin-bottom:28px;">
+        ${afspraken.map((a, i) => `
+          <tr style="${i < afspraken.length - 1 ? 'border-bottom:1px solid #e4e9f0;' : ''}">
+            <td style="padding:12px 16px;background:${i % 2 === 1 ? '#f8fafd' : '#ffffff'};">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="vertical-align:top;padding-right:12px;">
+                  <div style="width:24px;height:24px;border-radius:50%;background:#1b2d4a;color:#fff;
+                       font-size:11px;font-weight:700;text-align:center;line-height:24px;font-family:${F};">${i + 1}</div>
+                </td>
+                <td style="vertical-align:top;">
+                  <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">${a.omschrijving}</p>
+                  ${a.toelichting ? `<p style="margin:0 0 4px;font-size:12px;color:#64748b;font-family:${F};line-height:1.6;">${a.toelichting}</p>` : ''}
+                  ${a.verantwoordelijke === 'klant' ? `<span style="display:inline-block;background:#fef9c3;color:#92400e;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:${F};">Regelt u zelf</span>` : ''}
+                  ${a.verantwoordelijke === 'ozvolt' ? `<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:${F};">Regelt Ozvolt</span>` : ''}
+                </td>
+              </tr>
+              </table>
+            </td>
+          </tr>`).join('')}
+       </table>`
+    : ''
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#7b92b2;text-transform:uppercase;
+       letter-spacing:0.16em;font-family:${F};">✓ Werkafspraken bevestigd</p>
+    <p style="margin:0 0 28px;font-size:30px;font-weight:900;color:#1b2d4a;letter-spacing:-0.8px;
+       font-family:${F};line-height:1.1;">${afspraakNr}</p>
+
+    <p style="margin:0 0 10px;font-size:16px;color:#1b2d4a;line-height:1.5;font-family:${F};">
+      Beste <strong>${voornaam}</strong>,
+    </p>
+    <p style="margin:0 0 32px;font-size:14.5px;color:#4a5568;line-height:1.9;font-family:${F};">
+      Bedankt voor uw bevestiging. Hieronder vindt u een overzicht van de gemaakte
+      <strong style="color:#1b2d4a;">werkafspraken</strong>${datum ? ` van ${datum}` : ''}.
+      Bewaar deze e-mail als referentie.
+    </p>
+
+    ${infoBox([
+      { label: 'Werkafspraken', value: afspraakNr, borderRight: !!datum },
+      ...(datum ? [{ label: 'Datum', value: datum }] : []),
+    ])}
+
+    <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:#7b92b2;text-transform:uppercase;
+       letter-spacing:0.14em;font-family:${F};">Afgesproken werkzaamheden</p>
+    ${afsprakenLijst}
+
+    ${divider()}
+
+    <p style="margin:0 0 6px;font-size:14px;color:#1b2d4a;font-family:${F};">
+      Heeft u vragen over de planning? Bel of mail ons gerust.
+    </p>
+    <p style="margin:0;font-size:13.5px;color:#4a5568;line-height:1.8;font-family:${F};">
+      Met vriendelijke groet,<br>
+      <strong style="color:#1b2d4a;font-size:15px;">Ahmet Öz</strong><br>
+      <span style="color:#9daab8;font-size:12px;">Ozvolt Elektrotechniek &nbsp;·&nbsp; 06 449 98 789</span>
+    </p>`
+
+  return mailWrapper({ accentColor: BRAND, headerBg: BRAND, tagline: 'Werkafspraken', body })
+}

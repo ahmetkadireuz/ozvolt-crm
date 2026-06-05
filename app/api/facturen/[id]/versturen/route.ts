@@ -34,6 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         bedrag: totalen.inclBtw,
         omschrijving: `Betaalnota ${factuur.factuurnummer} — ${factuur.klant_naam}`,
         redirectUrl: `${siteUrl}/betaling-ontvangen`,
+        webhookUrl: `${siteUrl}/api/mollie/webhook`,
         metadata: { factuurId: String(factuurId), factuurNr: factuur.factuurnummer },
       })
       await sql`UPDATE facturen SET betaal_url = ${betaalUrl} WHERE id = ${factuurId}`
