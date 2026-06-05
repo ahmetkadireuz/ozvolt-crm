@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatEuro } from '@/lib/utils'
 
 export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean }) {
   const router = useRouter()
+  const [mollieLoading, setMollieLoading] = useState(false)
 
   async function updateStatus(status: string) {
     await fetch(`/api/facturen/${factuurId}`, {
@@ -15,8 +17,23 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
     router.refresh()
   }
 
+  async function maakMollieBetaallink() {
+    if (!confirm('Mollie betaallink aanmaken voor deze betaalnota?')) return
+    setMollieLoading(true)
+    try {
+      const res = await fetch(`/api/facturen/${factuurId}/betaallink`, { method: 'POST' })
+      const data = await res.json()
+      if (data.ok) { router.refresh() }
+      else alert('Fout: ' + (data.error ?? 'Mollie fout'))
+    } catch (err: any) {
+      alert('Fout: ' + (err?.message ?? 'Onbekend'))
+    } finally {
+      setMollieLoading(false)
+    }
+  }
+
   async function versturen() {
-    if (!confirm('Factuur per e-mail verzenden naar de klant?')) return
+    if (!confirm('Betaalnota per e-mail versturen naar de klant? De PDF wordt bijgevoegd.')) return
     const res = await fetch(`/api/facturen/${factuurId}/versturen`, { method: 'POST' })
     const data = await res.json()
     if (data.ok) { updateStatus('verstuurd'); router.refresh() }
@@ -89,12 +106,39 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
             Markeer als betaald
           </button>
 
-          {/* Moneybird */}
+          {/* Mollie betaallink */}
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8, marginTop: 2 }}>
+            {factuur.betaal_url ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700 }}>✓ Mollie betaallink actief</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input className="form-ctrl" value={factuur.betaal_url} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
+                  <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren"
+                    onClick={() => navigator.clipboard.writeText(factuur.betaal_url)}>
+                    <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>content_copy</span>
+                  </button>
+                </div>
+                <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+                  onClick={maakMollieBetaallink} disabled={mollieLoading}>
+                  <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>refresh</span>
+                  {mollieLoading ? 'Bezig…' : 'Nieuwe link aanmaken'}
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+                onClick={maakMollieBetaallink} disabled={mollieLoading}>
+                <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>payments</span>
+                {mollieLoading ? 'Bezig…' : 'Mollie betaallink aanmaken'}
+              </button>
+            )}
+          </div>
+
+          {/* Moneybird boekhouden */}
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8, marginTop: 2 }}>
             {factuur.moneybird_id ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
-                <span style={{ fontSize: '.78rem', color: '#5b7fa6', flex: 1 }}>In Moneybird</span>
+                <span style={{ fontSize: '.78rem', color: '#5b7fa6', flex: 1 }}>In Moneybird (boekhouden)</span>
                 {factuur.moneybird_url && (
                   <a href={factuur.moneybird_url} target="_blank" rel="noopener noreferrer"
                     className="btn btn-ghost btn-sm" style={{ padding: '3px 8px' }}>
@@ -103,18 +147,14 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
                 )}
               </div>
             ) : !mbConfigured ? (
-              <div style={{ fontSize: '.75rem', color: '#f59e0b', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 10px' }}>
-                ⚠️ Moneybird API keys niet ingesteld in Vercel.
+              <div style={{ fontSize: '.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                Moneybird niet geconfigureerd
               </div>
             ) : (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={syncMoneybird}
-              >
+              <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+                onClick={syncMoneybird}>
                 <img src="https://www.moneybird.com/favicon.ico" style={{ width: 14, height: 14 }} alt="" />
-                Stuur naar Moneybird
+                Verwerken in Moneybird
               </button>
             )}
           </div>

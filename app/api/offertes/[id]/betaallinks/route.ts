@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen } from '@/lib/db'
 import { requireSession } from '@/lib/session'
-import { mbHaalOfMaakContact, mbMaakBetaalLink } from '@/lib/moneybird'
+import { maakBetaalLink } from '@/lib/mollie'
 
-// Maakt Moneybird betaallinks aan voor een offerte (volledig of 50/50)
-// Geld gaat direct naar ABN AMRO via Ponto-koppeling — geen tussenpersoon
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
   const { id } = await params
@@ -13,7 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const split = !!body.betaling_50_50
 
   const rows = await sql`
-    SELECT o.*, k.naam AS klant_naam, k.email AS klant_email, k.telefoon AS klant_telefoon, k.type AS klant_type
+    SELECT o.*, k.naam AS klant_naam
     FROM offertes o JOIN klanten k ON k.id = o.klant_id
     WHERE o.id = ${offerteId}
   `
@@ -23,67 +21,52 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const regels = Array.isArray(offerte.regels) ? offerte.regels : JSON.parse(offerte.regels ?? '[]')
   const totalen = berekenTotalen(regels, Number(offerte.korting_pct ?? 0), Number(offerte.btw_pct ?? 21))
   const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4, '0')}`
-  const datum = offerte.datum?.slice(0, 10) ?? new Date().toISOString().slice(0, 10)
+  const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
+  const redirectUrl = `${siteUrl}/betaling-ontvangen`
 
   try {
-    // Haal of maak Moneybird contact
-    const contact = await mbHaalOfMaakContact({
-      id: offerte.klant_id,
-      naam: offerte.klant_naam,
-      email: offerte.klant_email,
-      telefoon: offerte.klant_telefoon,
-      type: offerte.klant_type,
-    })
-
     if (split) {
       const halveBedrag = totalen.inclBtw / 2
 
-      const [result1, result2] = await Promise.all([
-        mbMaakBetaalLink({
-          contactId: contact.id,
+      const [url1, url2] = await Promise.all([
+        maakBetaalLink({
+          bedrag: halveBedrag,
           omschrijving: `${offerteNr} — eerste termijn (50%) — ${offerte.klant_naam}`,
-          bedrag: halveBedrag,
-          btwPct: Number(offerte.btw_pct ?? 21),
-          referentie: `${offerteNr}-T1`,
-          datum,
+          redirectUrl,
+          metadata: { offerteId: String(offerteId), termijn: '1', offerteNr },
         }),
-        mbMaakBetaalLink({
-          contactId: contact.id,
-          omschrijving: `${offerteNr} — tweede termijn (50%) — ${offerte.klant_naam}`,
+        maakBetaalLink({
           bedrag: halveBedrag,
-          btwPct: Number(offerte.btw_pct ?? 21),
-          referentie: `${offerteNr}-T2`,
-          datum,
+          omschrijving: `${offerteNr} — tweede termijn (50%) — ${offerte.klant_naam}`,
+          redirectUrl,
+          metadata: { offerteId: String(offerteId), termijn: '2', offerteNr },
         }),
       ])
 
       await sql`
         UPDATE offertes SET
           betaling_50_50 = true,
-          betaal_url = ${result1.betaalUrl},
-          betaal_url_2 = ${result2.betaalUrl},
+          betaal_url = ${url1},
+          betaal_url_2 = ${url2},
           bijgewerkt_op = NOW()
         WHERE id = ${offerteId}
       `
-      return NextResponse.json({ ok: true, betaal_url: result1.betaalUrl, betaal_url_2: result2.betaalUrl })
+      return NextResponse.json({ ok: true, betaal_url: url1, betaal_url_2: url2 })
     } else {
-      const result = await mbMaakBetaalLink({
-        contactId: contact.id,
-        omschrijving: `${offerteNr} — ${offerte.klant_naam}`,
+      const url = await maakBetaalLink({
         bedrag: totalen.inclBtw,
-        btwPct: Number(offerte.btw_pct ?? 21),
-        referentie: offerteNr,
-        datum,
+        omschrijving: `${offerteNr} — ${offerte.klant_naam}`,
+        redirectUrl,
+        metadata: { offerteId: String(offerteId), offerteNr },
       })
 
       await sql`
-        UPDATE offertes SET betaal_url = ${result.betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${offerteId}
+        UPDATE offertes SET betaal_url = ${url}, bijgewerkt_op = NOW() WHERE id = ${offerteId}
       `
-      return NextResponse.json({ ok: true, betaal_url: result.betaalUrl })
+      return NextResponse.json({ ok: true, betaal_url: url })
     }
   } catch (err: any) {
-    console.error('[betaallinks]', err)
-    const msg = err?.message ?? String(err) ?? 'Moneybird fout'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[mollie betaallinks offerte]', err)
+    return NextResponse.json({ error: err?.message ?? 'Mollie fout' }, { status: 500 })
   }
 }

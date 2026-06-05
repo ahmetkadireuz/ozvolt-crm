@@ -60,7 +60,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
   const [mollieLoading, setMollieLoading] = useState(false)
 
   async function maakMollieBetaallinks() {
-    if (!confirm('Moneybird betaallinks aanmaken? Factuur wordt aangemaakt in Moneybird en gekoppeld aan ABN AMRO via Ponto.')) return
+    if (!confirm('Mollie betaallink(s) aanmaken voor dit werkvoorstel?')) return
     setMollieLoading(true)
     try {
       const res = await fetch(`/api/offertes/${offerteId}/betaallinks`, {
@@ -227,9 +227,9 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         </Link>
       ))}
 
-      {/* Moneybird betaallinks */}
+      {/* Mollie betaallinks */}
       <div className="card">
-        <div className="section-label">Online betaling (via Moneybird → ABN AMRO)</div>
+        <div className="section-label">Online betaling (via Mollie)</div>
         {offerte.betaal_url ? (
           <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div>
@@ -262,10 +262,10 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           disabled={mollieLoading}
         >
           <span className="nav-ico" style={{ fontSize: 16 }}>payments</span>
-          {mollieLoading ? 'Bezig...' : offerte.betaal_url ? 'Betaallinks vernieuwen' : 'Betaallinks aanmaken via Moneybird'}
+          {mollieLoading ? 'Bezig...' : offerte.betaal_url ? 'Betaallinks vernieuwen' : 'Betaallinks aanmaken via Mollie'}
         </button>
         <div style={{ fontSize: '.72rem', color: '#8ba8c4', marginTop: 6 }}>
-          Factuur wordt aangemaakt in Moneybird · Ponto synct betaling naar ABN AMRO
+          Klant betaalt via iDEAL, creditcard of andere betaalmethode
         </div>
       </div>
 

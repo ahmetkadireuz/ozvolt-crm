@@ -134,7 +134,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 <body>
 
 <div class="printbar">
-  <span class="printbar-info">Factuur ${f.factuurnummer} — ${f.klant_naam}</span>
+  <span class="printbar-info">Betaalnota ${f.factuurnummer} — ${f.klant_naam}</span>
   <div class="printbar-btns">
     <button class="btn-p" onclick="window.print()">🖨 Afdrukken / PDF opslaan</button>
     <button class="btn-x" onclick="window.close()">✕</button>
@@ -156,7 +156,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     <div class="header-right">
       <div>
         <div class="doc-label">Document</div>
-        <div class="doc-type">Factuur</div>
+        <div class="doc-type">Betaalnota</div>
         <div class="doc-nr">${f.factuurnummer}</div>
       </div>
       <div class="doc-status ${f.status === 'betaald' ? 'status-betaald' : teLaat ? 'status-laat' : 'status-open'}">

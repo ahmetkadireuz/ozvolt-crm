@@ -49,8 +49,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await sendMail({
       to: offerte.klant_email,
       subject: werkafspraakNr
-        ? `Offerte ${offerteNr} + werkafspraken — Ozvolt Elektrotechniek`
-        : `Uw offerte ${offerteNr} — Ozvolt Elektrotechniek`,
+        ? `Werkvoorstel ${offerteNr} + werkafspraken — Ozvolt Elektrotechniek`
+        : `Uw werkvoorstel ${offerteNr} — Ozvolt Elektrotechniek`,
       html: offerteMailHtml({
         klantNaam: offerte.klant_naam,
         offerteNr,
