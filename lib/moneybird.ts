@@ -83,13 +83,14 @@ export async function mbMaakFactuur(params: {
     ledger_account_id: null,
   }))
 
+  const datumStr = new Date(params.factuurdatum).toISOString().slice(0, 10)
   const vervaldatum = new Date(params.factuurdatum)
   vervaldatum.setDate(vervaldatum.getDate() + params.betalingstermijn)
 
   const payload = {
     sales_invoice: {
       contact_id: params.contactId,
-      invoice_date: params.factuurdatum.slice(0, 10),
+      invoice_date: datumStr,
       due_date: vervaldatum.toISOString().slice(0, 10),
       reference: params.factuurNummer,
       notes: params.notities ?? '',
