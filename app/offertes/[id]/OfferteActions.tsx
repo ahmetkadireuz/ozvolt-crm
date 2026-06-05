@@ -225,10 +225,26 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
       <div className="card">
         <div className="section-label">Online betaling (via Moneybird → ABN AMRO)</div>
         {offerte.betaal_url ? (
-          <div>
-            <div style={{ fontSize: '.72rem', color: '#16a34a', marginBottom: 6, fontWeight: 600 }}>✓ Betaallink actief</div>
+          <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div>
+              <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700, marginBottom: 4 }}>✓ Betaallink {offerte.betaling_50_50 ? '(termijn 1)' : ''}</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input className="form-ctrl" value={offerte.betaal_url} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
+                <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren" onClick={() => navigator.clipboard.writeText(offerte.betaal_url)}>
+                  <span className="nav-ico" style={{ fontSize: 16 }}>content_copy</span>
+                </button>
+              </div>
+            </div>
             {offerte.betaling_50_50 && offerte.betaal_url_2 && (
-              <div style={{ fontSize: '.72rem', color: '#16a34a', marginBottom: 6, fontWeight: 600 }}>✓ Tweede termijn actief</div>
+              <div>
+                <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700, marginBottom: 4 }}>✓ Betaallink (termijn 2)</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input className="form-ctrl" value={offerte.betaal_url_2} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
+                  <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren" onClick={() => navigator.clipboard.writeText(offerte.betaal_url_2)}>
+                    <span className="nav-ico" style={{ fontSize: 16 }}>content_copy</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         ) : null}
