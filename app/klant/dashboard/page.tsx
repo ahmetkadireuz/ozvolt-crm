@@ -9,11 +9,12 @@ export default async function KlantDashboard() {
   const klantId = await getKlantSessie()
   if (!klantId) redirect('/klant/geen-toegang')
 
-  const [klantRows, klussen, offertes, facturen, rapporten, documenten] = await Promise.all([
+  const [klantRows, klussen, offertes, facturen, werkafspraken, rapporten, documenten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct, mollie_status FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
+    sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klant_id = ${klantId} AND status != 'concept' ORDER BY datum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
   ])
@@ -103,6 +104,49 @@ export default async function KlantDashboard() {
           </a>
         ))}
       </Section>
+
+      {/* Werkafspraken */}
+      {werkafspraken.length > 0 && (
+        <Section titel="Werkafspraken">
+          {werkafspraken.map((w: any) => {
+            const afspraken: { omschrijving: string; toelichting?: string; door?: string }[] = Array.isArray(w.afspraken) ? w.afspraken : []
+            return (
+              <Kaart key={w.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: afspraken.length > 0 ? 12 : 0 }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#0d1b3e' }}>
+                      {w.titel || `Werkafspraken OZWA-${String(w.afspraaknummer).padStart(4,'0')}`}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{new Date(w.datum).toLocaleDateString('nl-NL')}</div>
+                  </div>
+                  <Badge tekst={w.status} kleur={w.status === 'geaccepteerd' ? '#16a34a' : '#f59e0b'} />
+                </div>
+                {afspraken.length > 0 && (
+                  <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+                    {afspraken.map((a, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6, fontSize: 12 }}>
+                        <span style={{ color: '#3b82f6', marginTop: 1, flexShrink: 0 }}>•</span>
+                        <div>
+                          <span style={{ fontWeight: 600, color: '#0d1b3e' }}>{a.omschrijving}</span>
+                          {a.toelichting && <span style={{ color: '#64748b' }}> — {a.toelichting}</span>}
+                          {a.door && (
+                            <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
+                              background: a.door === 'klant' ? '#f3f0ff' : a.door === 'gezamenlijk' ? '#f0fdf4' : '#e8edf5',
+                              color: a.door === 'klant' ? '#7c3aed' : a.door === 'gezamenlijk' ? '#15803d' : '#1b2d4a',
+                            }}>
+                              {a.door === 'klant' ? 'Door u' : a.door === 'gezamenlijk' ? 'Gezamenlijk' : 'Door Ozvolt'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Kaart>
+            )
+          })}
+        </Section>
+      )}
 
       {/* Financieel overzicht */}
       {facturen.length > 0 && (() => {
