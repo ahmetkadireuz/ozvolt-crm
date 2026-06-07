@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatEuro } from '@/lib/utils'
 
-export default function FactuurActions({ factuur, factuurId, totalen, ebConfigured = false }: { factuur: any; factuurId: number; totalen: any; ebConfigured?: boolean }) {
+export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean }) {
   const router = useRouter()
   const [mollieLoading, setMollieLoading] = useState(false)
 
@@ -40,18 +40,18 @@ export default function FactuurActions({ factuur, factuurId, totalen, ebConfigur
     else alert('Versturen mislukt: ' + (data.error ?? 'Onbekende fout'))
   }
 
-  async function syncEboekhouden() {
-    const res = await fetch('/api/eboekhouden/sync-factuur', {
+  async function syncMoneybird() {
+    const res = await fetch('/api/moneybird/sync-factuur', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ factuurId }),
     })
     const data = await res.json()
     if (res.ok) {
-      alert('✅ Factuur staat nu in e-Boekhouden!')
+      alert('✅ Factuur staat nu in Moneybird!')
       router.refresh()
     } else {
-      alert('❌ ' + (data.error ?? 'e-Boekhouden sync mislukt'))
+      alert('❌ ' + (data.error ?? 'Moneybird sync mislukt'))
     }
   }
 
@@ -133,12 +133,12 @@ export default function FactuurActions({ factuur, factuurId, totalen, ebConfigur
             )}
           </div>
 
-          {/* e-Boekhouden boekhouden */}
+          {/* Moneybird boekhouden */}
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8, marginTop: 2 }}>
             {factuur.moneybird_id ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
-                <span style={{ fontSize: '.78rem', color: '#5b7fa6', flex: 1 }}>✓ In e-Boekhouden</span>
+                <span style={{ fontSize: '.78rem', color: '#5b7fa6', flex: 1 }}>In Moneybird (boekhouden)</span>
                 {factuur.moneybird_url && (
                   <a href={factuur.moneybird_url} target="_blank" rel="noopener noreferrer"
                     className="btn btn-ghost btn-sm" style={{ padding: '3px 8px' }}>
@@ -146,15 +146,15 @@ export default function FactuurActions({ factuur, factuurId, totalen, ebConfigur
                   </a>
                 )}
               </div>
-            ) : !ebConfigured ? (
+            ) : !mbConfigured ? (
               <div style={{ fontSize: '.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                e-Boekhouden niet geconfigureerd
+                Moneybird niet geconfigureerd
               </div>
             ) : (
               <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
-                onClick={syncEboekhouden}>
-                <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>book</span>
-                Inboeken in e-Boekhouden
+                onClick={syncMoneybird}>
+                <img src="https://www.moneybird.com/favicon.ico" style={{ width: 14, height: 14 }} alt="" />
+                Verwerken in Moneybird
               </button>
             )}
           </div>
