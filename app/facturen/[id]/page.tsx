@@ -27,7 +27,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
   const totalen = berekenTotalen(factuur.regels ?? [], 0, factuur.btw_pct)
   const klanten2 = JSON.parse(JSON.stringify(klanten))
-  const mbConfigured = !!(process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID)
+  const ebConfigured = !!process.env.EBOEKHOUDEN_API_TOKEN
 
   return (
     <div>
@@ -52,7 +52,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
       <div className="detail-grid">
         <FactuurForm factuur={factuur} klanten={klanten2} factuurId={factuurId} />
-        <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} mbConfigured={mbConfigured} />
+        <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} ebConfigured={ebConfigured} />
       </div>
     </div>
   )
