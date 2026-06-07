@@ -236,7 +236,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     <div class="betaalbox">
       <div class="betaal-left">
         <div class="bl">Betaalgegevens</div>
-        <div class="iban">IBAN: NL00 BANK 0000 0000 00</div>
+        <div class="iban">IBAN: NL69 KNAB 0780 9871 79</div>
         <div class="iban-sub">t.n.v. Ozvolt Elektrotechniek &nbsp;·&nbsp; Kenmerk: ${f.factuurnummer}</div>
       </div>
       <div class="betaal-right">

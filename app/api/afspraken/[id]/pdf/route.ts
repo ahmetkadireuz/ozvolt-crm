@@ -97,7 +97,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       <div class="company-info">
         <strong>Ozvolt Elektrotechniek</strong><br>
         KVK 99837366<br>
-        IBAN: NL04 ABNA 0154 5811 43<br>
+        IBAN: NL69 KNAB 0780 9871 79<br>
         financien@ozvoltelektro.nl
       </div>
     </div>

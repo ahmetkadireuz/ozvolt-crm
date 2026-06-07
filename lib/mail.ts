@@ -296,7 +296,7 @@ export function factuurMailHtml(params: {
       <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#7b92b2;text-transform:uppercase;
          letter-spacing:0.14em;font-family:${F};">Bankoverschrijving</p>
       <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#1b2d4a;
-         letter-spacing:0.05em;font-family:${F};">NL04 ABNA 0154 5811 43</p>
+         letter-spacing:0.05em;font-family:${F};">NL69 KNAB 0780 9871 79</p>
       <p style="margin:0;font-size:12px;color:#64748b;font-family:${F};">
         T.n.v. Ozvolt Elektrotechniek &nbsp;&middot;&nbsp; Kenmerk: <strong>${factuurNr}</strong>
       </p>
