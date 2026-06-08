@@ -15,22 +15,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Omschrijving is verplicht' }, { status: 400 })
     }
 
-    // Zorg dat tabel + kolom bestaan
-    await sql`
-      CREATE TABLE IF NOT EXISTS inkoop_items (
-        id            SERIAL PRIMARY KEY,
-        lijst_id      INTEGER NOT NULL REFERENCES inkoop_lijsten(id) ON DELETE CASCADE,
-        omschrijving  TEXT NOT NULL,
-        artikelnummer VARCHAR(100),
-        aantal        NUMERIC NOT NULL DEFAULT 1,
-        eenheid       VARCHAR(20) NOT NULL DEFAULT 'stuk',
-        leverancier   TEXT,
-        prijs_ex_btw  NUMERIC,
-        afgevinkt     BOOLEAN NOT NULL DEFAULT FALSE,
-        aangemaakt_op TIMESTAMPTZ DEFAULT NOW()
-      )
-    `
+    // Zorg dat alle kolommen bestaan
     await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS artikelnummer VARCHAR(100)`
+    await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS prijs_ex_btw NUMERIC`
+    await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS leverancier TEXT`
 
     const rows = await sql`
       INSERT INTO inkoop_items (lijst_id, omschrijving, artikelnummer, aantal, eenheid, leverancier, prijs_ex_btw)
