@@ -8,9 +8,10 @@ interface Props {
   statuses: string[]
   statusLabels: Record<string, string>
   klusId: number
+  documenten?: { id: number; naam: string; url: string; aangemaakt_op: string }[]
 }
 
-export default function KlusActions({ klus, statuses, statusLabels, klusId }: Props) {
+export default function KlusActions({ klus, statuses, statusLabels, klusId, documenten: initialDocumenten = [] }: Props) {
   const router = useRouter()
   const [notities, setNotities] = useState(klus.notities ?? '')
   const [saving, setSaving] = useState(false)
@@ -44,6 +45,10 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId }: Pr
   const [portaalLink, setPortaalLink] = useState<string | null>(null)
   const [portaalLaden, setPortaalLaden] = useState(false)
   const [portaalGekopieerd, setPortaalGekopieerd] = useState(false)
+
+  // Documenten
+  const [docs, setDocs] = useState(initialDocumenten)
+  const [docVerwijderenId, setDocVerwijderenId] = useState<number | null>(null)
 
   async function uploadFotos(files: FileList) {
     setUploadBezig(true)
@@ -94,6 +99,9 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId }: Pr
       setDocOk(true)
       setDocNaam('')
       setTimeout(() => setDocOk(false), 3000)
+      // Reload docs from server
+      const docsRes = await fetch(`/api/groenverklaring?klant_id=${klus.klant_id}`)
+      if (docsRes.ok) setDocs(await docsRes.json())
       router.refresh()
     } else {
       setDocFout(data.error ?? 'Upload mislukt')
@@ -150,6 +158,31 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId }: Pr
     const data = await res.json()
     setPortaalLaden(false)
     if (data.link) setPortaalLink(data.link)
+    return data.link as string | undefined
+  }
+
+  async function openPortaalDirectly() {
+    setPortaalLaden(true)
+    const res = await fetch('/api/klant/sessie-aanmaken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ klantId: klus.klant_id }),
+    })
+    const data = await res.json()
+    setPortaalLaden(false)
+    if (data.link) window.open(data.link, '_blank', 'noopener')
+  }
+
+  async function verwijderDocument(id: number) {
+    if (!confirm('Document verwijderen uit het klantportaal?')) return
+    setDocVerwijderenId(id)
+    await fetch('/api/groenverklaring', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    setDocs(prev => prev.filter(d => d.id !== id))
+    setDocVerwijderenId(null)
   }
 
   async function kopieerLink() {
@@ -243,9 +276,27 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId }: Pr
       {/* Documenten voor klant (groenverklaring / KLIC / etc.) */}
       <div className="card">
         <div className="section-label">Documenten voor klant</div>
-        <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 10px' }}>
-          Upload bijlagen die de klant ziet in het portaal (KLIC, groenverklaring, goedkeuringen, etc.).
-        </p>
+        {docs.length > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            {docs.map(d => (
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, padding: '6px 8px', background: '#f8fafc', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+                <span style={{ fontSize: 14 }}>📄</span>
+                <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, fontSize: 12, color: '#0d1b3e', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {d.naam}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => verwijderDocument(d.id)}
+                  disabled={docVerwijderenId === d.id}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '2px 4px', fontSize: 14, lineHeight: 1, flexShrink: 0 }}
+                  title="Verwijderen"
+                >
+                  {docVerwijderenId === d.id ? '…' : '✕'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="form-group">
           <label className="form-label">Documentnaam (optioneel)</label>
           <input
@@ -384,20 +435,31 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId }: Pr
       <div className="card">
         <div className="section-label">Klanten portaal</div>
         <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 10px' }}>
-          Stuur de klant een beveiligde link naar zijn dossier (geldig 30 dagen).
+          Open het portaal als de klant of genereer een link om te versturen (geldig 24 uur).
         </p>
-        {!portaalLink ? (
+        <div style={{ display: 'flex', gap: 6, marginBottom: portaalLink ? 8 : 0 }}>
           <button
             type="button"
             className="btn btn-primary btn-sm"
+            onClick={openPortaalDirectly}
+            disabled={portaalLaden}
+            style={{ flex: 1, justifyContent: 'center' }}
+          >
+            <span className="nav-ico" style={{ fontSize: 16 }}>open_in_new</span>
+            {portaalLaden ? 'Laden…' : 'Open portaal'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
             onClick={genereerPortaalLink}
             disabled={portaalLaden}
-            style={{ width: '100%', justifyContent: 'center' }}
+            style={{ justifyContent: 'center' }}
+            title="Link genereren om te sturen"
           >
             <span className="nav-ico" style={{ fontSize: 16 }}>link</span>
-            {portaalLaden ? 'Link aanmaken…' : 'Portaallink genereren'}
           </button>
-        ) : (
+        </div>
+        {portaalLink && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ background: '#f1f5f9', borderRadius: 8, padding: '8px 10px', fontSize: '.72rem', color: '#374151', wordBreak: 'break-all', lineHeight: 1.5, fontFamily: 'monospace' }}>
               {portaalLink}
@@ -435,7 +497,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId }: Pr
                 onClick={() => setPortaalLink(null)}
                 style={{ justifyContent: 'center' }}
               >
-                Nieuw
+                ✕
               </button>
             </div>
           </div>

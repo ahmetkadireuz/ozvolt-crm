@@ -44,6 +44,11 @@ export default async function KlusDetailPage({
     sql`SELECT id, type_werk, status, aangemaakt_op FROM klussen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) AND id != ${klusId} ORDER BY aangemaakt_op DESC LIMIT 5`,
   ])
 
+  let documenten: any[] = []
+  try {
+    documenten = await sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY aangemaakt_op DESC`
+  } catch {}
+
   // portaal_punten kolom kan nog niet bestaan — veilig ophalen
   let portaalPunten: any[] = []
   try {
@@ -119,7 +124,7 @@ export default async function KlusDetailPage({
               {klus.omschrijving && (
                 <div style={{ gridColumn: '1/-1' }}>
                   <span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem', marginBottom: 4 }}>Omschrijving</span>
-                  <p style={{ margin: 0, lineHeight: 1.6 }}>{klus.omschrijving}</p>
+                  <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{klus.omschrijving}</p>
                 </div>
               )}
             </div>
@@ -201,6 +206,7 @@ export default async function KlusDetailPage({
           statuses={STATUSES}
           statusLabels={STATUS_LABELS}
           klusId={klusId}
+          documenten={documenten}
         />
       </div>
     </div>
