@@ -148,9 +148,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       <img class="logo-img" src="https://portaal.ozvoltelektro.nl/logo-wit-site.png" alt="Ozvolt" onerror="this.style.display='none'">
       <div class="company-info">
         <strong>Ozvolt Elektrotechniek</strong><br>
-        KVK 99837366 · BTW NL000000000B00<br>
-        info@ozvoltelektro.nl · www.ozvoltelektro.nl<br>
-        06 449 98 789
+        KVK 99837366 · BTW NL005413208B33
       </div>
     </div>
     <div class="header-right">
@@ -160,7 +158,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         <div class="doc-nr">${f.factuurnummer}</div>
       </div>
       <div class="doc-status ${f.status === 'betaald' ? 'status-betaald' : teLaat ? 'status-laat' : 'status-open'}">
-        ${f.status === 'betaald' ? '✓ Betaald' : teLaat ? '⚠ Vervallen' : 'Openstaand'}
+        ${f.status === 'betaald' ? '✓ Betaald' : teLaat ? '⚠ Vervallen' : 'Verzonden'}
       </div>
     </div>
   </div>
@@ -227,11 +225,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       </div>
     </div>
 
-    ${f.notities ? `
-    <div class="notities">
-      <div class="notities-title">Opmerkingen</div>
-      <p>${f.notities}</p>
-    </div>` : ''}
 
     <div class="betaalbox">
       <div class="betaal-left">
@@ -248,7 +241,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   </div>
 
   <div class="footer">
-    <p><strong style="color:var(--navy)">Ozvolt Elektrotechniek</strong> · KVK 99837366 · info@ozvoltelektro.nl · 06 449 98 789</p>
+    <p><strong style="color:var(--navy)">Ozvolt Elektrotechniek</strong> · KVK 99837366 · BTW NL005413208B33 · financien@ozvoltelektro.nl</p>
     <p>${f.factuurnummer}</p>
   </div>
 
