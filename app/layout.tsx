@@ -10,6 +10,7 @@ import Sidebar from '@/components/Sidebar'
 export const metadata: Metadata = {
   title: { default: 'Ozvolt CRM', template: '%s — Ozvolt CRM' },
   description: 'Ozvolt Elektrotechniek CRM-portaal',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 }
 
 const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte/', '/werkafspraak/', '/klant']

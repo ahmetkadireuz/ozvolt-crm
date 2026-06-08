@@ -95,13 +95,23 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
         </div>
       </aside>
 
+      {/* Mobile: backdrop om sidebar te sluiten */}
+      <div
+        className="sidebar-backdrop"
+        id="sidebar-backdrop"
+        onClick={() => {
+          document.getElementById('sidebar')?.classList.remove('open')
+          document.getElementById('sidebar-backdrop')?.classList.remove('open')
+        }}
+      />
+
       {/* Mobile tab bar */}
       <nav className="mobile-tab-bar">
         {[
           { href: '/',             icon: 'dashboard',     label: 'Overzicht' },
           { href: '/klussen',      icon: 'construction',  label: 'Projecten' },
+          { href: '/klanten',      icon: 'groups',        label: 'Klanten' },
           { href: '/agenda',       icon: 'calendar_month',label: 'Agenda' },
-          { href: '/whatsapp',     icon: 'chat',          label: 'WhatsApp' },
           { href: '/notificaties', icon: 'notifications', label: 'Meldingen' },
         ].map(t => (
           <Link key={t.href} href={t.href} className={`mobile-tab ${isActive(t.href) ? 'active' : ''}`}>
@@ -112,7 +122,10 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
         <button
           type="button"
           className="mobile-tab"
-          onClick={() => document.getElementById('sidebar')?.classList.toggle('open')}
+          onClick={() => {
+            document.getElementById('sidebar')?.classList.toggle('open')
+            document.getElementById('sidebar-backdrop')?.classList.toggle('open')
+          }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: 22 }}>menu</span>
           <span>Meer</span>
