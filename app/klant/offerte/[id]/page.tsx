@@ -99,13 +99,6 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
           <TotaalRegel label="Totaal incl. BTW" waarde={formatEuro(totaal)} vet />
         </div>
 
-        {/* Notities */}
-        {o.notities && (
-          <div style={{ marginTop: 20, padding: 16, background: '#fffbeb', borderRadius: 8, border: '1px solid #fde68a', fontSize: 13, color: '#92400e' }}>
-            <strong>Opmerking:</strong> {o.notities}
-          </div>
-        )}
-
         {/* Werkzaamheden */}
         {waItems.length > 0 && (
           <div style={{ marginTop: 24 }}>
@@ -162,6 +155,23 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
             {o.accepted_name && ` door ${o.accepted_name}`}
           </div>
         )}
+
+        {/* PDF downloaden */}
+        <a
+          href={`/api/offertes/${o.id}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'block', textAlign: 'center',
+            padding: '11px', borderRadius: 8,
+            border: '1px solid #cbd5e1',
+            color: '#475569', fontSize: 14, fontWeight: 600,
+            textDecoration: 'none', background: '#f8fafc',
+            marginTop: 12,
+          }}
+        >
+          📄 PDF downloaden
+        </a>
       </div>
     </div>
   )
