@@ -70,7 +70,7 @@ export default async function KlantDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14, color: '#0d1b3e' }}>{k.type_werk || 'Project'}</div>
-                  {k.omschrijving && <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{k.omschrijving}</div>}
+                  {k.omschrijving && <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, whiteSpace: 'pre-wrap' }}>{k.omschrijving}</div>}
                 </div>
                 <Badge tekst={k.status} kleur={statusKleur[k.status] ?? '#64748b'} />
               </div>
