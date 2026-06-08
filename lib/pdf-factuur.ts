@@ -201,12 +201,7 @@ export async function genereerFactuurPDF(params: {
       y += 36
     }
 
-    if (params.notities) {
-      y += 14
-      doc.rect(margin, y, W - 2 * margin, 50).fill(LIGHT)
-      doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5).text('OPMERKINGEN', margin + 14, y + 10)
-      doc.fillColor(NAVY).font('Helvetica').fontSize(9).text(params.notities, margin + 14, y + 24, { width: W - 2 * margin - 28 })
-    }
+    // Opmerkingen sectie verwijderd
 
     // ── Footer ────────────────────────────────────────────────────────────
     doc.rect(0, 810, W, 32).fill(LIGHT)
