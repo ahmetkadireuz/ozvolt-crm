@@ -118,7 +118,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="topbar">
         <h1 className="page-title">Inkoop</h1>
         <button className="btn btn-primary" onClick={() => setShowNieuweLijst(true)}>
           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
@@ -126,9 +126,28 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20, alignItems: 'start' }}>
-        {/* Sidebar lijsten */}
-        <div>
+      {/* Mobiel: lijstkiezer als dropdown */}
+      {localLijsten.length > 0 && (
+        <div className="mobile-only" style={{ marginBottom: 12 }}>
+          <select
+            className="form-ctrl"
+            value={activeLijst?.id ?? ''}
+            onChange={e => {
+              const l = localLijsten.find(l => l.id === Number(e.target.value))
+              setActiveLijst(l ?? null)
+            }}
+          >
+            <option value="">— Kies een inkooplijst —</option>
+            {localLijsten.map(l => (
+              <option key={l.id} value={l.id}>{l.titel}{l.klant_naam ? ` · ${l.klant_naam}` : ''}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="inkoop-grid">
+        {/* Sidebar lijsten — verborgen op mobiel */}
+        <div className="desktop-only">
           <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
             Inkooplijsten
           </div>
@@ -197,23 +216,16 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                 <button className="btn btn-danger btn-sm" onClick={() => verwijderLijst(activeLijst.id)}>Verwijderen</button>
               </div>
 
-              {/* Koptekst tabel */}
+              {/* Desktop: koptekst tabel */}
               {lijstItems.length > 0 && (
-                <div style={{
+                <div className="desktop-only" style={{
                   display: 'grid',
-                  gridTemplateColumns: '28px 1fr 120px 100px 80px 90px 90px 80px 32px',
+                  gridTemplateColumns: '28px 1fr 120px 100px 80px 90px 90px 80px 64px',
                   gap: 6, padding: '0 4px 6px', borderBottom: '2px solid #e2e8f0', marginBottom: 6,
                   fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.05em',
                 }}>
-                  <div />
-                  <div>Omschrijving</div>
-                  <div>Artikelnr.</div>
-                  <div>Leverancier</div>
-                  <div>Aantal</div>
-                  <div>Prijs p/st. ex</div>
-                  <div>Totaal ex</div>
-                  <div>Totaal incl</div>
-                  <div />
+                  <div /><div>Omschrijving</div><div>Artikelnr.</div><div>Leverancier</div>
+                  <div>Aantal</div><div>Prijs p/st. ex</div><div>Totaal ex</div><div>Totaal incl</div><div />
                 </div>
               )}
 
@@ -227,95 +239,101 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                   const totIncl = totEx != null ? totEx * (1 + btw / 100) : null
                   const isEditing = editItemId === item.id
                   return (
-                    <div key={item.id} style={{
-                      display: 'grid',
-                      gridTemplateColumns: '28px 1fr 120px 100px 80px 90px 90px 80px 32px',
-                      gap: 6, alignItems: 'center', padding: '8px 4px',
-                      background: item.afgevinkt ? '#f0fdf4' : '#f8fafc',
-                      borderRadius: 8, border: `1px solid ${item.afgevinkt ? '#bbf7d0' : '#e2e8f0'}`,
-                    }}>
-                      <input
-                        type="checkbox" checked={item.afgevinkt} onChange={() => toggleItem(item)}
-                        style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#16a34a', margin: '0 auto' }}
-                      />
-                      {isEditing ? (
-                        <>
-                          <input className="form-ctrl" style={{ fontSize: '.8rem', padding: '4px 8px' }}
-                            value={String(editItemData.omschrijving ?? item.omschrijving)}
-                            onChange={e => setEditItemData(d => ({ ...d, omschrijving: e.target.value }))} />
-                          <input className="form-ctrl" style={{ fontSize: '.8rem', padding: '4px 8px' }}
-                            value={String(editItemData.artikelnummer ?? item.artikelnummer ?? '')}
-                            placeholder="Artikelnr."
-                            onChange={e => setEditItemData(d => ({ ...d, artikelnummer: e.target.value }))} />
-                          <input className="form-ctrl" style={{ fontSize: '.8rem', padding: '4px 8px' }}
-                            value={String(editItemData.leverancier ?? item.leverancier ?? '')}
-                            placeholder="Leverancier"
-                            onChange={e => setEditItemData(d => ({ ...d, leverancier: e.target.value }))} />
-                          <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                            <input className="form-ctrl" type="number" style={{ fontSize: '.8rem', padding: '4px 6px', width: 48 }}
-                              value={String(editItemData.aantal ?? item.aantal)}
-                              onChange={e => setEditItemData(d => ({ ...d, aantal: parseFloat(e.target.value) }))} />
-                            <select className="form-ctrl" style={{ fontSize: '.75rem', padding: '4px 4px', width: 48 }}
-                              value={String(editItemData.eenheid ?? item.eenheid)}
-                              onChange={e => setEditItemData(d => ({ ...d, eenheid: e.target.value }))}>
-                              {EENHEDEN.map(u => <option key={u}>{u}</option>)}
-                            </select>
-                          </div>
-                          <input className="form-ctrl" type="number" style={{ fontSize: '.8rem', padding: '4px 8px' }}
-                            value={String(editItemData.prijs_ex_btw ?? item.prijs_ex_btw ?? '')}
-                            placeholder="0,00"
-                            onChange={e => setEditItemData(d => ({ ...d, prijs_ex_btw: parseFloat(e.target.value) }))} />
-                          <div />
-                          <div />
-                          <button className="btn btn-primary btn-sm" style={{ padding: '4px 8px', fontSize: '.74rem' }}
-                            onClick={() => slaItemOp(item.id)}>✓</button>
-                        </>
-                      ) : (
-                        <>
-                          <div style={{ opacity: item.afgevinkt ? .5 : 1 }}>
-                            <div style={{ fontWeight: 600, fontSize: '.84rem', color: '#0d1b3e', textDecoration: item.afgevinkt ? 'line-through' : 'none' }}>
+                    <div key={item.id}>
+                      {/* Desktop rij */}
+                      <div className="desktop-only" style={{
+                        display: 'grid',
+                        gridTemplateColumns: '28px 1fr 120px 100px 80px 90px 90px 80px 64px',
+                        gap: 6, alignItems: 'center', padding: '8px 4px',
+                        background: item.afgevinkt ? '#f0fdf4' : '#f8fafc',
+                        borderRadius: 8, border: `1px solid ${item.afgevinkt ? '#bbf7d0' : '#e2e8f0'}`,
+                      }}>
+                        <input type="checkbox" checked={item.afgevinkt} onChange={() => toggleItem(item)}
+                          style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#16a34a', margin: '0 auto' }} />
+                        {isEditing ? (
+                          <>
+                            <input className="form-ctrl" style={{ fontSize: '.8rem', padding: '4px 8px' }}
+                              value={String(editItemData.omschrijving ?? item.omschrijving)}
+                              onChange={e => setEditItemData(d => ({ ...d, omschrijving: e.target.value }))} />
+                            <input className="form-ctrl" style={{ fontSize: '.8rem', padding: '4px 8px' }}
+                              value={String(editItemData.artikelnummer ?? item.artikelnummer ?? '')} placeholder="Artikelnr."
+                              onChange={e => setEditItemData(d => ({ ...d, artikelnummer: e.target.value }))} />
+                            <input className="form-ctrl" style={{ fontSize: '.8rem', padding: '4px 8px' }}
+                              value={String(editItemData.leverancier ?? item.leverancier ?? '')} placeholder="Leverancier"
+                              onChange={e => setEditItemData(d => ({ ...d, leverancier: e.target.value }))} />
+                            <div style={{ display: 'flex', gap: 2 }}>
+                              <input className="form-ctrl" type="number" style={{ fontSize: '.8rem', padding: '4px 6px', width: 48 }}
+                                value={String(editItemData.aantal ?? item.aantal)}
+                                onChange={e => setEditItemData(d => ({ ...d, aantal: parseFloat(e.target.value) }))} />
+                              <select className="form-ctrl" style={{ fontSize: '.75rem', padding: '4px', width: 52 }}
+                                value={String(editItemData.eenheid ?? item.eenheid)}
+                                onChange={e => setEditItemData(d => ({ ...d, eenheid: e.target.value }))}>
+                                {EENHEDEN.map(u => <option key={u}>{u}</option>)}
+                              </select>
+                            </div>
+                            <input className="form-ctrl" type="number" style={{ fontSize: '.8rem', padding: '4px 8px' }}
+                              value={String(editItemData.prijs_ex_btw ?? item.prijs_ex_btw ?? '')} placeholder="0,00"
+                              onChange={e => setEditItemData(d => ({ ...d, prijs_ex_btw: parseFloat(e.target.value) }))} />
+                            <div /><div />
+                            <button className="btn btn-primary btn-sm" style={{ padding: '4px 8px' }} onClick={() => slaItemOp(item.id)}>✓</button>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ opacity: item.afgevinkt ? .5 : 1 }}>
+                              <div style={{ fontWeight: 600, fontSize: '.84rem', color: '#0d1b3e', textDecoration: item.afgevinkt ? 'line-through' : 'none' }}>{item.omschrijving}</div>
+                              <div style={{ fontSize: '.72rem', color: '#8ba8c4' }}>{item.aantal} {item.eenheid}</div>
+                            </div>
+                            <div style={{ fontSize: '.8rem', color: '#374151' }}>{item.artikelnummer || <span style={{ color: '#d1d5db' }}>—</span>}</div>
+                            <div style={{ fontSize: '.8rem', color: '#374151' }}>{item.leverancier || <span style={{ color: '#d1d5db' }}>—</span>}</div>
+                            <div style={{ fontSize: '.82rem', fontWeight: 600 }}>{item.aantal} {item.eenheid}</div>
+                            <div style={{ fontSize: '.82rem' }}>{item.prijs_ex_btw != null ? euro(Number(item.prijs_ex_btw)) : <span style={{ color: '#d1d5db' }}>—</span>}</div>
+                            <div style={{ fontSize: '.84rem', fontWeight: 700 }}>{totEx != null ? euro(totEx) : '—'}</div>
+                            <div style={{ fontSize: '.84rem', fontWeight: 700, color: totIncl != null ? '#16a34a' : '#d1d5db' }}>{totIncl != null ? euro(totIncl) : '—'}</div>
+                            <div style={{ display: 'flex', gap: 2 }}>
+                              <button className="btn btn-ghost btn-sm" style={{ padding: '4px 6px' }}
+                                onClick={() => { setEditItemId(item.id); setEditItemData({}) }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>edit</span>
+                              </button>
+                              <button className="btn btn-ghost btn-sm" style={{ padding: '4px 6px', color: '#ef4444' }}
+                                onClick={() => verwijderItem(item.id)}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Mobiel kaartje */}
+                      <div className="mobile-only" style={{
+                        padding: '10px 12px', marginBottom: 4,
+                        background: item.afgevinkt ? '#f0fdf4' : '#fff',
+                        borderRadius: 10, border: `1px solid ${item.afgevinkt ? '#bbf7d0' : '#e2e8f0'}`,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                          <input type="checkbox" checked={item.afgevinkt} onChange={() => toggleItem(item)}
+                            style={{ width: 20, height: 20, marginTop: 2, cursor: 'pointer', accentColor: '#16a34a', flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: '.9rem', color: '#0d1b3e', textDecoration: item.afgevinkt ? 'line-through' : 'none', opacity: item.afgevinkt ? .5 : 1 }}>
                               {item.omschrijving}
                             </div>
-                            <div style={{ fontSize: '.72rem', color: '#8ba8c4', marginTop: 1 }}>
-                              {item.aantal} {item.eenheid}
+                            <div style={{ fontSize: '.76rem', color: '#64748b', marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>
+                              <span>{item.aantal} {item.eenheid}</span>
+                              {item.artikelnummer && <span>Art: {item.artikelnummer}</span>}
+                              {item.leverancier && <span>{item.leverancier}</span>}
                             </div>
+                            {(totEx != null || totIncl != null) && (
+                              <div style={{ marginTop: 6, display: 'flex', gap: 12 }}>
+                                {totEx != null && <span style={{ fontSize: '.8rem', color: '#374151', fontWeight: 600 }}>{euro(totEx)} ex</span>}
+                                {totIncl != null && <span style={{ fontSize: '.8rem', color: '#16a34a', fontWeight: 700 }}>{euro(totIncl)} incl</span>}
+                              </div>
+                            )}
                           </div>
-                          <div style={{ fontSize: '.8rem', color: '#374151', opacity: item.afgevinkt ? .5 : 1 }}>
-                            {item.artikelnummer || <span style={{ color: '#d1d5db' }}>—</span>}
-                          </div>
-                          <div style={{ fontSize: '.8rem', color: '#374151', opacity: item.afgevinkt ? .5 : 1 }}>
-                            {item.leverancier || <span style={{ color: '#d1d5db' }}>—</span>}
-                          </div>
-                          <div style={{ fontSize: '.82rem', color: '#374151', fontWeight: 600 }}>
-                            {item.aantal} {item.eenheid}
-                          </div>
-                          <div style={{ fontSize: '.82rem', color: '#374151' }}>
-                            {item.prijs_ex_btw != null ? euro(Number(item.prijs_ex_btw)) : <span style={{ color: '#d1d5db' }}>—</span>}
-                          </div>
-                          <div style={{ fontSize: '.84rem', fontWeight: 700, color: totEx != null ? '#0d1b3e' : '#d1d5db' }}>
-                            {totEx != null ? euro(totEx) : '—'}
-                          </div>
-                          <div style={{ fontSize: '.84rem', fontWeight: 700, color: totIncl != null ? '#16a34a' : '#d1d5db' }}>
-                            {totIncl != null ? euro(totIncl) : '—'}
-                          </div>
-                          <div style={{ display: 'flex', gap: 2 }}>
-                            <button
-                              className="btn btn-ghost btn-sm" style={{ padding: '4px 6px' }}
-                              onClick={() => { setEditItemId(item.id); setEditItemData({}) }}
-                              title="Bewerken"
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>edit</span>
-                            </button>
-                            <button
-                              className="btn btn-ghost btn-sm" style={{ padding: '4px 6px', color: '#ef4444' }}
-                              onClick={() => verwijderItem(item.id)}
-                              title="Verwijderen"
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
-                            </button>
-                          </div>
-                        </>
-                      )}
+                          <button className="btn btn-ghost btn-sm" style={{ padding: '4px 8px', color: '#ef4444', flexShrink: 0 }}
+                            onClick={() => verwijderItem(item.id)}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )
                 })}

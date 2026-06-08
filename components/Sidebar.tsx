@@ -36,6 +36,11 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
     return pathname.startsWith(key)
   }
 
+  function closeSidebar() {
+    document.getElementById('sidebar')?.classList.remove('open')
+    document.getElementById('sidebar-backdrop')?.classList.remove('open')
+  }
+
   return (
     <>
       <aside className="sidebar" id="sidebar">
@@ -51,7 +56,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
 
         <nav className="sb-nav">
           {navMain.map(item => (
-            <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`}>
+            <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`} onClick={closeSidebar}>
               <span className="material-symbols-outlined nav-ico">{item.icon}</span>
               <span>{item.label}</span>
               {item.key === '/klussen' && nieuwCount > 0 && (
@@ -66,7 +71,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
           <div className="sb-divider">Bedrijf</div>
 
           {navOps.map(item => (
-            <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`}>
+            <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`} onClick={closeSidebar}>
               <span className="material-symbols-outlined nav-ico">{item.icon}</span>
               <span>{item.label}</span>
             </Link>
@@ -75,7 +80,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
           <div className="sb-divider">AI Tools</div>
 
           {navAI.map(item => (
-            <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`}>
+            <Link key={item.key} href={item.key} className={`nav-item ${isActive(item.key) ? 'active' : ''}`} onClick={closeSidebar}>
               <span className="material-symbols-outlined nav-ico">{item.icon}</span>
               <span>{item.label}</span>
             </Link>
@@ -114,7 +119,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
           { href: '/agenda',       icon: 'calendar_month',label: 'Agenda' },
           { href: '/notificaties', icon: 'notifications', label: 'Meldingen' },
         ].map(t => (
-          <Link key={t.href} href={t.href} className={`mobile-tab ${isActive(t.href) ? 'active' : ''}`}>
+          <Link key={t.href} href={t.href} className={`mobile-tab ${isActive(t.href) ? 'active' : ''}`} onClick={closeSidebar}>
             <span className="material-symbols-outlined" style={{ fontSize: 22 }}>{t.icon}</span>
             <span>{t.label}</span>
           </Link>
