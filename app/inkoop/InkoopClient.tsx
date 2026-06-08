@@ -33,6 +33,8 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
   const [saving, setSaving] = useState(false)
   const [editItemId, setEditItemId] = useState<number | null>(null)
   const [editItemData, setEditItemData] = useState<Partial<Item>>({})
+  const [itemFout, setItemFout] = useState('')
+  const [itemSaving, setItemSaving] = useState(false)
 
   const lijstItems = activeLijst ? localItems.filter(i => i.lijst_id === activeLijst.id) : []
   const gedaan = lijstItems.filter(i => i.afgevinkt).length
@@ -67,19 +69,29 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
   async function voegItemToe(e: React.FormEvent) {
     e.preventDefault()
     if (!activeLijst || !nieuwItem.omschrijving.trim()) return
-    const res = await fetch(`/api/inkoop/${activeLijst.id}/items`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...nieuwItem,
-        aantal: parseFloat(nieuwItem.aantal) || 1,
-        prijs_ex_btw: nieuwItem.prijs_ex_btw ? parseFloat(nieuwItem.prijs_ex_btw) : null,
-      }),
-    })
-    if (res.ok) {
-      const { item } = await res.json()
-      setLocalItems(prev => [...prev, item])
-      setNieuwItem({ omschrijving: '', artikelnummer: '', aantal: '1', eenheid: nieuwItem.eenheid, leverancier: nieuwItem.leverancier, prijs_ex_btw: '' })
+    setItemFout('')
+    setItemSaving(true)
+    try {
+      const res = await fetch(`/api/inkoop/${activeLijst.id}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...nieuwItem,
+          aantal: parseFloat(nieuwItem.aantal) || 1,
+          prijs_ex_btw: nieuwItem.prijs_ex_btw ? parseFloat(nieuwItem.prijs_ex_btw) : null,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.item) {
+        setLocalItems(prev => [...prev, data.item])
+        setNieuwItem({ omschrijving: '', artikelnummer: '', aantal: '1', eenheid: nieuwItem.eenheid, leverancier: nieuwItem.leverancier, prijs_ex_btw: '' })
+      } else {
+        setItemFout(data.error ?? `Fout ${res.status}: kon artikel niet opslaan`)
+      }
+    } catch (err: any) {
+      setItemFout('Netwerkfout: ' + err.message)
+    } finally {
+      setItemSaving(false)
     }
   }
 
@@ -417,11 +429,16 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                         onChange={e => setNieuwItem(f => ({ ...f, prijs_ex_btw: e.target.value }))}
                       />
                     </div>
-                    <button type="submit" className="btn btn-primary" style={{ flexShrink: 0 }}>
+                    <button type="submit" className="btn btn-primary" style={{ flexShrink: 0 }} disabled={itemSaving}>
                       <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
-                      Toevoegen
+                      {itemSaving ? 'Bezig…' : 'Toevoegen'}
                     </button>
                   </div>
+                  {itemFout && (
+                    <div style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px', fontSize: '.82rem', color: '#991b1b', marginTop: 4 }}>
+                      ⚠️ {itemFout}
+                    </div>
+                  )}
                   {/* Preview bedrag als je prijs en aantal hebt ingevuld */}
                   {nieuwItem.prijs_ex_btw && nieuwItem.aantal && (
                     <div style={{ fontSize: '.78rem', color: '#5b7fa6', paddingLeft: 4 }}>
