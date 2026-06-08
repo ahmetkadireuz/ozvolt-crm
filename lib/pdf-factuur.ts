@@ -49,9 +49,7 @@ export async function genereerFactuurPDF(params: {
     doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(16)
        .text('Ozvolt Elektrotechniek', margin, 28)
     doc.fillColor('rgba(255,255,255,0.55)').font('Helvetica').fontSize(9)
-       .text('KVK 99837366  ·  BTW NL005413208B33  ·  06 449 98 789', margin, 50)
-    doc.fillColor('rgba(255,255,255,0.55)').fontSize(9)
-       .text('info@ozvoltelektro.nl  ·  ozvoltelektro.nl', margin, 64)
+       .text('KVK 99837366  ·  BTW NL005413208B33', margin, 50)
 
     // Betaalnota label + nummer rechts
     doc.fillColor('rgba(255,255,255,0.45)').font('Helvetica').fontSize(8)
@@ -62,8 +60,8 @@ export async function genereerFactuurPDF(params: {
        .text(params.factuurnummer, W - 180, 66, { width: 130, align: 'right' })
 
     // Status badge
-    const statusColor = params.status === 'betaald' ? '#166534' : '#1e3a5f'
-    const statusText = params.status === 'betaald' ? '✓ Betaald' : params.status === 'te_laat' ? '⚠ Vervallen' : 'Openstaand'
+    const statusColor = params.status === 'betaald' ? '#166534' : params.status === 'te_laat' ? '#7f1d1d' : '#1e3a5f'
+    const statusText = params.status === 'betaald' ? '✓ Betaald' : params.status === 'te_laat' ? '⚠ Vervallen' : 'Verzonden'
     doc.roundedRect(W - 120, 88, 72, 20, 4).fill(statusColor)
     doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8)
        .text(statusText, W - 120, 94, { width: 72, align: 'center' })
@@ -208,7 +206,7 @@ export async function genereerFactuurPDF(params: {
     doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(8.5)
        .text('Ozvolt Elektrotechniek', margin, 819)
     doc.fillColor(MUTED).font('Helvetica').fontSize(8)
-       .text('KVK 99837366  ·  info@ozvoltelektro.nl  ·  06 449 98 789', margin, 819 + 11)
+       .text('KVK 99837366  ·  BTW NL005413208B33  ·  financien@ozvoltelektro.nl', margin, 819 + 11)
     doc.fillColor(MUTED).font('Helvetica').fontSize(8)
        .text(params.factuurnummer, W - margin - 80, 822, { width: 80, align: 'right' })
 
