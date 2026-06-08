@@ -12,8 +12,10 @@ export default async function InkoopPage() {
   let items: any[] = []
 
   try {
-    // Zorg dat btw_pct kolom bestaat
     await sql`ALTER TABLE inkoop_lijsten ADD COLUMN IF NOT EXISTS btw_pct INTEGER NOT NULL DEFAULT 21`
+  } catch {}
+  try {
+    await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS artikelnummer VARCHAR(100)`
   } catch {}
 
   try {
