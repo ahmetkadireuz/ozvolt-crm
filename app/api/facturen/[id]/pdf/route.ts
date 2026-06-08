@@ -153,12 +153,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     </div>
     <div class="header-right">
       <div>
-        <div class="doc-label">Document</div>
-        <div class="doc-type">Betaalnota</div>
+        <div class="doc-type">Factuur</div>
         <div class="doc-nr">${f.factuurnummer}</div>
-      </div>
-      <div class="doc-status ${f.status === 'betaald' ? 'status-betaald' : teLaat ? 'status-laat' : 'status-open'}">
-        ${f.status === 'betaald' ? '✓ Betaald' : teLaat ? '⚠ Vervallen' : 'Verzonden'}
       </div>
     </div>
   </div>
