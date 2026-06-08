@@ -4,7 +4,7 @@ export const revalidate = 0
 import { redirect, notFound } from 'next/navigation'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
-import BetaalKnop from './BetaalKnop'
+// BetaalKnop (iDEAL) tijdelijk vervangen door bankoverschrijving
 
 export default async function KlantFactuurPagina({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -100,11 +100,24 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
         {/* Betaal / download */}
         <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {!isBetaald && totaal > 0 && (
-            <BetaalKnop factuurId={f.id} totaal={formatEuro(totaal)} />
-          )}
-          {!isBetaald && totaal <= 0 && (
-            <div style={{ padding: 14, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, color: '#64748b', textAlign: 'center' }}>
-              Betaling beschikbaar zodra de factuur een bedrag heeft.
+            <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 12, padding: '18px 20px' }}>
+              <div style={{ fontWeight: 800, color: '#0369a1', fontSize: 15, marginBottom: 12 }}>🏦 Betalen via bankoverschrijving</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14 }}>
+                {[
+                  { label: 'IBAN', waarde: 'NL69 KNAB 0780 9871 79' },
+                  { label: 'T.n.v.', waarde: 'Ozvolt Elektrotechniek' },
+                  { label: 'Bedrag', waarde: formatEuro(totaal) },
+                  { label: 'Betalingskenmerk', waarde: f.factuurnummer },
+                ].map(({ label, waarde }) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e0f2fe', paddingBottom: 8 }}>
+                    <span style={{ color: '#64748b' }}>{label}</span>
+                    <strong style={{ color: '#0d1b3e' }}>{waarde}</strong>
+                  </div>
+                ))}
+              </div>
+              <p style={{ margin: '12px 0 0', fontSize: 12, color: '#0369a1' }}>
+                Vermeld het betalingskenmerk bij uw overschrijving. Na ontvangst wordt de factuur als betaald gemarkeerd.
+              </p>
             </div>
           )}
           <a

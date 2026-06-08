@@ -202,17 +202,21 @@ export default async function KlantDashboard() {
                   <Badge tekst={isBetaald ? 'betaald' : 'openstaand'} kleur={isBetaald ? '#16a34a' : '#ef4444'} />
                 </div>
               </div>
-              {!isBetaald && (
-                <a
-                  href={`/klant/factuur/${f.id}`}
-                  style={{
-                    display: 'block', textAlign: 'center', padding: '10px',
-                    borderRadius: 8, background: '#16a34a', color: '#fff',
-                    fontWeight: 700, fontSize: 14, textDecoration: 'none',
-                  }}
-                >
-                  💳 Nu betalen via iDEAL — {formatEuro(totaalFactuur(f))}
-                </a>
+              {!isBetaald && totaalFactuur(f) > 0 && (
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, padding: '10px 14px', fontSize: 12 }}>
+                    <div style={{ fontWeight: 700, color: '#0369a1', marginBottom: 6 }}>🏦 Betalen via bankoverschrijving</div>
+                    <div style={{ color: '#0d1b3e', lineHeight: 1.8 }}>
+                      <div><span style={{ color: '#64748b' }}>IBAN:</span> <strong>NL69 KNAB 0780 9871 79</strong></div>
+                      <div><span style={{ color: '#64748b' }}>T.n.v.:</span> Ozvolt Elektrotechniek</div>
+                      <div><span style={{ color: '#64748b' }}>Bedrag:</span> <strong>{formatEuro(totaalFactuur(f))}</strong></div>
+                      <div><span style={{ color: '#64748b' }}>Kenmerk:</span> <strong>{f.factuurnummer}</strong></div>
+                    </div>
+                  </div>
+                  <a href={`/klant/factuur/${f.id}`} style={{ display: 'block', textAlign: 'center', marginTop: 8, fontSize: 12, color: '#64748b', textDecoration: 'underline' }}>
+                    Factuur bekijken / downloaden
+                  </a>
+                </div>
               )}
               {isBetaald && (
                 <a href={`/klant/factuur/${f.id}`} style={{ fontSize: 12, color: '#64748b', textDecoration: 'underline' }}>
