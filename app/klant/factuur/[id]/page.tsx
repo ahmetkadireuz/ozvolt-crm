@@ -90,12 +90,6 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
           <TotaalRegel label="Totaal incl. BTW" waarde={formatEuro(totaal)} vet />
         </div>
 
-        {/* Notities */}
-        {f.notities && (
-          <div style={{ marginTop: 20, padding: 16, background: '#fffbeb', borderRadius: 8, border: '1px solid #fde68a', fontSize: 13, color: '#92400e' }}>
-            <strong>Opmerking:</strong> {f.notities}
-          </div>
-        )}
 
         {/* Betaal / download */}
         <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
