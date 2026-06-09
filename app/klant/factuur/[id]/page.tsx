@@ -4,7 +4,7 @@ export const revalidate = 0
 import { redirect, notFound } from 'next/navigation'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
-// BetaalKnop (iDEAL) tijdelijk vervangen door bankoverschrijving
+import BetaalKnop from './BetaalKnop'
 
 export default async function KlantFactuurPagina({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -94,25 +94,28 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
         {/* Betaal / download */}
         <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {!isBetaald && totaal > 0 && (
-            <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 12, padding: '18px 20px' }}>
-              <div style={{ fontWeight: 800, color: '#0369a1', fontSize: 15, marginBottom: 12 }}>🏦 Betalen via bankoverschrijving</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14 }}>
-                {[
-                  { label: 'IBAN', waarde: 'NL69 KNAB 0780 9871 79' },
-                  { label: 'T.n.v.', waarde: 'Ozvolt Elektrotechniek' },
-                  { label: 'Bedrag', waarde: formatEuro(totaal) },
-                  { label: 'Betalingskenmerk', waarde: f.factuurnummer },
-                ].map(({ label, waarde }) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e0f2fe', paddingBottom: 8 }}>
-                    <span style={{ color: '#64748b' }}>{label}</span>
-                    <strong style={{ color: '#0d1b3e' }}>{waarde}</strong>
-                  </div>
-                ))}
+            <>
+              {/* iDEAL betaalknop */}
+              <BetaalKnop factuurId={f.id} totaal={formatEuro(totaal)} />
+
+              {/* Bankoverschrijving als alternatief */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, color: '#475569', fontSize: 13, marginBottom: 10 }}>🏦 Of betalen via bankoverschrijving</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+                  {[
+                    { label: 'IBAN', waarde: 'NL69 KNAB 0780 9871 79' },
+                    { label: 'T.n.v.', waarde: 'Ozvolt Elektrotechniek' },
+                    { label: 'Bedrag', waarde: formatEuro(totaal) },
+                    { label: 'Kenmerk', waarde: f.factuurnummer },
+                  ].map(({ label, waarde }) => (
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+                      <span style={{ color: '#94a3b8' }}>{label}</span>
+                      <strong style={{ color: '#0d1b3e' }}>{waarde}</strong>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p style={{ margin: '12px 0 0', fontSize: 12, color: '#0369a1' }}>
-                Vermeld het betalingskenmerk bij uw overschrijving. Na ontvangst wordt de factuur als betaald gemarkeerd.
-              </p>
-            </div>
+            </>
           )}
           <a
             href={`/api/facturen/${f.id}/pdf`}
