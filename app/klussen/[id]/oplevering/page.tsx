@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
-import { werkzaamhedenSecties } from '@/lib/oplevering-checklists'
 import OpleveringsFormulier from './OpleveringsFormulier'
 
 export const metadata: Metadata = { title: 'Opleveringsrapport' }
@@ -26,20 +25,12 @@ export default async function OpleveringPagina({
   await ensureProjectbeheerTables()
 
   const klusRows = await sql`
-    SELECT k.*, kt.id AS klant_id, kt.naam AS klant_naam, kt.email AS klant_email,
-           kt.telefoon AS klant_tel, kt.locatie AS klant_locatie
+    SELECT k.*, kt.id AS klant_id, kt.naam AS klant_naam
     FROM klussen k JOIN klanten kt ON kt.id = k.klant_id
     WHERE k.id = ${klusId}
   `
   const klus = klusRows[0]
   if (!klus) notFound()
-
-  // Offerte-regels voor de werkzaamheden-checklist (meest recente offerte van deze klus)
-  let offerteRegels: { omschrijving?: string }[] = []
-  try {
-    const o = await sql`SELECT regels FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC LIMIT 1`
-    if (Array.isArray(o[0]?.regels)) offerteRegels = o[0].regels
-  } catch {}
 
   // Bestaand rapport bewerken?
   let bestaandRapport: any = null
@@ -47,9 +38,16 @@ export default async function OpleveringPagina({
   if (!isNaN(rapportId)) {
     const r = await sql`SELECT * FROM opleveringsrapporten WHERE id = ${rapportId} AND klus_id = ${klusId}`
     bestaandRapport = r[0] ?? null
-  }
 
-  const werkSecties = werkzaamhedenSecties(offerteRegels, { type_werk: klus.type_werk, omschrijving: klus.omschrijving })
+    // Backwards-compat: oude rapporten gebruikten secties met ja/nee. Pak alleen de punten als items.
+    if (bestaandRapport?.inhoud && !Array.isArray(bestaandRapport.inhoud?.items) && Array.isArray(bestaandRapport.inhoud?.secties)) {
+      const items: string[] = []
+      for (const s of bestaandRapport.inhoud.secties) {
+        for (const r of (s.rijen ?? [])) if (r.punt) items.push(String(r.punt))
+      }
+      bestaandRapport.inhoud = { items, aanvullend: bestaandRapport.inhoud.aanvullend ?? '' }
+    }
+  }
 
   return (
     <div>
@@ -70,7 +68,6 @@ export default async function OpleveringPagina({
         klantId={klus.klant_id}
         klantNaam={klus.klant_naam}
         typeWerk={klus.type_werk}
-        werkzaamhedenSecties={werkSecties}
         bestaandRapport={bestaandRapport}
       />
     </div>

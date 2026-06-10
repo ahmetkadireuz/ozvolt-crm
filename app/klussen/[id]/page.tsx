@@ -60,12 +60,9 @@ export default async function KlusDetailPage({
     portaalPunten = Array.isArray(p[0]?.portaal_punten) ? p[0].portaal_punten : []
   } catch {}
 
-  // Projectbeheer: uren, taken, meerwerk, rapporten en financieel overzicht
+  // Rapporten en eenvoudig financieel overzicht
   await ensureProjectbeheerTables()
-  const [uren, taken, meerwerk, rapporten, omzetRows, kostenRows] = await Promise.all([
-    sql`SELECT * FROM project_uren WHERE klus_id = ${klusId} ORDER BY datum DESC, id DESC`,
-    sql`SELECT * FROM project_taken WHERE klus_id = ${klusId} ORDER BY volgorde, id`,
-    sql`SELECT * FROM project_meerwerk WHERE klus_id = ${klusId} ORDER BY aangemaakt_op, id`,
+  const [rapporten, omzetRows, kostenRows] = await Promise.all([
     sql`SELECT id, titel, type, getekend_op, aangemaakt_op FROM opleveringsrapporten WHERE klus_id = ${klusId} ORDER BY aangemaakt_op DESC`,
     sql`
       SELECT COALESCE(SUM(
@@ -225,12 +222,9 @@ export default async function KlusDetailPage({
         />
       </div>
 
-      {/* Projectbeheer: financieel, taken, uren, meerwerk, opleveringsrapporten */}
+      {/* Financieel overzicht + opleveringsrapporten */}
       <ProjectbeheerPaneel
         klusId={klusId}
-        uren={uren as any}
-        taken={taken as any}
-        meerwerk={meerwerk as any}
         rapporten={rapporten as any}
         omzet={omzet}
         kosten={kostenTotaal}

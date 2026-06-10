@@ -4,8 +4,7 @@ export const revalidate = 0
 import { redirect } from 'next/navigation'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
-import { ensureProjectbeheerTables, berekenVoortgang } from '@/lib/projectbeheer'
-import MeerwerkAccepteren from './MeerwerkAccepteren'
+import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
 
 export default async function KlantDashboard() {
   const klantId = await getKlantSessie()
@@ -39,21 +38,6 @@ export default async function KlantDashboard() {
     } catch { /* kolom bestaat nog niet */ }
   }
 
-  // Voortgang (taken) en meerwerk per klus
-  const voortgangMap: Record<number, { totaal: number; klaar: number; pct: number }> = {}
-  const meerwerkMap: Record<number, any[]> = {}
-  if (klussenIds.length > 0) {
-    try {
-      const [takenRows, meerwerkRows] = await Promise.all([
-        sql`SELECT klus_id, gereed, aantal_totaal, aantal_klaar FROM project_taken WHERE klus_id = ANY(${klussenIds})`,
-        sql`SELECT * FROM project_meerwerk WHERE klus_id = ANY(${klussenIds}) AND status <> 'geweigerd' ORDER BY aangemaakt_op, id`,
-      ])
-      const perKlus: Record<number, any[]> = {}
-      for (const t of takenRows) (perKlus[t.klus_id] ??= []).push(t)
-      for (const [kid, taken] of Object.entries(perKlus)) voortgangMap[Number(kid)] = berekenVoortgang(taken as any)
-      for (const m of meerwerkRows) (meerwerkMap[m.klus_id] ??= []).push(m)
-    } catch { /* tabellen bestaan nog niet */ }
-  }
 
   function totaalOfferte(o: Record<string, any>) {
     const sub = o.regels.reduce((s: number, r: { aantal: number; prijs: number }) => s + r.aantal * r.prijs, 0)
@@ -86,8 +70,6 @@ export default async function KlantDashboard() {
       <Section titel="Uw projecten">
         {klussen.length === 0 ? <Leeg tekst="Geen lopende projecten" /> : klussen.map((k: any) => {
           const punten: any[] = portaalPuntenMap[k.id] ?? []
-          const vg = voortgangMap[k.id]
-          const klusMeerwerk: any[] = meerwerkMap[k.id] ?? []
           return (
             <Kaart key={k.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -97,34 +79,6 @@ export default async function KlantDashboard() {
                 </div>
                 <Badge tekst={k.status} kleur={statusKleur[k.status] ?? '#64748b'} />
               </div>
-              {vg && vg.totaal > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#64748b', marginBottom: 4 }}>
-                    <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Voortgang</span>
-                    <span>{vg.klaar} van {vg.totaal} afgerond · <strong>{vg.pct}%</strong></span>
-                  </div>
-                  <div style={{ height: 8, background: '#eef2f7', borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${Math.max(2, vg.pct)}%`, background: '#16a34a', borderRadius: 99 }} />
-                  </div>
-                </div>
-              )}
-              {klusMeerwerk.length > 0 && (
-                <div style={{ marginTop: 12, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Meerwerk</div>
-                  {klusMeerwerk.map((m: any) => (
-                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 6, fontSize: 12 }}>
-                      <span style={{ color: '#0d1b3e' }}>
-                        <strong>{m.omschrijving}</strong> — {formatEuro(Number(m.bedrag))}
-                      </span>
-                      {m.status === 'geaccepteerd' ? (
-                        <Badge tekst="geaccepteerd" kleur="#16a34a" />
-                      ) : (
-                        <MeerwerkAccepteren meerwerkId={m.id} omschrijving={m.omschrijving} bedrag={Number(m.bedrag)} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
               {punten.length > 0 && (
                 <div style={{ marginTop: 12, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Afgesproken werkzaamheden</div>

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
-import { ensureProjectbeheerTables, type RapportSectie } from '@/lib/projectbeheer'
+import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
 import PrintKnoppen from './PrintKnoppen'
 
 export const metadata: Metadata = { title: 'Opleveringsrapport' }
@@ -15,6 +15,20 @@ const BEDRIJF = {
   email: 'financien@ozvoltelektro.nl',
 }
 
+type Foto = { url: string; caption?: string }
+
+function herstelItems(inhoud: any): string[] {
+  if (!inhoud) return []
+  if (Array.isArray(inhoud.items)) return inhoud.items.filter((s: any) => typeof s === 'string' && s.trim())
+  // backwards-compat: oude rapporten met secties → trek alle punten samen
+  if (Array.isArray(inhoud.secties)) {
+    const out: string[] = []
+    for (const s of inhoud.secties) for (const r of (s.rijen ?? [])) if (r.punt) out.push(String(r.punt))
+    return out
+  }
+  return []
+}
+
 export default async function RapportPrintPagina({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const rapportId = parseInt(id)
@@ -22,7 +36,7 @@ export default async function RapportPrintPagina({ params }: { params: Promise<{
 
   await ensureProjectbeheerTables()
   const rows = await sql`
-    SELECT r.*, k.type_werk, k.status AS klus_status,
+    SELECT r.*, k.type_werk,
            kt.naam AS klant_naam, kt.email AS klant_email,
            kt.telefoon AS klant_tel, kt.locatie AS klant_locatie
     FROM opleveringsrapporten r
@@ -33,8 +47,9 @@ export default async function RapportPrintPagina({ params }: { params: Promise<{
   const rapport = rows[0]
   if (!rapport) notFound()
 
-  const inhoud = rapport.inhoud as { secties?: RapportSectie[]; aanvullend?: string } | null
-  const secties: RapportSectie[] = inhoud?.secties ?? []
+  const items = herstelItems(rapport.inhoud)
+  const aanvullend = rapport.inhoud?.aanvullend ?? rapport.notities ?? ''
+  const fotos: Foto[] = Array.isArray(rapport.fotos) ? rapport.fotos : []
   const docNumber = 'OPL-' + String(rapport.id).padStart(5, '0')
   const datum = new Date(rapport.bijgewerkt_op ?? rapport.aangemaakt_op).toLocaleDateString('nl-NL')
 
@@ -47,7 +62,7 @@ export default async function RapportPrintPagina({ params }: { params: Promise<{
           .actionbar { display: none !important; }
           .page { margin: 0 !important; box-shadow: none !important; min-height: auto !important; }
           .panel { break-inside: avoid; }
-          tr { break-inside: avoid; }
+          .foto-grid > div { break-inside: avoid; }
           * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       `}</style>
@@ -89,78 +104,78 @@ export default async function RapportPrintPagina({ params }: { params: Promise<{
             </aside>
           </header>
 
-          {/* Projectgegevens */}
-          <section style={{ marginTop: '7mm', border: '1px solid #dfe7ef', borderRadius: 10, overflow: 'hidden' }}>
-            <div style={{ padding: '3mm 4mm', background: '#f6f8fb', borderBottom: '1px solid #dfe7ef', color: '#0d1b3e', fontSize: '9pt', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>
-              Projectgegevens
+          {/* Projectgegevens — compact */}
+          <section style={{ marginTop: '7mm', border: '1px solid #dfe7ef', borderRadius: 10, padding: '4mm', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 9mm' }}>
+            {[
+              ['Klant', rapport.klant_naam],
+              ['Adres', rapport.klant_locatie || '-'],
+              ['Telefoon', rapport.klant_tel || '-'],
+              ['E-mail', rapport.klant_email || '-'],
+            ].map(([label, val]) => (
+              <div key={label} style={{ display: 'grid', gridTemplateColumns: '24mm 1fr', gap: '3mm', padding: '1.5mm 0', fontSize: '9pt' }}>
+                <span style={{ color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em', fontSize: '7.6pt' }}>{label}</span>
+                <span style={{ fontWeight: 650, wordBreak: 'break-word' }}>{val}</span>
+              </div>
+            ))}
+          </section>
+
+          {/* Uitgevoerde werkzaamheden */}
+          <section className="panel" style={{ marginTop: '5mm' }}>
+            <div style={{ padding: '3mm 4mm', background: '#0d1b3e', color: '#fff', fontSize: '9pt', fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', borderRadius: '10px 10px 0 0' }}>
+              Uitgevoerde werkzaamheden
             </div>
-            <div style={{ padding: '4mm', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 9mm' }}>
-              {[
-                ['Naam', rapport.klant_naam],
-                ['Projectnr.', `#${rapport.klus_id}`],
-                ['Adres', rapport.klant_locatie || '-'],
-                ['Werk', rapport.type_werk || '-'],
-                ['Telefoon', rapport.klant_tel || '-'],
-                ['E-mail', rapport.klant_email || '-'],
-              ].map(([label, val]) => (
-                <div key={label} style={{ display: 'grid', gridTemplateColumns: '27mm 1fr', gap: '4mm', padding: '2mm 0', borderBottom: '1px solid #edf1f5', fontSize: '9pt' }}>
-                  <span style={{ color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em', fontSize: '7.6pt' }}>{label}</span>
-                  <span style={{ fontWeight: 650, wordBreak: 'break-word' }}>{val}</span>
-                </div>
-              ))}
+            <div style={{ border: '1px solid #dfe7ef', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '5mm 6mm' }}>
+              {items.length === 0 ? (
+                <p style={{ color: '#94a3b8', fontSize: '9.5pt', margin: 0 }}>Geen werkzaamheden vastgelegd.</p>
+              ) : (
+                <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                  {items.map((it, i) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '3mm', padding: '2mm 0', borderBottom: i < items.length - 1 ? '1px solid #f1f5f9' : 'none', fontSize: '10pt', lineHeight: 1.5 }}>
+                      <span style={{ color: '#1d4fa3', fontWeight: 800, flexShrink: 0 }}>•</span>
+                      <span style={{ color: '#172033' }}>{it}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 
-          {/* Checklist secties */}
-          {secties.map((sectie, si) => (
-            <section key={si} className="panel" style={{ marginTop: '5mm', border: '1px solid #dfe7ef', borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ padding: '3mm 4mm', background: '#0d1b3e', color: '#fff', fontSize: '9pt', fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                {sectie.titel}
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8.9pt' }}>
-                <thead>
-                  <tr>
-                    {['Controlepunt', 'Resultaat', 'Opmerking'].map((h, i) => (
-                      <th key={h} style={{ background: '#f6f8fb', color: '#0d1b3e', padding: '2.4mm 2.3mm', textAlign: 'left', fontSize: '7.6pt', textTransform: 'uppercase', letterSpacing: '.06em', borderBottom: '1px solid #dfe7ef', width: i === 1 ? '22mm' : i === 2 ? '48mm' : 'auto' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sectie.rijen.map((rij, ri) => {
-                    const w = rij.waarde
-                    const sym = w === 'ja' ? '✓ Ja' : w === 'nee' ? '✗ Nee' : w === 'nvt' ? '— N.v.t.' : '—'
-                    const kleur = w === 'ja' ? '#2d8a4e' : w === 'nee' ? '#c0392b' : '#94a3b8'
-                    return (
-                      <tr key={ri} style={{ background: ri % 2 ? '#fafbfc' : '#fff' }}>
-                        <td style={{ padding: '2.2mm 2.3mm', borderBottom: '1px solid #edf1f5', color: '#233044' }}>{rij.punt}</td>
-                        <td style={{ padding: '2.2mm 2.3mm', borderBottom: '1px solid #edf1f5', color: kleur, fontWeight: 700, whiteSpace: 'nowrap' }}>{sym}</td>
-                        <td style={{ padding: '2.2mm 2.3mm', borderBottom: '1px solid #edf1f5', color: '#64748b', fontSize: '8.4pt' }}>{rij.opmerking || ''}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </section>
-          ))}
-
-          {/* Aanvullende opmerkingen / vrije notities */}
-          {(inhoud?.aanvullend?.trim() || rapport.notities) && (
-            <section className="panel" style={{ marginTop: '5mm', border: '1px solid #dfe7ef', borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ padding: '3mm 4mm', background: '#f6f8fb', borderBottom: '1px solid #dfe7ef', color: '#0d1b3e', fontSize: '9pt', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          {/* Aanvullende opmerkingen */}
+          {aanvullend.trim() && (
+            <section className="panel" style={{ marginTop: '5mm' }}>
+              <div style={{ padding: '3mm 4mm', background: '#f6f8fb', borderBottom: '1px solid #dfe7ef', color: '#0d1b3e', fontSize: '9pt', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', borderRadius: '10px 10px 0 0' }}>
                 Aanvullende opmerkingen
               </div>
-              <div style={{ padding: '4mm', fontSize: '9.5pt', lineHeight: 1.7, whiteSpace: 'pre-wrap', color: '#263244' }}>
-                {inhoud?.aanvullend?.trim() || rapport.notities}
+              <div style={{ border: '1px solid #dfe7ef', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '4mm', fontSize: '9.5pt', lineHeight: 1.7, whiteSpace: 'pre-wrap', color: '#263244' }}>
+                {aanvullend}
+              </div>
+            </section>
+          )}
+
+          {/* Foto's */}
+          {fotos.length > 0 && (
+            <section className="panel" style={{ marginTop: '5mm' }}>
+              <div style={{ padding: '3mm 4mm', background: '#f6f8fb', borderBottom: '1px solid #dfe7ef', color: '#0d1b3e', fontSize: '9pt', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', borderRadius: '10px 10px 0 0' }}>
+                Foto&apos;s
+              </div>
+              <div className="foto-grid" style={{ border: '1px solid #dfe7ef', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '4mm', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '3mm' }}>
+                {fotos.map((f, i) => (
+                  <div key={i}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={f.url} alt="" style={{ width: '100%', height: '40mm', objectFit: 'cover', borderRadius: 6, display: 'block', border: '1px solid #dfe7ef' }} />
+                    {f.caption && <p style={{ margin: '2mm 0 0', fontSize: '7.8pt', color: '#64748b', textAlign: 'center' }}>{f.caption}</p>}
+                  </div>
+                ))}
               </div>
             </section>
           )}
 
           {/* Ondertekening */}
-          <section className="panel" style={{ marginTop: '5mm', border: '1px solid #dfe7ef', borderRadius: 10, overflow: 'hidden' }}>
-            <div style={{ padding: '3mm 4mm', background: '#f6f8fb', borderBottom: '1px solid #dfe7ef', color: '#0d1b3e', fontSize: '9pt', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          <section className="panel" style={{ marginTop: '5mm' }}>
+            <div style={{ padding: '3mm 4mm', background: '#f6f8fb', borderBottom: '1px solid #dfe7ef', color: '#0d1b3e', fontSize: '9pt', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', borderRadius: '10px 10px 0 0' }}>
               Ondertekening
             </div>
-            <div style={{ padding: '4mm', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8mm' }}>
+            <div style={{ border: '1px solid #dfe7ef', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '4mm', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8mm' }}>
               <div style={{ minHeight: '30mm', border: '1px solid #dfe7ef', borderRadius: 10, padding: '4mm' }}>
                 <div style={{ color: '#64748b', fontSize: '7.8pt', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em' }}>Monteur</div>
                 {rapport.handtekening_monteur ? (
