@@ -8,6 +8,8 @@ import { sql } from '@/lib/db'
 import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
 import StatusBadge from '@/components/StatusBadge'
 import KlusActions from './KlusActions'
+import KlusInlineEditor from './KlusInlineEditor'
+import KlusKebabMenu from './KlusKebabMenu'
 import PuntenEditor from './PuntenEditor'
 import OfferteKoppelen from './OfferteKoppelen'
 import ProjectbeheerPaneel from './ProjectbeheerPaneel'
@@ -97,17 +99,19 @@ export default async function KlusDetailPage({
             <span className="mono" style={{ color: '#8ba8c4' }}>Project #{klus.id} · {new Date(klus.aangemaakt_op).toLocaleDateString('nl-NL')}</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <a href={waUrl} target="_blank" rel="noopener" className="btn btn-success btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>chat</span>
-            WhatsApp
-          </a>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {klus.klant_tel && (
-            <a href={`tel:${klus.klant_tel}`} className="btn btn-ghost btn-sm">
-              <span className="nav-ico" style={{ fontSize: 16 }}>call</span>
-              Bellen
-            </a>
+            <>
+              <a href={waUrl} target="_blank" rel="noopener" className="btn btn-success btn-sm" title="WhatsApp">
+                <span className="nav-ico" style={{ fontSize: 16 }}>chat</span>
+                WhatsApp
+              </a>
+              <a href={`tel:${klus.klant_tel}`} className="btn btn-ghost btn-sm" title="Bellen">
+                <span className="nav-ico" style={{ fontSize: 16 }}>call</span>
+              </a>
+            </>
           )}
+          <KlusKebabMenu klusId={klusId} klantNaam={klus.klant_naam} />
         </div>
       </div>
 
@@ -135,22 +139,11 @@ export default async function KlusDetailPage({
             </Link>
           </div>
 
-          {/* Aanvraagdetails */}
-          <div className="card">
-            <div className="section-label">Aanvraagdetails</div>
-            <div style={{ display: 'grid', gap: '10px 20px', gridTemplateColumns: '1fr 1fr', fontSize: '.84rem' }}>
-              <div><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>Type werk</span>{klus.type_werk || '—'}</div>
-              <div><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>Product</span>{klus.product || '—'}</div>
-              <div><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>Bron</span>{klus.bron}</div>
-              <div><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>Status</span><StatusBadge status={klus.status} /></div>
-              {klus.omschrijving && (
-                <div style={{ gridColumn: '1/-1' }}>
-                  <span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem', marginBottom: 4 }}>Omschrijving</span>
-                  <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{klus.omschrijving}</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Aanvraagdetails — inline editable met auto-save */}
+          <KlusInlineEditor
+            klusId={klusId}
+            initial={{ type_werk: klus.type_werk, product: klus.product, omschrijving: klus.omschrijving }}
+          />
 
           {/* Documenten: Offertes, Facturen & Werkafspraken */}
           <div className="card">

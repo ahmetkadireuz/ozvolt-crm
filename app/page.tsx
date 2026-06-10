@@ -147,6 +147,18 @@ export default async function Dashboard() {
           <h1 className="page-title">Overzicht</h1>
           <p style={{ margin: 0, fontSize: '.78rem', color: '#8ba8c4' }}>
             {nu.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {' · '}
+            <Link href="/klussen?status=nieuw" style={{ color: s.nieuw > 0 ? '#1d4ed8' : '#8ba8c4', textDecoration: 'none', fontWeight: 700 }}>
+              {s.nieuw} nieuw
+            </Link>
+            <span style={{ margin: '0 6px', color: '#cbd5e1' }}>·</span>
+            <Link href="/klussen" style={{ color: '#475569', textDecoration: 'none', fontWeight: 700 }}>
+              {s.open} lopend
+            </Link>
+            <span style={{ margin: '0 6px', color: '#cbd5e1' }}>·</span>
+            <Link href="/klanten" style={{ color: '#475569', textDecoration: 'none', fontWeight: 700 }}>
+              {s.klanten} klanten
+            </Link>
           </p>
         </div>
         <Link href="/klussen/nieuw" className="btn btn-primary">
@@ -200,31 +212,6 @@ export default async function Dashboard() {
             <div className="stat-sub" style={{ color: s.te_laat > 0 ? '#dc2626' : '#8ba8c4' }}>
               {s.te_laat > 0 ? `${s.te_laat} factuur/facturen verlopen` : 'Alles op tijd'}
             </div>
-          </div>
-        </Link>
-      </div>
-
-      {/* ── Aantallen ── */}
-      <div className="stats-grid" style={{ marginBottom: 28 }}>
-        <Link href="/klussen?status=nieuw" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ borderLeft: '3px solid #3b82f6' }}>
-            <div className="stat-label">Nieuwe aanvragen</div>
-            <div className="stat-value" style={{ color: '#1d4ed8' }}>{s.nieuw}</div>
-            <div className="stat-sub">Wachten op opvolging</div>
-          </div>
-        </Link>
-        <Link href="/klussen" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ borderLeft: '3px solid #f59e0b' }}>
-            <div className="stat-label">Lopende projecten</div>
-            <div className="stat-value">{s.open}</div>
-            <div className="stat-sub">In behandeling / gepland</div>
-          </div>
-        </Link>
-        <Link href="/klanten" style={{ textDecoration: 'none' }}>
-          <div className="stat-card">
-            <div className="stat-label">Klanten</div>
-            <div className="stat-value">{s.klanten}</div>
-            <div className="stat-sub">Totaal in database</div>
           </div>
         </Link>
       </div>

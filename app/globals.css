@@ -302,3 +302,16 @@ textarea.form-ctrl { resize: vertical; min-height: 90px; }
   background: #fff; color: #dc2626; cursor: pointer; font-size: 14px;
 }
 .btn-row-del:hover { background: #fef2f2; }
+
+/* ── Status-pills op klusdetail ── */
+.status-pill {
+  padding: 5px 12px; border: 1px solid #e2e8f0; border-radius: 999px;
+  background: #fff; color: #475569; font-size: .76rem; font-weight: 700;
+  cursor: pointer; transition: background .14s, color .14s, border-color .14s;
+  font-family: inherit;
+}
+.status-pill:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+.status-pill.active {
+  background: #0d1b3e; border-color: #0d1b3e; color: #fff; cursor: default;
+}
+.status-pill:disabled { cursor: default; }

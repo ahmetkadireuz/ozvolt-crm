@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAutosave } from '@/lib/use-autosave'
 
 interface Punt {
   omschrijving: string
@@ -17,8 +18,15 @@ interface Props {
 export default function PuntenEditor({ klusId, initialPunten }: Props) {
   const router = useRouter()
   const [punten, setPunten] = useState<Punt[]>(initialPunten)
-  const [saving, setSaving] = useState(false)
-  const [ok, setOk] = useState(false)
+
+  const { saving, saved } = useAutosave(punten, async val => {
+    await fetch(`/api/klussen/${klusId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ portaal_punten: val }),
+    })
+    router.refresh()
+  })
 
   function update(i: number, field: keyof Punt, value: string) {
     setPunten(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: value } : p))
@@ -32,22 +40,14 @@ export default function PuntenEditor({ klusId, initialPunten }: Props) {
     setPunten(prev => prev.filter((_, idx) => idx !== i))
   }
 
-  async function save() {
-    setSaving(true)
-    await fetch(`/api/klussen/${klusId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ portaal_punten: punten }),
-    })
-    setSaving(false)
-    setOk(true)
-    setTimeout(() => setOk(false), 3000)
-    router.refresh()
-  }
-
   return (
     <div className="card">
-      <div className="section-label">Afspraken voor klant portaal</div>
+      <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>Afspraken voor klantportaal</span>
+        <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
+          {saving ? 'Opslaan…' : saved ? '✓ Opgeslagen' : ''}
+        </span>
+      </div>
       <p style={{ fontSize: '.78rem', color: '#8ba8c4', marginBottom: 12 }}>
         Alleen zichtbaar voor de klant in het portaal.
       </p>
@@ -96,16 +96,9 @@ export default function PuntenEditor({ klusId, initialPunten }: Props) {
         </div>
       ))}
 
-      <button type="button" className="btn btn-ghost btn-sm" onClick={add} style={{ marginBottom: 12 }}>
+      <button type="button" className="btn btn-ghost btn-sm" onClick={add}>
         <span className="nav-ico" style={{ fontSize: 15 }}>add</span>
         Afspraak toevoegen
-      </button>
-
-      {ok && <p style={{ color: '#16a34a', fontSize: 12, margin: '0 0 8px' }}>✓ Opgeslagen — zichtbaar in portaal</p>}
-
-      <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={saving}
-        style={{ width: '100%', justifyContent: 'center' }}>
-        {saving ? 'Opslaan…' : 'Opslaan in portaal'}
       </button>
     </div>
   )
