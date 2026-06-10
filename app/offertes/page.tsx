@@ -23,8 +23,8 @@ export default async function OffertesPage({ searchParams }: { searchParams: Pro
   const filter = validStatuses.includes(status) ? status : null
 
   const offertes = filter
-    ? await sql`SELECT o.*, kt.naam AS klant_naam FROM offertes o JOIN klanten kt ON kt.id = o.klant_id WHERE o.status = ${filter} ORDER BY o.datum DESC`
-    : await sql`SELECT o.*, kt.naam AS klant_naam FROM offertes o JOIN klanten kt ON kt.id = o.klant_id ORDER BY o.datum DESC`
+    ? await sql`SELECT o.*, kt.naam AS klant_naam, kt.locatie FROM offertes o JOIN klanten kt ON kt.id = o.klant_id WHERE o.status = ${filter} ORDER BY o.datum DESC`
+    : await sql`SELECT o.*, kt.naam AS klant_naam, kt.locatie FROM offertes o JOIN klanten kt ON kt.id = o.klant_id ORDER BY o.datum DESC`
 
   const counts = await sql`SELECT status, COUNT(*)::int AS n FROM offertes GROUP BY status`
   const cm: Record<string, number> = { alles: 0 }
@@ -33,7 +33,9 @@ export default async function OffertesPage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <div className="topbar">
-        <h1 className="page-title">Offertes</h1>
+        <h1 className="page-title">
+          Offertes <span style={{ color: '#8ba8c4', fontWeight: 600, fontSize: '.85em' }}>{cm['alles'] ?? 0}</span>
+        </h1>
         <Link href="/offertes/nieuw" className="btn btn-primary">
           <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
           Nieuwe offerte

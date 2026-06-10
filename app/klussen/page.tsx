@@ -17,20 +17,12 @@ const STATUS_TABS = [
   { key: 'afgerond', label: 'Afgerond' },
 ]
 
-function timeAgo(dt: string) {
-  const diff = Math.floor((Date.now() - new Date(dt).getTime()) / 1000)
-  if (diff < 60)    return 'zojuist'
-  if (diff < 3600)  return `${Math.round(diff / 60)}m`
-  if (diff < 86400) return `${Math.round(diff / 3600)}u`
-  return `${Math.round(diff / 86400)}d`
-}
-
 export default async function KlussenPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>
+  searchParams: Promise<{ status?: string }>
 }) {
-  const { status = 'alles', q = '' } = await searchParams
+  const { status = 'alles' } = await searchParams
 
   const validStatuses = ['nieuw','in_behandeling','offerte_gestuurd','gepland','afgerond']
   const filterStatus = validStatuses.includes(status) ? status : null
@@ -41,14 +33,12 @@ export default async function KlussenPage({
                kt.naam AS klant_naam, kt.telefoon, kt.locatie
         FROM klussen k JOIN klanten kt ON kt.id = k.klant_id
         WHERE k.status = ${filterStatus}
-          AND (${q} = '' OR kt.naam ILIKE ${'%' + q + '%'} OR k.type_werk ILIKE ${'%' + q + '%'})
         ORDER BY k.aangemaakt_op DESC
       `
     : await sql`
         SELECT k.id, k.type_werk, k.status, k.bron, k.aangemaakt_op, k.gebeld_status,
                kt.naam AS klant_naam, kt.telefoon, kt.locatie
         FROM klussen k JOIN klanten kt ON kt.id = k.klant_id
-        WHERE (${q} = '' OR kt.naam ILIKE ${'%' + q + '%'} OR k.type_werk ILIKE ${'%' + q + '%'})
         ORDER BY k.aangemaakt_op DESC
       `
 
@@ -59,20 +49,26 @@ export default async function KlussenPage({
   return (
     <div>
       <div className="topbar">
-        <h1 className="page-title">Projecten</h1>
-        <Link href="/klussen/nieuw" className="btn btn-primary">
-          <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
-          Nieuw project
-        </Link>
+        <h1 className="page-title">Klussen &amp; aanvragen</h1>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Link href="/klussen/nieuw" className="btn btn-primary">
+            <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
+            Klus toevoegen
+          </Link>
+          <Link href="/klanten/nieuw" className="btn btn-ghost">
+            <span className="nav-ico" style={{ fontSize: 18 }}>person_add</span>
+            Klant toevoegen
+          </Link>
+        </div>
       </div>
 
-      {/* Filters */}
+      {/* Status filters */}
       <div className="toolbar">
         <div className="filter-tabs">
           {STATUS_TABS.map(tab => (
             <Link
               key={tab.key}
-              href={`/klussen?status=${tab.key}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+              href={`/klussen?status=${tab.key}`}
               className={`filter-tab ${status === tab.key ? 'active' : ''}`}
             >
               {tab.label}
@@ -82,18 +78,6 @@ export default async function KlussenPage({
             </Link>
           ))}
         </div>
-        <form style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-          <input type="hidden" name="status" value={status} />
-          <input
-            className="form-ctrl"
-            type="search"
-            name="q"
-            defaultValue={q}
-            placeholder="Zoek klant of type werk…"
-            style={{ width: 220 }}
-          />
-          <button type="submit" className="btn btn-ghost btn-sm">Zoeken</button>
-        </form>
       </div>
 
       <KlussenTable klussen={klussen as any[]} />
