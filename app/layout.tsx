@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 }
 
-const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte/', '/werkafspraak/', '/klant']
-const BARE_PATHS = ['/offerte/', '/werkafspraak/', '/klant'] // volledig kaal — eigen layout
+const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte/', '/werkafspraak/', '/klant', '/rapporten/']
+const BARE_PATHS = ['/offerte/', '/werkafspraak/', '/klant', '/rapporten/'] // volledig kaal — eigen layout
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers()

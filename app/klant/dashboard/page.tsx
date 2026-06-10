@@ -4,10 +4,15 @@ export const revalidate = 0
 import { redirect } from 'next/navigation'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
+import { ensureProjectbeheerTables, berekenVoortgang } from '@/lib/projectbeheer'
+import MeerwerkAccepteren from './MeerwerkAccepteren'
 
 export default async function KlantDashboard() {
   const klantId = await getKlantSessie()
   if (!klantId) redirect('/klant/geen-toegang')
+
+  // Zorgt o.a. dat de kolom getekend_op op opleveringsrapporten bestaat
+  await ensureProjectbeheerTables()
 
   const [klantRows, klussen, offertes, facturen, werkafspraken, rapporten, documenten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
@@ -15,7 +20,7 @@ export default async function KlantDashboard() {
     sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct, mollie_status FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klant_id = ${klantId} AND jsonb_array_length(afspraken) > 0 ORDER BY datum DESC`,
-    sql`SELECT id, klus_id, titel, aangemaakt_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
+    sql`SELECT id, klus_id, titel, aangemaakt_op, getekend_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
   ])
 
@@ -32,6 +37,22 @@ export default async function KlantDashboard() {
         portaalPuntenMap[row.id] = Array.isArray(row.portaal_punten) ? row.portaal_punten : []
       }
     } catch { /* kolom bestaat nog niet */ }
+  }
+
+  // Voortgang (taken) en meerwerk per klus
+  const voortgangMap: Record<number, { totaal: number; klaar: number; pct: number }> = {}
+  const meerwerkMap: Record<number, any[]> = {}
+  if (klussenIds.length > 0) {
+    try {
+      const [takenRows, meerwerkRows] = await Promise.all([
+        sql`SELECT klus_id, gereed, aantal_totaal, aantal_klaar FROM project_taken WHERE klus_id = ANY(${klussenIds})`,
+        sql`SELECT * FROM project_meerwerk WHERE klus_id = ANY(${klussenIds}) AND status <> 'geweigerd' ORDER BY aangemaakt_op, id`,
+      ])
+      const perKlus: Record<number, any[]> = {}
+      for (const t of takenRows) (perKlus[t.klus_id] ??= []).push(t)
+      for (const [kid, taken] of Object.entries(perKlus)) voortgangMap[Number(kid)] = berekenVoortgang(taken as any)
+      for (const m of meerwerkRows) (meerwerkMap[m.klus_id] ??= []).push(m)
+    } catch { /* tabellen bestaan nog niet */ }
   }
 
   function totaalOfferte(o: Record<string, any>) {
@@ -65,6 +86,8 @@ export default async function KlantDashboard() {
       <Section titel="Uw projecten">
         {klussen.length === 0 ? <Leeg tekst="Geen lopende projecten" /> : klussen.map((k: any) => {
           const punten: any[] = portaalPuntenMap[k.id] ?? []
+          const vg = voortgangMap[k.id]
+          const klusMeerwerk: any[] = meerwerkMap[k.id] ?? []
           return (
             <Kaart key={k.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -74,6 +97,34 @@ export default async function KlantDashboard() {
                 </div>
                 <Badge tekst={k.status} kleur={statusKleur[k.status] ?? '#64748b'} />
               </div>
+              {vg && vg.totaal > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#64748b', marginBottom: 4 }}>
+                    <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Voortgang</span>
+                    <span>{vg.klaar} van {vg.totaal} afgerond · <strong>{vg.pct}%</strong></span>
+                  </div>
+                  <div style={{ height: 8, background: '#eef2f7', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${Math.max(2, vg.pct)}%`, background: '#16a34a', borderRadius: 99 }} />
+                  </div>
+                </div>
+              )}
+              {klusMeerwerk.length > 0 && (
+                <div style={{ marginTop: 12, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Meerwerk</div>
+                  {klusMeerwerk.map((m: any) => (
+                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 6, fontSize: 12 }}>
+                      <span style={{ color: '#0d1b3e' }}>
+                        <strong>{m.omschrijving}</strong> — {formatEuro(Number(m.bedrag))}
+                      </span>
+                      {m.status === 'geaccepteerd' ? (
+                        <Badge tekst="geaccepteerd" kleur="#16a34a" />
+                      ) : (
+                        <MeerwerkAccepteren meerwerkId={m.id} omschrijving={m.omschrijving} bedrag={Number(m.bedrag)} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
               {punten.length > 0 && (
                 <div style={{ marginTop: 12, borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Afgesproken werkzaamheden</div>
@@ -234,9 +285,12 @@ export default async function KlantDashboard() {
           {rapporten.map((r: any) => (
             <a key={r.id} href={`/klant/rapport/${r.id}`} style={{ textDecoration: 'none' }}>
               <Kaart hover>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                   <div style={{ fontWeight: 600, fontSize: 14, color: '#0d1b3e' }}>{r.titel}</div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>{new Date(r.aangemaakt_op).toLocaleDateString('nl-NL')}</div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>{new Date(r.aangemaakt_op).toLocaleDateString('nl-NL')}</div>
+                    <Badge tekst={r.getekend_op ? '✓ ondertekend' : 'nog te ondertekenen'} kleur={r.getekend_op ? '#16a34a' : '#f59e0b'} />
+                  </div>
                 </div>
               </Kaart>
             </a>

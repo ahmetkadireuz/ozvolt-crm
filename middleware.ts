@@ -23,6 +23,8 @@ const KLANT_PATHS = [
   '/klant/',           // alle klantportaal pagina's
   '/api/klant/profiel',
   '/api/klant/groenverklaring',
+  '/api/klant/rapport/tekenen',
+  '/api/klant/meerwerk/accepteren',
 ]
 
 // Controleert of het pad een klant-betaallink is: /api/facturen/[id]/betaal-link

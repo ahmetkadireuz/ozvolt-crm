@@ -5,10 +5,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
+import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
 import StatusBadge from '@/components/StatusBadge'
 import KlusActions from './KlusActions'
 import PuntenEditor from './PuntenEditor'
 import OfferteKoppelen from './OfferteKoppelen'
+import ProjectbeheerPaneel from './ProjectbeheerPaneel'
 
 export const metadata: Metadata = { title: 'Project detail' }
 
@@ -55,6 +57,26 @@ export default async function KlusDetailPage({
     const p = await sql`SELECT portaal_punten FROM klussen WHERE id = ${klusId}`
     portaalPunten = Array.isArray(p[0]?.portaal_punten) ? p[0].portaal_punten : []
   } catch {}
+
+  // Projectbeheer: uren, taken, meerwerk, rapporten en financieel overzicht
+  await ensureProjectbeheerTables()
+  const [uren, taken, meerwerk, rapporten, omzetRows, kostenRows] = await Promise.all([
+    sql`SELECT * FROM project_uren WHERE klus_id = ${klusId} ORDER BY datum DESC, id DESC`,
+    sql`SELECT * FROM project_taken WHERE klus_id = ${klusId} ORDER BY volgorde, id`,
+    sql`SELECT * FROM project_meerwerk WHERE klus_id = ${klusId} ORDER BY aangemaakt_op, id`,
+    sql`SELECT id, titel, type, getekend_op, aangemaakt_op FROM opleveringsrapporten WHERE klus_id = ${klusId} ORDER BY aangemaakt_op DESC`,
+    sql`
+      SELECT COALESCE(SUM(
+        (SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
+         FROM jsonb_array_elements(regels) r)
+        * (1 - korting_pct / 100.0)
+      ), 0) AS omzet
+      FROM offertes WHERE klus_id = ${klusId} AND status = 'geaccepteerd'
+    `,
+    sql`SELECT COALESCE(SUM(bedrag), 0) AS totaal FROM kosten WHERE klus_id = ${klusId}`,
+  ])
+  const omzet = Number(omzetRows[0]?.omzet ?? 0)
+  const kostenTotaal = Number(kostenRows[0]?.totaal ?? 0)
 
   const klus = klusRows[0]
   if (!klus) notFound()
@@ -209,6 +231,17 @@ export default async function KlusDetailPage({
           documenten={documenten}
         />
       </div>
+
+      {/* Projectbeheer: financieel, taken, uren, meerwerk, opleveringsrapporten */}
+      <ProjectbeheerPaneel
+        klusId={klusId}
+        uren={uren as any}
+        taken={taken as any}
+        meerwerk={meerwerk as any}
+        rapporten={rapporten as any}
+        omzet={omzet}
+        kosten={kostenTotaal}
+      />
     </div>
   )
 }
