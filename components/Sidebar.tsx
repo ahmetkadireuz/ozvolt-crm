@@ -19,6 +19,7 @@ const navOps = [
   { key: '/kosten',             icon: 'payments',         label: 'Kosten' },
   { key: '/inkoop',             icon: 'shopping_cart',    label: 'Inkoop' },
   { key: '/groepenverklaring',  icon: 'electrical_services', label: 'Groepenverklaring' },
+  { key: '/instellingen/boekhouding', icon: 'account_balance', label: 'Boekhouding' },
 ]
 
 const navAI = [
