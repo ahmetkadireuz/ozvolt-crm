@@ -38,6 +38,11 @@ export type IconName =
   | 'eye'
   | 'download'
   | 'chevron-right'
+  | 'copy'
+  | 'send'
+  | 'refresh'
+  | 'external'
+  | 'x'
 
 const PATHS: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -190,6 +195,27 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
   'chevron-right': <path d="m9 6 6 6-6 6" />,
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+    </>
+  ),
+  send: <path d="m4 12 16-8-6 18-3-7-7-3z" />,
+  refresh: (
+    <>
+      <path d="M21 12a9 9 0 1 1-3-6.7" />
+      <path d="M21 4v5h-5" />
+    </>
+  ),
+  external: (
+    <>
+      <path d="M14 4h6v6" />
+      <path d="m10 14 10-10" />
+      <path d="M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" />
+    </>
+  ),
+  x: <path d="M18 6 6 18M6 6l12 12" />,
 }
 
 export default function Icon({ name, size = 18, className, strokeWidth = 1.6, style }: Props) {

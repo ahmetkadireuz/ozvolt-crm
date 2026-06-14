@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import RegelEditor from '@/components/RegelEditor'
+import Icon from '@/components/Icon'
 import type { RegelItem } from '@/lib/utils'
 
 export default function FactuurForm({ factuur, klanten, factuurId }: { factuur: any; klanten: any[]; factuurId: number }) {
@@ -68,7 +69,7 @@ export default function FactuurForm({ factuur, klanten, factuurId }: { factuur: 
       </div>
 
       <button type="submit" className="btn btn-primary" disabled={saving}>
-        <span className="nav-ico" style={{ fontSize: 18 }}>save</span>
+        <Icon name="check" size={18} />
         {saving ? 'Opslaan…' : 'Factuur opslaan'}
       </button>
     </form>

@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
 import FacturenTable from './FacturenTable'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Facturen' }
 
@@ -32,9 +33,12 @@ export default async function FacturenPage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <div className="topbar">
-        <h1 className="page-title">Facturen</h1>
+        <div>
+          <h1 className="page-title">Facturen</h1>
+          <p className="page-sub">{cm['alles'] ?? 0} factuur/facturen totaal</p>
+        </div>
         <Link href="/facturen/nieuw" className="btn btn-primary">
-          <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
+          <Icon name="plus" size={16} />
           Nieuwe factuur
         </Link>
       </div>

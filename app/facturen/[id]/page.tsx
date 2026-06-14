@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { berekenTotalen } from '@/lib/utils'
 import StatusBadge from '@/components/StatusBadge'
+import Icon from '@/components/Icon'
 import FactuurForm from './FactuurForm'
 import FactuurActions from './FactuurActions'
 
@@ -34,7 +35,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/facturen" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <div>
             <h1 className="page-title">Factuur {factuur.factuurnummer}</h1>
@@ -45,7 +46,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
         <Link href={`/api/facturen/${factuurId}/pdf`} target="_blank" className="btn btn-ghost btn-sm">
-          <span className="nav-ico" style={{ fontSize: 16 }}>print</span>
+          <Icon name="download" size={16} />
           PDF
         </Link>
       </div>

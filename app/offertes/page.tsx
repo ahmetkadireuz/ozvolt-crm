@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
 import OffertesTable from './OffertesTable'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Offertes' }
 
@@ -33,11 +34,12 @@ export default async function OffertesPage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <div className="topbar">
-        <h1 className="page-title">
-          Offertes <span style={{ color: '#8ba8c4', fontWeight: 600, fontSize: '.85em' }}>{cm['alles'] ?? 0}</span>
-        </h1>
+        <div>
+          <h1 className="page-title">Offertes</h1>
+          <p className="page-sub">{cm['alles'] ?? 0} offerte{cm['alles'] === 1 ? '' : 's'} totaal</p>
+        </div>
         <Link href="/offertes/nieuw" className="btn btn-primary">
-          <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
+          <Icon name="plus" size={16} />
           Nieuwe offerte
         </Link>
       </div>

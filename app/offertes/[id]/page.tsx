@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
 import StatusBadge from '@/components/StatusBadge'
+import Icon from '@/components/Icon'
 import OfferteActions from './OfferteActions'
 import OfferteForm from './OfferteForm'
 
@@ -66,7 +67,7 @@ export default async function OfferteDetailPage({
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/offertes" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <div>
             <h1 className="page-title">Offerte OZVT-{String(offerte.offertenummer).padStart(4,'0')}</h1>
@@ -103,7 +104,7 @@ export default async function OfferteDetailPage({
             Kosten &amp; marge — {offerte.klant_naam}
           </h2>
           <Link href="/kosten" className="btn btn-ghost btn-sm">
-            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>
+            <Icon name="arrow-right" size={15} />
             Alle kosten
           </Link>
         </div>

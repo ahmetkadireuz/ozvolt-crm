@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Nieuwe factuur' }
 
@@ -61,7 +62,7 @@ export default async function NieuweFactuurPage({
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href={terugUrl} className="btn btn-ghost btn-sm">
-            <span className="material-symbols-outlined nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <h1 className="page-title">Nieuwe factuur</h1>
         </div>

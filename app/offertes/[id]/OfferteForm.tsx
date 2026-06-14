@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import RegelEditor from '@/components/RegelEditor'
 import WerkafsprakenEditor, { type WaItem, type Bijlage } from '@/components/WerkafsprakenEditor'
+import Icon from '@/components/Icon'
 import type { RegelItem } from '@/lib/utils'
 
 export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: any; klanten: any[]; offerteId: number }) {
@@ -104,11 +105,11 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
 
       <div style={{ display: 'flex', gap: 10 }}>
         <button type="submit" className="btn btn-primary" disabled={saving}>
-          <span className="nav-ico" style={{ fontSize: 18 }}>save</span>
+          <Icon name="check" size={18} />
           {saving ? 'Opslaan…' : 'Offerte opslaan'}
         </button>
         <button type="button" className="btn btn-ghost" disabled={saving} onClick={handlePdf}>
-          <span className="nav-ico" style={{ fontSize: 18 }}>print</span>
+          <Icon name="download" size={18} />
           {saving ? 'Opslaan…' : 'PDF bekijken'}
         </button>
       </div>

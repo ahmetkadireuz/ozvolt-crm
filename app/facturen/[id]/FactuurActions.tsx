@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatEuro } from '@/lib/utils'
+import Icon from '@/components/Icon'
 
 export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean }) {
   const router = useRouter()
@@ -55,6 +56,28 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
     }
   }
 
+  const [refreshBezig, setRefreshBezig] = useState(false)
+  async function refreshMoneybirdStatus() {
+    if (!factuur.moneybird_id) return
+    setRefreshBezig(true)
+    try {
+      const res = await fetch('/api/moneybird/refresh-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ factuurId }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        if (data.statusVeranderd) alert(`Status bijgewerkt: ${data.nieuweStatus}`)
+        router.refresh()
+      } else {
+        alert('❌ ' + (data.error ?? 'Status ophalen mislukt'))
+      }
+    } finally {
+      setRefreshBezig(false)
+    }
+  }
+
   async function deleteFactuur() {
     if (!confirm('Factuur verwijderen?')) return
     await fetch(`/api/facturen/${factuurId}`, { method: 'DELETE' })
@@ -92,7 +115,7 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
             onClick={versturen}
             disabled={!factuur.klant_email}
           >
-            <span className="material-symbols-outlined nav-ico" style={{ fontSize: 16 }}>send</span>
+            <Icon name="send" size={16} />
             Factuur versturen
           </button>
           <button
@@ -102,7 +125,7 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
             onClick={() => updateStatus('betaald')}
             disabled={factuur.status === 'betaald'}
           >
-            <span className="material-symbols-outlined nav-ico" style={{ fontSize: 16 }}>check_circle</span>
+            <Icon name="check" size={16} />
             Markeer als betaald
           </button>
 
@@ -115,19 +138,19 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
                   <input className="form-ctrl" value={factuur.betaal_url} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
                   <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren"
                     onClick={() => navigator.clipboard.writeText(factuur.betaal_url)}>
-                    <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>content_copy</span>
+                    <Icon name="copy" size={14} />
                   </button>
                 </div>
                 <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
                   onClick={maakBetaallink} disabled={betaallinkLoading}>
-                  <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>refresh</span>
+                  <Icon name="refresh" size={14} />
                   {betaallinkLoading ? 'Bezig…' : 'Nieuwe link aanmaken'}
                 </button>
               </div>
             ) : (
               <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
                 onClick={maakBetaallink} disabled={betaallinkLoading}>
-                <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>payments</span>
+                <Icon name="payments" size={14} />
                 {betaallinkLoading ? 'Bezig…' : 'Online betaallink aanmaken'}
               </button>
             )}
@@ -136,24 +159,31 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
           {/* Moneybird boekhouden */}
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8, marginTop: 2 }}>
             {factuur.moneybird_id ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
-                <span style={{ fontSize: '.78rem', color: '#5b7fa6', flex: 1 }}>In Moneybird (boekhouden)</span>
-                {factuur.moneybird_url && (
-                  <a href={factuur.moneybird_url} target="_blank" rel="noopener noreferrer"
-                    className="btn btn-ghost btn-sm" style={{ padding: '3px 8px' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>
-                  </a>
-                )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} />
+                  <span style={{ fontSize: '.78rem', color: 'var(--text-mute)', flex: 1 }}>In Moneybird</span>
+                  {factuur.moneybird_url && (
+                    <a href={factuur.moneybird_url} target="_blank" rel="noopener noreferrer"
+                      className="btn btn-ghost btn-sm" style={{ padding: '3px 8px' }}>
+                      <Icon name="external" size={14} />
+                    </a>
+                  )}
+                </div>
+                <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+                  onClick={refreshMoneybirdStatus} disabled={refreshBezig}>
+                  <Icon name="refresh" size={14} />
+                  {refreshBezig ? 'Bezig…' : 'Status uit Moneybird ophalen'}
+                </button>
               </div>
             ) : !mbConfigured ? (
-              <div style={{ fontSize: '.75rem', color: '#94a3b8', fontStyle: 'italic' }}>
+              <div style={{ fontSize: '.75rem', color: 'var(--text-soft)', fontStyle: 'italic' }}>
                 Moneybird niet geconfigureerd
               </div>
             ) : (
               <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
                 onClick={syncMoneybird}>
-                <img src="https://www.moneybird.com/favicon.ico" style={{ width: 14, height: 14 }} alt="" />
+                <Icon name="book" size={14} />
                 Verwerken in Moneybird
               </button>
             )}
@@ -175,14 +205,14 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
               disabled={factuur.status === s}
             >
               {STATUS_LABELS[s]}
-              {factuur.status === s && <span className="nav-ico" style={{ fontSize: 14 }}>check</span>}
+              {factuur.status === s && <Icon name="check" size={14} />}
             </button>
           ))}
         </div>
       </div>
 
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteFactuur} style={{ width: '100%', justifyContent: 'center' }}>
-        <span className="nav-ico" style={{ fontSize: 16 }}>delete</span>
+        <Icon name="trash" size={16} />
         Verwijderen
       </button>
     </div>
