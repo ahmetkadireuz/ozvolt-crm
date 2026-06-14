@@ -4,6 +4,7 @@ export const revalidate = 0
 import type { Metadata } from 'next'
 import { sql, formatEuro } from '@/lib/db'
 import CopyKnop from './CopyKnop'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Boekhouding' }
 
@@ -75,9 +76,7 @@ export default async function BoekhoudingPage() {
             background: liveCheck.ok ? 'rgba(45,138,78,.12)' : '#f1f5f9',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 26, color: liveCheck.ok ? '#16a34a' : '#64748b' }}>
-              {liveCheck.ok ? 'check_circle' : 'sync_problem'}
-            </span>
+            <Icon name={liveCheck.ok ? 'check-circle' : 'alert-circle'} size={26} style={{ color: liveCheck.ok ? '#16a34a' : '#64748b' }} />
           </div>
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ fontWeight: 800, color: '#0d1b3e', fontSize: '1.05rem' }}>

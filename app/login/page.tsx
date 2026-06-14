@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
+import Icon, { type IconName } from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Inloggen — Ozvolt CRM' }
 
@@ -58,15 +59,15 @@ export default async function LoginPage({
           <p style={{ color: '#4a6580', margin: '0 0 44px', fontSize: '.82rem' }}>CRM Beheerportaal</p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
-            {[
+            {([
               { icon: 'construction', text: 'Klussen & klanten beheren' },
-              { icon: 'description', text: 'Offertes & facturen versturen' },
-              { icon: 'calendar_month', text: 'Agenda & afspraken plannen' },
-              { icon: 'auto_awesome', text: 'AI-gestuurde mails opstellen' },
-            ].map(item => (
+              { icon: 'file-text',    text: 'Offertes & facturen versturen' },
+              { icon: 'calendar',     text: 'Agenda & afspraken plannen' },
+              { icon: 'sparkles',     text: 'AI-gestuurde mails opstellen' },
+            ] as { icon: IconName; text: string }[]).map(item => (
               <div key={item.icon} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#fff' }}>{item.icon}</span>
+                  <Icon name={item.icon} size={18} style={{ color: '#fff' }} />
                 </div>
                 <span style={{ color: '#c8d8ea', fontSize: '.88rem' }}>{item.text}</span>
               </div>
@@ -103,7 +104,7 @@ export default async function LoginPage({
               padding: '12px 16px', marginBottom: 20, fontSize: '.85rem', color: '#dc2626',
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>error</span>
+              <Icon name="alert-circle" size={18} />
               {error === 'locked'
                 ? 'Te veel pogingen. Probeer het over 5 minuten opnieuw.'
                 : 'Onjuiste gebruikersnaam of wachtwoord.'}
@@ -114,9 +115,7 @@ export default async function LoginPage({
             <div>
               <label className="form-label">Gebruikersnaam</label>
               <div style={{ position: 'relative' }}>
-                <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 18, color: '#8ba8c4', pointerEvents: 'none' }}>
-                  person
-                </span>
+                <Icon name="user" size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#8ba8c4', pointerEvents: 'none' }} />
                 <input
                   className="form-ctrl"
                   type="text"
@@ -132,9 +131,7 @@ export default async function LoginPage({
             <div>
               <label className="form-label">Wachtwoord</label>
               <div style={{ position: 'relative' }}>
-                <span className="material-symbols-outlined" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 18, color: '#8ba8c4', pointerEvents: 'none' }}>
-                  lock
-                </span>
+                <Icon name="lock" size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#8ba8c4', pointerEvents: 'none' }} />
                 <input
                   className="form-ctrl"
                   type="password"
@@ -151,7 +148,7 @@ export default async function LoginPage({
               className="btn btn-primary"
               style={{ width: '100%', justifyContent: 'center', padding: '13px', fontSize: '.95rem', marginTop: 4, borderRadius: 12 }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>login</span>
+              <Icon name="login" size={18} />
               Inloggen
             </button>
           </form>

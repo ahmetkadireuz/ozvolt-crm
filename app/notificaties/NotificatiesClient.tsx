@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Icon, { type IconName } from '@/components/Icon'
 
 type Notif = {
   id: number
@@ -13,14 +14,14 @@ type Notif = {
   aangemaakt_op: string
 }
 
-const typeConfig: Record<string, { icon: string; color: string }> = {
+const typeConfig: Record<string, { icon: IconName; color: string }> = {
   nieuw_klus:       { icon: 'construction',    color: '#3b82f6' },
-  offerte_akkoord:  { icon: 'check_circle',     color: '#16a34a' },
-  factuur_te_laat:  { icon: 'warning',          color: '#dc2626' },
-  afspraak_morgen:  { icon: 'calendar_month',   color: '#8b5cf6' },
-  klus_stilstand:   { icon: 'hourglass_empty',  color: '#f59e0b' },
-  offerte_verlopen: { icon: 'timer_off',        color: '#f97316' },
-  info:             { icon: 'info',             color: '#6b7280' },
+  offerte_akkoord:  { icon: 'check-circle',    color: '#16a34a' },
+  factuur_te_laat:  { icon: 'alert-triangle',  color: '#dc2626' },
+  afspraak_morgen:  { icon: 'calendar',        color: '#8b5cf6' },
+  klus_stilstand:   { icon: 'hourglass',       color: '#f59e0b' },
+  offerte_verlopen: { icon: 'timer-off',       color: '#f97316' },
+  info:             { icon: 'info',            color: '#6b7280' },
 }
 
 function timeAgo(dt: string) {
@@ -66,7 +67,7 @@ export default function NotificatiesClient({ notifs }: { notifs: Notif[] }) {
         </div>
         {ongelezen > 0 && (
           <button className="btn btn-ghost btn-sm" onClick={markAllRead}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>done_all</span>
+            <Icon name="done-all" size={16} />
             Alles gelezen
           </button>
         )}
@@ -83,7 +84,7 @@ export default function NotificatiesClient({ notifs }: { notifs: Notif[] }) {
 
       {visible.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 48, color: '#8ba8c4', display: 'block', marginBottom: 12 }}>notifications_none</span>
+          <Icon name="bell" size={48} style={{ color: '#8ba8c4', display: 'block', margin: '0 auto 12px' }} />
           <p style={{ color: '#8ba8c4', margin: 0 }}>
             {filter === 'ongelezen' ? 'Geen ongelezen meldingen.' : 'Geen meldingen.'}
           </p>
@@ -106,7 +107,7 @@ export default function NotificatiesClient({ notifs }: { notifs: Notif[] }) {
               >
                 {/* Icoon */}
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: cfg.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 20, color: cfg.color }}>{cfg.icon}</span>
+                  <Icon name={cfg.icon} size={20} style={{ color: cfg.color }} />
                 </div>
 
                 {/* Inhoud */}
@@ -126,11 +127,11 @@ export default function NotificatiesClient({ notifs }: { notifs: Notif[] }) {
                 <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                   {!notif.gelezen && (
                     <button className="btn btn-ghost btn-sm" title="Markeer als gelezen" onClick={() => markRead(notif.id)}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>check</span>
+                      <Icon name="check" size={16} />
                     </button>
                   )}
                   <button className="btn btn-ghost btn-sm" title="Verwijderen" onClick={() => deleteNotif(notif.id)}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+                    <Icon name="trash" size={16} />
                   </button>
                 </div>
               </div>

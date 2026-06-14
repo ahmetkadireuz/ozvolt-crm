@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Icon from '@/components/Icon'
 
 const SJABLONEN = [
   { label: 'Offerte follow-up', prompt: 'Schrijf een vriendelijke follow-up mail voor een openstaande offerte.' },
@@ -117,7 +118,7 @@ export default function MailClient({ klanten, klussen, aiActief }: {
               {SJABLONEN.map(s => (
                 <button key={s.label} className="btn btn-ghost btn-sm" style={{ textAlign: 'left', justifyContent: 'flex-start' }}
                   onClick={() => setForm(f => ({ ...f, context: s.prompt, onderwerp: s.label }))}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>auto_awesome</span>
+                  <Icon name="sparkles" size={16} />
                   {s.label}
                 </button>
               ))}
@@ -125,7 +126,7 @@ export default function MailClient({ klanten, klussen, aiActief }: {
           </div>
 
           <button className="btn btn-primary" onClick={genereerMail} disabled={genereren || !aiActief} style={{ width: '100%' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>auto_awesome</span>
+            <Icon name="sparkles" size={18} />
             {genereren ? 'Genereren...' : aiActief ? 'Mail genereren met AI' : 'AI niet ingesteld (OPENAI_API_KEY)'}
           </button>
         </div>
@@ -137,12 +138,12 @@ export default function MailClient({ klanten, klussen, aiActief }: {
             {gegenereerd && !gegenereerd.startsWith('❌') && (
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(gegenereerd)}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>content_copy</span>
+                  <Icon name="copy" size={16} />
                   Kopiëren
                 </button>
                 {selectedKlant?.email && (
                   <button className="btn btn-primary btn-sm" onClick={stuurMail} disabled={versturen}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>send</span>
+                    <Icon name="send" size={16} />
                     {versturen ? 'Versturen...' : 'Versturen'}
                   </button>
                 )}
@@ -158,7 +159,7 @@ export default function MailClient({ klanten, klussen, aiActief }: {
 
           {!gegenereerd ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', color: '#8ba8c4' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 48, display: 'block', marginBottom: 12 }}>mail</span>
+              <Icon name="mail" size={48} style={{ display: 'block', margin: '0 auto 12px' }} />
               <p style={{ margin: 0, fontSize: '.9rem' }}>Vul links in en klik op Mail genereren.</p>
             </div>
           ) : (

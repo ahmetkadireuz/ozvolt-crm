@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Icon from '@/components/Icon'
 
 type AgendaItem = {
   id: number
@@ -98,7 +99,7 @@ export default function AgendaClient({ items, klanten, klussen }: {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 className="page-title">Agenda</h1>
         <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
+          <Icon name="plus" size={18} />
           Nieuwe afspraak
         </button>
       </div>
@@ -107,13 +108,13 @@ export default function AgendaClient({ items, klanten, klussen }: {
       <div className="card" style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <button className="btn btn-ghost btn-sm" onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
-            <span className="material-symbols-outlined">chevron_left</span>
+            <Icon name="chevron-left" size={20} />
           </button>
           <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0d1b3e' }}>
             {MAANDEN[month]} {year}
           </h2>
           <button className="btn btn-ghost btn-sm" onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
-            <span className="material-symbols-outlined">chevron_right</span>
+            <Icon name="chevron-right" size={20} />
           </button>
         </div>
 
@@ -196,7 +197,7 @@ export default function AgendaClient({ items, klanten, klussen }: {
                     <div>
                       <div style={{ fontWeight: 700, color: '#0d1b3e', marginBottom: 4 }}>{item.titel}</div>
                       <div style={{ fontSize: '.8rem', color: '#5b7fa6' }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>schedule</span>
+                        <Icon name="clock" size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                         {formatDatum(item.datum_start)}
                       </div>
                       {(item.klant_naam || item.klus_naam) && (
@@ -223,7 +224,7 @@ export default function AgendaClient({ items, klanten, klussen }: {
               <button className="btn btn-ghost btn-sm" onClick={() => setSelected(null)}>✕</button>
             </div>
             <p style={{ fontSize: '.85rem', color: '#5b7fa6', margin: '0 0 8px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>schedule</span>
+              <Icon name="clock" size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
               {formatDatum(selected.datum_start)}
               {selected.datum_eind && ` → ${formatDatum(selected.datum_eind)}`}
             </p>

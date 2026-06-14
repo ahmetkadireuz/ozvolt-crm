@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Icon from '@/components/Icon'
 
 export interface WaItem {
   omschrijving: string
@@ -136,14 +137,14 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
                 onClick={() => removeItem(i)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '4px', marginTop: 2 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete</span>
+                <Icon name="trash" size={18} />
               </button>
             </div>
           </div>
         ))}
 
         <button type="button" className="btn btn-ghost btn-sm" onClick={addItem} style={{ marginTop: 4 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+          <Icon name="plus" size={16} />
           Afspraak toevoegen
         </button>
       </div>
@@ -156,13 +157,13 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
 
         {bijlagen.map((b, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, marginBottom: 6 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#dc2626' }}>picture_as_pdf</span>
+            <Icon name="pdf" size={18} style={{ color: '#dc2626' }} />
             <a href={b.url} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: '.82rem', fontWeight: 600, color: '#1b2d4a', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {b.naam}
             </a>
             <span style={{ fontSize: '.72rem', color: '#8ba8c4', whiteSpace: 'nowrap' }}>{formatBytes(b.grootte)}</span>
             <button type="button" onClick={() => verwijderBijlage(b.url)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 0 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+              <Icon name="x" size={16} />
             </button>
           </div>
         ))}
@@ -180,7 +181,7 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>upload_file</span>
+          <Icon name="upload" size={16} />
           {uploading ? 'Uploaden…' : 'Bijlage uploaden'}
         </button>
       </div>}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Icon from '@/components/Icon'
 
 type Groep = { nummer: number; naam: string; vermogen: string; ampere: string; type: string }
 
@@ -64,7 +65,7 @@ export default function GroepenverklaringClient({ klanten, klussen }: { klanten:
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 className="page-title">Groepenverklaring</h1>
         <button className="btn btn-primary" onClick={genereerPDF} disabled={genereren}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>download</span>
+          <Icon name="download" size={18} />
           {genereren ? 'Genereren...' : 'Download document'}
         </button>
       </div>
@@ -154,7 +155,7 @@ export default function GroepenverklaringClient({ klanten, klussen }: { klanten:
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1 }}>Groepen ({groepen.length})</div>
             <button className="btn btn-ghost btn-sm" onClick={voegGroepToe}>
-              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+              <Icon name="plus" size={16} />
               Groep toevoegen
             </button>
           </div>
@@ -165,7 +166,7 @@ export default function GroepenverklaringClient({ klanten, klussen }: { klanten:
                   <span style={{ width: 24, height: 24, background: '#0d1b3e', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 800, flexShrink: 0 }}>{groep.nummer}</span>
                   <input className="form-ctrl" style={{ flex: 1 }} value={groep.naam} onChange={e => updateGroep(i, 'naam', e.target.value)} placeholder="Naam groep" />
                   <button className="btn btn-ghost btn-sm" onClick={() => verwijderGroep(i)}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+                    <Icon name="trash" size={16} />
                   </button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: 6 }}>

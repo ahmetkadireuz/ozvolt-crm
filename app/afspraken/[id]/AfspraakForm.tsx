@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Icon from '@/components/Icon'
 
 interface AfspraakItem {
   omschrijving: string
@@ -107,14 +108,14 @@ export default function AfspraakForm({ afspraak, klanten, afspraakId }: { afspra
               </div>
               <button type="button" onClick={() => removeItem(i)} disabled={items.length === 1}
                 style={{ background: 'none', border: 'none', cursor: items.length === 1 ? 'not-allowed' : 'pointer', color: '#dc2626', padding: 4, opacity: items.length === 1 ? .3 : 1 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete</span>
+                <Icon name="trash" size={18} />
               </button>
             </div>
           </div>
         ))}
 
         <button type="button" className="btn btn-ghost btn-sm" onClick={addItem}>
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+          <Icon name="plus" size={16} />
           Afspraak toevoegen
         </button>
       </div>

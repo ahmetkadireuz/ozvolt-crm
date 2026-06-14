@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Icon from '@/components/Icon'
 
 type Lijst = {
   id: number; titel: string; klant_id: number | null; klant_naam: string | null
@@ -133,7 +134,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
       <div className="topbar">
         <h1 className="page-title">Inkoop</h1>
         <button className="btn btn-primary" onClick={() => setShowNieuweLijst(true)}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
+          <Icon name="plus" size={18} />
           Nieuwe lijst
         </button>
       </div>
@@ -206,7 +207,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
         <div>
           {!activeLijst ? (
             <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 48, color: '#8ba8c4', display: 'block', marginBottom: 12 }}>shopping_cart</span>
+              <Icon name="cart" size={48} style={{ color: '#8ba8c4', display: 'block', margin: '0 auto 12px' }} />
               <p style={{ color: '#8ba8c4', margin: 0 }}>Selecteer een lijst of maak een nieuwe aan.</p>
             </div>
           ) : (
@@ -304,11 +305,11 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                             <div style={{ display: 'flex', gap: 2 }}>
                               <button className="btn btn-ghost btn-sm" style={{ padding: '4px 6px' }}
                                 onClick={() => { setEditItemId(item.id); setEditItemData({}) }}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>edit</span>
+                                <Icon name="edit" size={15} />
                               </button>
                               <button className="btn btn-ghost btn-sm" style={{ padding: '4px 6px', color: '#ef4444' }}
                                 onClick={() => verwijderItem(item.id)}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
+                                <Icon name="trash" size={15} />
                               </button>
                             </div>
                           </>
@@ -342,7 +343,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                           </div>
                           <button className="btn btn-ghost btn-sm" style={{ padding: '4px 8px', color: '#ef4444', flexShrink: 0 }}
                             onClick={() => verwijderItem(item.id)}>
-                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+                            <Icon name="trash" size={16} />
                           </button>
                         </div>
                       </div>
@@ -430,7 +431,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                       />
                     </div>
                     <button type="submit" className="btn btn-primary" style={{ flexShrink: 0 }} disabled={itemSaving}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
+                      <Icon name="plus" size={18} />
                       {itemSaving ? 'Bezig…' : 'Toevoegen'}
                     </button>
                   </div>

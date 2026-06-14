@@ -38,11 +38,25 @@ export type IconName =
   | 'eye'
   | 'download'
   | 'chevron-right'
+  | 'chevron-left'
   | 'copy'
   | 'send'
   | 'refresh'
   | 'external'
   | 'x'
+  | 'done-all'
+  | 'alert-circle'
+  | 'alert-triangle'
+  | 'login'
+  | 'pdf'
+  | 'upload'
+  | 'construction'
+  | 'check-circle'
+  | 'hourglass'
+  | 'timer-off'
+  | 'info'
+  | 'user'
+  | 'lock'
 
 const PATHS: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -216,6 +230,90 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
   x: <path d="M18 6 6 18M6 6l12 12" />,
+  'chevron-left': <path d="m15 6-6 6 6 6" />,
+  'done-all': (
+    <>
+      <path d="m2 12 5 5 9-11" />
+      <path d="m10 17 9-11" />
+    </>
+  ),
+  'alert-circle': (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v5M12 16v.01" />
+    </>
+  ),
+  'alert-triangle': (
+    <>
+      <path d="M12 3 2 20h20L12 3z" />
+      <path d="M12 10v4M12 17v.01" />
+    </>
+  ),
+  login: (
+    <>
+      <path d="M10 17l5-5-5-5" />
+      <path d="M15 12H3" />
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+    </>
+  ),
+  pdf: (
+    <>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 14h.5a1.5 1.5 0 1 1 0 3H9v-3zm0 0v3M13 14v3h1.5a1.5 1.5 0 0 0 0-3H13z" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M12 17V5M7 9l5-4 5 4" />
+      <path d="M5 21h14" />
+    </>
+  ),
+  construction: (
+    <>
+      <path d="M3 21h18" />
+      <path d="M5 21V11l7-4 7 4v10" />
+      <path d="M10 21v-5h4v5" />
+    </>
+  ),
+  'check-circle': (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12 3 3 5-6" />
+    </>
+  ),
+  hourglass: (
+    <>
+      <path d="M6 3h12M6 21h12" />
+      <path d="M6 3c0 4 6 5 6 9s-6 5-6 9M18 3c0 4-6 5-6 9s6 5 6 9" />
+    </>
+  ),
+  'timer-off': (
+    <>
+      <path d="M10 2h4" />
+      <path d="M12 14v-4" />
+      <circle cx="12" cy="14" r="8" />
+      <path d="m2 2 20 20" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v.01M11 12h1v4h1" />
+    </>
+  ),
+  user: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c.7-4 4-6 8-6s7.3 2 8 6" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </>
+  ),
 }
 
 export default function Icon({ name, size = 18, className, strokeWidth = 1.6, style }: Props) {

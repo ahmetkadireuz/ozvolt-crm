@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
 import KlantenTable from './KlantenTable'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Klanten' }
 
@@ -33,7 +34,7 @@ export default async function KlantenPage({ searchParams }: { searchParams: Prom
       <div className="topbar">
         <h1 className="page-title">Klanten</h1>
         <Link href="/klanten/nieuw" className="btn btn-primary">
-          <span className="material-symbols-outlined nav-ico" style={{ fontSize: 18 }}>person_add</span>
+          <Icon name="users" size={18} />
           Klant toevoegen
         </Link>
       </div>

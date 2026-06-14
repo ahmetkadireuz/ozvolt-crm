@@ -4,6 +4,14 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StatusBadge from '@/components/StatusBadge'
 import Icon from '@/components/Icon'
+import SwipeRow, { type SwipeAction } from '@/components/SwipeRow'
+
+function waLink(tel: string | null) {
+  if (!tel) return null
+  const digits = tel.replace(/\D/g, '')
+  if (!digits) return null
+  return `https://wa.me/${digits.startsWith('0') ? '31' + digits.slice(1) : digits}`
+}
 
 function datumNL(dt: string) {
   const d = new Date(dt)
@@ -91,28 +99,51 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
             </div>
           </div>
 
-          {/* Mobiel: kaartjes */}
+          {/* Mobiel: kaartjes met swipe */}
           <div className="klus-cards mobile-only">
-            {lijst.map((k: any) => (
-              <div key={k.id} className="klus-card" onClick={() => router.push(`/klussen/${k.id}`)}>
-                <div className="klus-card-top">
-                  <div style={{ minWidth: 0 }}>
-                    <div className="klus-card-naam">{k.klant_naam}</div>
-                    <div className="klus-card-meta">{k.type_werk || 'Geen type'}{k.locatie ? ` · ${k.locatie}` : ''}</div>
+            {lijst.map((k: any) => {
+              const wa = waLink(k.telefoon)
+              const left: SwipeAction[] = []
+              if (k.telefoon) left.push({
+                label: 'Bel', color: '#16a34a',
+                icon: <Icon name="phone" size={20} />,
+                onAction: () => { window.location.href = `tel:${k.telefoon}` },
+              })
+              if (wa) left.push({
+                label: 'WhatsApp', color: '#25d366',
+                icon: <Icon name="chat" size={20} />,
+                onAction: () => { window.open(wa, '_blank', 'noopener') },
+              })
+              const right: SwipeAction[] = [{
+                label: 'Verwijder', color: '#dc2626',
+                icon: <Icon name="trash" size={20} />,
+                onAction: () => verwijder(k),
+              }]
+              return (
+                <SwipeRow
+                  key={k.id}
+                  leftActions={left}
+                  rightActions={right}
+                  onClick={() => router.push(`/klussen/${k.id}`)}
+                >
+                  <div className="klus-card" style={{ borderRadius: 0, marginBottom: 0, border: 'none', borderBottom: '1px solid var(--line-soft)' }}>
+                    <div className="klus-card-top">
+                      <div style={{ minWidth: 0 }}>
+                        <div className="klus-card-naam">{k.klant_naam}</div>
+                        <div className="klus-card-meta">{k.type_werk || 'Geen type'}{k.locatie ? ` · ${k.locatie}` : ''}</div>
+                      </div>
+                      <StatusBadge status={k.status} />
+                    </div>
+                    <div className="klus-card-bottom">
+                      <span style={{ fontSize: '.74rem', color: '#8ba8c4' }}>
+                        <span className="via-badge" style={{ marginRight: 6 }}>{k.bron || 'handmatig'}</span>
+                        {datumNL(k.aangemaakt_op)}
+                      </span>
+                    </div>
                   </div>
-                  <StatusBadge status={k.status} />
-                </div>
-                <div className="klus-card-bottom">
-                  <span style={{ fontSize: '.74rem', color: '#8ba8c4' }}>
-                    <span className="via-badge" style={{ marginRight: 6 }}>{k.bron || 'handmatig'}</span>
-                    {datumNL(k.aangemaakt_op)}
-                  </span>
-                  <span onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 6 }}>
-                    <a href={`/facturen/nieuw?klus=${k.id}`} className="btn-row-primary">+ Factuur</a>
-                  </span>
-                </div>
-              </div>
-            ))}
+                </SwipeRow>
+              )
+            })}
           </div>
         </>
       )}

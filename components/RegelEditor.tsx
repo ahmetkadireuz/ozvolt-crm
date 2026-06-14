@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { RegelItem } from '@/lib/utils'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
+import Icon from '@/components/Icon'
 
 interface Props {
   initialRegels?: RegelItem[]
@@ -119,7 +120,7 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
               style={{ background: 'none', border: 'none', cursor: regels.length === 1 ? 'not-allowed' : 'pointer', color: '#dc2626', padding: '4px', opacity: regels.length === 1 ? .3 : 1 }}
               title="Verwijder regel"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete</span>
+              <Icon name="trash" size={18} />
             </button>
           </div>
 
@@ -144,7 +145,7 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
       ))}
 
       <button type="button" className="btn btn-ghost btn-sm" onClick={addRegel} style={{ marginBottom: 20 }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+        <Icon name="plus" size={16} />
         Regel toevoegen
       </button>
 

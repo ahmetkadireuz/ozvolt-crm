@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Icon from '@/components/Icon'
 
 type Kost = {
   id: number
@@ -96,7 +97,7 @@ export default function KostenClient({ kosten, klanten, klussen }: {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 className="page-title">Kosten</h1>
         <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
+          <Icon name="plus" size={18} />
           Kost toevoegen
         </button>
       </div>
@@ -158,7 +159,7 @@ export default function KostenClient({ kosten, klanten, klussen }: {
                   <td style={{ padding: '10px 16px', fontWeight: 800, color: '#dc2626', whiteSpace: 'nowrap' }}>{euro(Number(k.bedrag))}</td>
                   <td style={{ padding: '10px 16px' }}>
                     <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(k.id)}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+                      <Icon name="trash" size={16} />
                     </button>
                   </td>
                 </tr>

@@ -7,6 +7,7 @@ import './globals.css'
 import { requireSession } from '@/lib/session'
 import { sql } from '@/lib/db'
 import Sidebar from '@/components/Sidebar'
+import MobileFab from '@/components/MobileFab'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -18,7 +19,21 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: { default: 'Ozvolt CRM', template: '%s — Ozvolt CRM' },
   description: 'Ozvolt Elektrotechniek CRM-portaal',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
+  manifest: '/manifest.webmanifest',
+  themeColor: '#0d1b3e',
+  appleWebApp: {
+    capable: true,
+    title: 'Ozvolt',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte/', '/werkafspraak/', '/klant', '/rapporten/']
@@ -52,19 +67,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="nl" className={inter.variable}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body>
         {showSidebar && <Sidebar nieuwCount={nieuwCount} notifCount={notifCount} />}
         <main className={showSidebar ? 'main-content' : ''}>
           {children}
         </main>
+        {showSidebar && <MobileFab />}
       </body>
     </html>
   )

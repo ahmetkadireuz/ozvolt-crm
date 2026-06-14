@@ -2,6 +2,7 @@ import { sql } from '@/lib/db'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import SignForm from './SignForm'
+import Icon from '@/components/Icon'
 
 const SITE = 'https://portaal.ozvoltelektro.nl'
 
@@ -314,7 +315,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                   <div className="bijlagen-list">
                     {bijlagen.map((b: any, i: number) => (
                       <a key={i} href={b.url} target="_blank" rel="noreferrer" className="bijlage-item">
-                        <span className="bijlage-icon material-symbols-outlined">picture_as_pdf</span>
+                        <Icon name="pdf" size={20} className="bijlage-icon" />
                         <span className="bijlage-naam">{b.naam}</span>
                         <span className="bijlage-type">{b.type}</span>
                       </a>

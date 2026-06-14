@@ -83,29 +83,6 @@ a { color: inherit; }
   line-height: 1.5;
 }
 
-/* Material Symbols (overgangsfase: oude pagina's gebruiken nog font-icons,
-   nieuwe pagina's gebruiken de Icon-component met inline SVG) */
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 20px;
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-}
-span.nav-ico:not(:empty):not(:has(svg)) {
-  font-family: 'Material Symbols Outlined';
-  font-size: 18px;
-  line-height: 1;
-}
-
 .sb-divider {
   font-size: .64rem; font-weight: 700; letter-spacing: .12em;
   text-transform: uppercase; color: var(--text-soft);
@@ -268,6 +245,61 @@ textarea.form-ctrl { resize: vertical; min-height: 90px; }
 .totalen-row { display: flex; justify-content: space-between; padding: 4px 0; color: #475569; }
 .totalen-row.total { font-size: 1rem; font-weight: 800; color: var(--navy); border-top: 1px solid var(--line); margin-top: 8px; padding-top: 12px; }
 
+/* ── Swipe rows ──────────────────────────────────────── */
+.swipe-row {
+  position: relative; overflow: hidden;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line-soft);
+  touch-action: pan-y;
+}
+.swipe-row-body {
+  position: relative; z-index: 2;
+  background: var(--surface);
+  will-change: transform;
+}
+.swipe-actions {
+  position: absolute; top: 0; bottom: 0;
+  display: flex; z-index: 1;
+}
+.swipe-actions-left  { left: 0; }
+.swipe-actions-right { right: 0; }
+.swipe-action {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  color: #fff; font-size: .7rem; font-weight: 600;
+  border: none; cursor: pointer;
+  padding: 0 4px;
+  font-family: inherit;
+}
+.swipe-action-label { font-size: .68rem; }
+.swipe-action:active { filter: brightness(.9); }
+
+/* mobile-only card lists */
+.mobile-list { display: none; }
+.swipe-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.swipe-card-body { flex: 1; min-width: 0; }
+.swipe-card-title { font-weight: 700; color: var(--navy); font-size: .92rem; }
+.swipe-card-meta { font-size: .76rem; color: var(--text-mute); margin-top: 2px; }
+.swipe-card-side { font-size: .74rem; color: var(--text-mute); text-align: right; flex-shrink: 0; }
+
+/* ── Mobile FAB (Nieuwe aanvraag) ────────────────────── */
+.mobile-fab {
+  display: none;
+  position: fixed;
+  right: 18px;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 14px);
+  width: 56px; height: 56px;
+  border-radius: 999px;
+  background: var(--accent, #0d1b3e);
+  color: #fff;
+  align-items: center; justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(13,27,62,.28), 0 2px 6px rgba(13,27,62,.18);
+  z-index: 250;
+  transition: transform .15s, box-shadow .15s;
+}
+.mobile-fab:active { transform: scale(.94); box-shadow: 0 4px 10px rgba(13,27,62,.24); }
+
 /* ── Mobile tab bar ──────────────────────────────────── */
 .mobile-tab-bar {
   display: none; position: fixed; bottom: 0; left: 0; right: 0;
@@ -348,6 +380,9 @@ textarea.form-ctrl { resize: vertical; min-height: 90px; }
 
   .main-content { margin-left: 0; padding: 14px 14px 86px; }
   .mobile-tab-bar { display: flex; }
+  .mobile-fab { display: flex; }
+  .mobile-list { display: block; }
+  .desktop-table { display: none; }
   .detail-grid { grid-template-columns: 1fr; }
   .regel-row { grid-template-columns: 1fr 55px 80px 55px 32px; }
 

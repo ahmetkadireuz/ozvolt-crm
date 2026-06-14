@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Icon from '@/components/Icon'
 
 type Bericht = {
   id: number; klant_id: number | null; klus_id: number | null
@@ -89,7 +90,7 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
             <div style={{ display: 'flex', gap: 10 }}>
               {apiActief ? (
                 <button type="submit" className="btn btn-primary" disabled={sending} style={{ background: '#25d366' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>send</span>
+                  <Icon name="send" size={18} />
                   {sending ? 'Versturen...' : 'Versturen via API'}
                 </button>
               ) : null}
@@ -103,7 +104,7 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
                   className="btn btn-primary"
                   style={{ background: '#25d366', textDecoration: 'none' }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>open_in_new</span>
+                  <Icon name="external" size={18} />
                   Open in WhatsApp
                 </a>
               )}
@@ -130,7 +131,7 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
                   className="btn btn-sm"
                   style={{ background: '#25d366', color: '#fff', textDecoration: 'none' }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chat</span>
+                  <Icon name="chat" size={16} />
                 </a>
               </div>
             ))}
@@ -151,9 +152,7 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
                 background: b.direction === 'inbound' ? '#f0fdf4' : '#f8fafc',
                 borderRadius: 8, borderLeft: `3px solid ${b.direction === 'inbound' ? '#16a34a' : '#25d366'}`
               }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 18, color: b.direction === 'inbound' ? '#16a34a' : '#25d366', flexShrink: 0 }}>
-                  {b.direction === 'inbound' ? 'call_received' : 'call_made'}
-                </span>
+                <Icon name={b.direction === 'inbound' ? 'arrow-left' : 'arrow-right'} size={18} style={{ color: b.direction === 'inbound' ? '#16a34a' : '#25d366', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontWeight: 700, fontSize: '.85rem', color: '#0d1b3e' }}>{b.klant_naam ?? 'Onbekend'}</span>
