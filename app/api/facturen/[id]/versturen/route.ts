@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen, formatEuro } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 import { sendMail, factuurMailHtml } from '@/lib/mail'
-import { maakBetaalLink } from '@/lib/mollie'
 import { genereerFactuurPDF } from '@/lib/pdf-factuur'
 import { mbHaalOfMaakContact, mbMaakFactuur, mbVerstuurFactuur } from '@/lib/moneybird'
 
@@ -27,23 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const vervalDatum = new Date(factuur.factuurdatum)
   vervalDatum.setDate(vervalDatum.getDate() + (factuur.betalingstermijn ?? 14))
 
-  // Zorg dat er een Mollie betaallink is
-  let betaalUrl: string | null = factuur.betaal_url ?? null
-  if (!betaalUrl && process.env.MOLLIE_API_KEY) {
-    try {
-      const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
-      betaalUrl = await maakBetaalLink({
-        bedrag: totalen.inclBtw,
-        omschrijving: `Betaalnota ${factuur.factuurnummer} — ${factuur.klant_naam}`,
-        redirectUrl: `${siteUrl}/betaling-ontvangen`,
-        webhookUrl: `${siteUrl}/api/mollie/webhook`,
-        metadata: { factuurId: String(factuurId), factuurNr: factuur.factuurnummer },
-      })
-      await sql`UPDATE facturen SET betaal_url = ${betaalUrl} WHERE id = ${factuurId}`
-    } catch (e) {
-      console.error('[mollie betaallink factuur]', e)
-    }
-  }
+  const betaalUrl: string | null = factuur.betaal_url ?? null
 
   await sql`UPDATE facturen SET status = 'verstuurd', bijgewerkt_op = NOW() WHERE id = ${factuurId}`
 

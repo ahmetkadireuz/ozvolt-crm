@@ -65,7 +65,7 @@ export default async function Dashboard() {
             * (1 + btw_pct / 100.0)
           )
           FROM facturen
-          WHERE (status = 'betaald' OR mollie_status = 'paid')
+          WHERE status = 'betaald'
             AND DATE_TRUNC('month', factuurdatum) = DATE_TRUNC('month', CURRENT_DATE)
         ), 0) AS omzet_maand,
 
@@ -76,7 +76,7 @@ export default async function Dashboard() {
             * (1 + btw_pct / 100.0)
           )
           FROM facturen
-          WHERE (status = 'betaald' OR mollie_status = 'paid')
+          WHERE status = 'betaald'
             AND DATE_TRUNC('month', factuurdatum) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
         ), 0) AS omzet_vorige_maand
     `,

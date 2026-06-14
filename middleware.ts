@@ -14,8 +14,7 @@ const PUBLIC_PATHS = [
   '/klant/login',
   '/api/klant/login',
   '/klant/geen-toegang',
-  '/api/mollie/klant-webhook', // Mollie betaal-webhook (geen sessie)
-  '/api/mollie/webhook',
+  '/api/moneybird/webhook', // Moneybird betaal-status webhook (geen sessie)
 ]
 
 // Routes die een klant-sessie vereisen (ozvolt_klant cookie)

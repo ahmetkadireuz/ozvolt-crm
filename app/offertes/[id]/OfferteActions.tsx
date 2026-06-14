@@ -57,11 +57,11 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
     else alert('Aanmaken mislukt')
   }
 
-  const [mollieLoading, setMollieLoading] = useState(false)
+  const [betaallinkLoading, setBetaallinkLoading] = useState(false)
 
-  async function maakMollieBetaallinks() {
-    if (!confirm('Mollie betaallink(s) aanmaken voor dit werkvoorstel?')) return
-    setMollieLoading(true)
+  async function maakBetaallinks() {
+    if (!confirm('Online betaallink(s) (via Moneybird) aanmaken voor dit werkvoorstel?')) return
+    setBetaallinkLoading(true)
     try {
       const res = await fetch(`/api/offertes/${offerteId}/betaallinks`, {
         method: 'POST',
@@ -75,7 +75,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
     } catch (err: any) {
       alert('Fout: ' + (err?.message ?? 'Onbekend'))
     } finally {
-      setMollieLoading(false)
+      setBetaallinkLoading(false)
     }
   }
 
@@ -227,9 +227,9 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         </Link>
       ))}
 
-      {/* Mollie betaallinks */}
+      {/* Online betaallinks (via Moneybird) */}
       <div className="card">
-        <div className="section-label">Online betaling (via Mollie)</div>
+        <div className="section-label">Online betaling</div>
         {offerte.betaal_url ? (
           <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div>
@@ -258,14 +258,14 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           type="button"
           className="btn btn-ghost btn-sm"
           style={{ width: '100%', justifyContent: 'center' }}
-          onClick={maakMollieBetaallinks}
-          disabled={mollieLoading}
+          onClick={maakBetaallinks}
+          disabled={betaallinkLoading}
         >
           <span className="nav-ico" style={{ fontSize: 16 }}>payments</span>
-          {mollieLoading ? 'Bezig...' : offerte.betaal_url ? 'Betaallinks vernieuwen' : 'Betaallinks aanmaken via Mollie'}
+          {betaallinkLoading ? 'Bezig...' : offerte.betaal_url ? 'Betaallinks vernieuwen' : 'Betaallinks aanmaken'}
         </button>
         <div style={{ fontSize: '.72rem', color: '#8ba8c4', marginTop: 6 }}>
-          Klant betaalt via iDEAL, creditcard of andere betaalmethode
+          Klant betaalt via iDEAL of bankoverschrijving (Moneybird)
         </div>
       </div>
 

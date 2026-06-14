@@ -25,7 +25,7 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
   const btw = sub * (f.btw_pct / 100)
   const totaal = sub + btw
 
-  const isBetaald = f.mollie_status === 'paid' || f.status === 'betaald'
+  const isBetaald = f.status === 'betaald'
 
   return (
     <div>

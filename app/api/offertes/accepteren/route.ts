@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen, formatEuro } from '@/lib/db'
 import { sendMail, offerteBevestigingMailHtml } from '@/lib/mail'
-import { maakBetaalLink } from '@/lib/mollie'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -51,49 +50,10 @@ export async function POST(req: NextRequest) {
     )
   `
 
-  // Maak automatisch Mollie betaallink(s) aan na ondertekening
-  let betaalUrl: string | null = null
-  let betaalUrl2: string | null = null
-  if (process.env.MOLLIE_API_KEY) {
-    try {
-      const webhookUrl = `${siteUrl}/api/mollie/webhook`
-
-      if (offerte.betaling_50_50) {
-        const halveBedrag = totalen.inclBtw / 2
-        const [url1, url2] = await Promise.all([
-          maakBetaalLink({
-            bedrag: halveBedrag,
-            omschrijving: `${offerteNr} — eerste termijn (50%) — ${offerte.klant_naam}`,
-            redirectUrl: `${siteUrl}/betaling-ontvangen`,
-            webhookUrl,
-            metadata: { offerteId: String(offerte.id), termijn: '1', offerteNr },
-          }),
-          maakBetaalLink({
-            bedrag: halveBedrag,
-            omschrijving: `${offerteNr} — tweede termijn (50%) — ${offerte.klant_naam}`,
-            redirectUrl: `${siteUrl}/betaling-ontvangen`,
-            webhookUrl,
-            metadata: { offerteId: String(offerte.id), termijn: '2', offerteNr },
-          }),
-        ])
-        betaalUrl = url1
-        betaalUrl2 = url2
-        await sql`UPDATE offertes SET betaal_url = ${betaalUrl}, betaal_url_2 = ${betaalUrl2}, bijgewerkt_op = NOW() WHERE id = ${offerte.id}`
-      } else {
-        betaalUrl = await maakBetaalLink({
-          bedrag: totalen.inclBtw,
-          omschrijving: `${offerteNr} — ${offerte.klant_naam}`,
-          redirectUrl: `${siteUrl}/betaling-ontvangen`,
-          webhookUrl,
-          metadata: { offerteId: String(offerte.id), offerteNr },
-        })
-        await sql`UPDATE offertes SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${offerte.id}`
-      }
-    } catch (err) {
-      console.error('[mollie betaallink na acceptatie]', err)
-      // Niet fataal — betaallink kan later handmatig aangemaakt worden
-    }
-  }
+  // Betaallinks worden niet meer automatisch aangemaakt bij ondertekening.
+  // Voor online betaling: maak handmatig een Moneybird-link aan via de offerte-detailpagina.
+  const betaalUrl: string | null = offerte.betaal_url ?? null
+  const betaalUrl2: string | null = offerte.betaal_url_2 ?? null
 
   // Stuur bevestigingsemail naar Ozvolt
   try {

@@ -17,7 +17,7 @@ export default async function KlantDashboard() {
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
-    sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct, mollie_status FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
+    sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klant_id = ${klantId} AND jsonb_array_length(afspraken) > 0 ORDER BY datum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op, getekend_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
@@ -172,10 +172,10 @@ export default async function KlantDashboard() {
       {/* Financieel overzicht */}
       {facturen.length > 0 && (() => {
         const totaalOpen = facturen
-          .filter((f: any) => f.mollie_status !== 'paid' && f.status !== 'betaald')
+          .filter((f: any) => f.status !== 'betaald')
           .reduce((s: number, f: any) => s + f.regels.reduce((r: number, l: any) => r + l.aantal * l.prijs, 0) * (1 + f.btw_pct / 100), 0)
         const totaalBetaald = facturen
-          .filter((f: any) => f.mollie_status === 'paid' || f.status === 'betaald')
+          .filter((f: any) => f.status === 'betaald')
           .reduce((s: number, f: any) => s + f.regels.reduce((r: number, l: any) => r + l.aantal * l.prijs, 0) * (1 + f.btw_pct / 100), 0)
         return (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 32 }}>
@@ -194,7 +194,7 @@ export default async function KlantDashboard() {
       {/* Facturen */}
       <Section titel="Facturen">
         {facturen.length === 0 ? <Leeg tekst="Geen facturen" /> : facturen.map((f: any) => {
-          const isBetaald = f.mollie_status === 'paid' || f.status === 'betaald'
+          const isBetaald = f.status === 'betaald'
           return (
             <Kaart key={f.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isBetaald ? 0 : 12 }}>

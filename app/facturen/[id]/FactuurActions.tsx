@@ -6,7 +6,7 @@ import { formatEuro } from '@/lib/utils'
 
 export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean }) {
   const router = useRouter()
-  const [mollieLoading, setMollieLoading] = useState(false)
+  const [betaallinkLoading, setBetaallinkLoading] = useState(false)
 
   async function updateStatus(status: string) {
     await fetch(`/api/facturen/${factuurId}`, {
@@ -17,18 +17,18 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
     router.refresh()
   }
 
-  async function maakMollieBetaallink() {
-    if (!confirm('Mollie betaallink aanmaken voor deze betaalnota?')) return
-    setMollieLoading(true)
+  async function maakBetaallink() {
+    if (!confirm('Online betaallink (via Moneybird) aanmaken voor deze factuur?')) return
+    setBetaallinkLoading(true)
     try {
       const res = await fetch(`/api/facturen/${factuurId}/betaallink`, { method: 'POST' })
       const data = await res.json()
       if (data.ok) { router.refresh() }
-      else alert('Fout: ' + (data.error ?? 'Mollie fout'))
+      else alert('Fout: ' + (data.error ?? 'Moneybird fout'))
     } catch (err: any) {
       alert('Fout: ' + (err?.message ?? 'Onbekend'))
     } finally {
-      setMollieLoading(false)
+      setBetaallinkLoading(false)
     }
   }
 
@@ -106,11 +106,11 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
             Markeer als betaald
           </button>
 
-          {/* Mollie betaallink */}
+          {/* Online betaallink (Moneybird) */}
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8, marginTop: 2 }}>
             {factuur.betaal_url ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700 }}>✓ Mollie betaallink actief</div>
+                <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700 }}>✓ Online betaallink actief</div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <input className="form-ctrl" value={factuur.betaal_url} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
                   <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren"
@@ -119,16 +119,16 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
                   </button>
                 </div>
                 <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
-                  onClick={maakMollieBetaallink} disabled={mollieLoading}>
+                  onClick={maakBetaallink} disabled={betaallinkLoading}>
                   <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>refresh</span>
-                  {mollieLoading ? 'Bezig…' : 'Nieuwe link aanmaken'}
+                  {betaallinkLoading ? 'Bezig…' : 'Nieuwe link aanmaken'}
                 </button>
               </div>
             ) : (
               <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
-                onClick={maakMollieBetaallink} disabled={mollieLoading}>
+                onClick={maakBetaallink} disabled={betaallinkLoading}>
                 <span className="material-symbols-outlined nav-ico" style={{ fontSize: 14 }}>payments</span>
-                {mollieLoading ? 'Bezig…' : 'Mollie betaallink aanmaken'}
+                {betaallinkLoading ? 'Bezig…' : 'Online betaallink aanmaken'}
               </button>
             )}
           </div>
