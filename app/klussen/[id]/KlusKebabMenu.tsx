@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Icon from '@/components/Icon'
 
 export default function KlusKebabMenu({ klusId, klantNaam }: { klusId: number; klantNaam: string }) {
   const router = useRouter()
@@ -17,7 +18,7 @@ export default function KlusKebabMenu({ klusId, klantNaam }: { klusId: number; k
   }, [])
 
   async function verwijder() {
-    if (!confirm(`Klus van ${klantNaam} verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return
+    if (!confirm(`Project van ${klantNaam} verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return
     setOpen(false)
     await fetch(`/api/klussen/${klusId}`, { method: 'DELETE' })
     router.push('/klussen')
@@ -32,7 +33,7 @@ export default function KlusKebabMenu({ klusId, klantNaam }: { klusId: number; k
         title="Meer acties"
         style={{ padding: '6px 10px' }}
       >
-        <span className="nav-ico" style={{ fontSize: 18 }}>more_vert</span>
+        <Icon name="more" size={18} />
       </button>
       {open && (
         <div
@@ -54,8 +55,8 @@ export default function KlusKebabMenu({ klusId, klantNaam }: { klusId: number; k
             onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            <span className="nav-ico" style={{ fontSize: 16 }}>delete</span>
-            Klus verwijderen
+            <Icon name="trash" size={16} />
+            Project verwijderen
           </button>
         </div>
       )}

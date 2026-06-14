@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
 import KlussenTable from './KlussenTable'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Projecten' }
 
@@ -49,15 +50,15 @@ export default async function KlussenPage({
   return (
     <div>
       <div className="topbar">
-        <h1 className="page-title">Klussen &amp; aanvragen</h1>
+        <h1 className="page-title">Projecten</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           <Link href="/klussen/nieuw" className="btn btn-primary">
-            <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
-            Klus toevoegen
+            <Icon name="plus" size={16} />
+            Nieuw project
           </Link>
           <Link href="/klanten/nieuw" className="btn btn-ghost">
-            <span className="nav-ico" style={{ fontSize: 18 }}>person_add</span>
-            Klant toevoegen
+            <Icon name="users" size={16} />
+            Nieuwe klant
           </Link>
         </div>
       </div>

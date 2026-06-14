@@ -2,10 +2,18 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import { requireSession } from '@/lib/session'
 import { sql } from '@/lib/db'
 import Sidebar from '@/components/Sidebar'
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: { default: 'Ozvolt CRM', template: '%s — Ozvolt CRM' },
@@ -43,11 +51,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="nl">
+    <html lang="nl" className={inter.variable}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body>
         {showSidebar && <Sidebar nieuwCount={nieuwCount} notifCount={notifCount} />}

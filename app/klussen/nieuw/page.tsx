@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Nieuw project' }
 
@@ -48,7 +49,7 @@ export default async function NieuweKlusPage() {
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/klussen" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <h1 className="page-title">Nieuw project</h1>
         </div>
@@ -126,7 +127,7 @@ export default async function NieuweKlusPage() {
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="submit" className="btn btn-primary">
-              <span className="nav-ico" style={{ fontSize: 18 }}>save</span>
+              <Icon name="check" size={18} />
               Project aanmaken
             </button>
             <Link href="/klussen" className="btn btn-ghost">Annuleren</Link>

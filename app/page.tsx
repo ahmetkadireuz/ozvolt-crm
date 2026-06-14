@@ -4,8 +4,8 @@ export const revalidate = 0
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { sql, formatEuro } from '@/lib/db'
-import DashboardKlussenRijen from './DashboardKlussenRijen'
 import StatusBadge from '@/components/StatusBadge'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Overzicht' }
 
@@ -18,7 +18,7 @@ function timeAgo(dt: string) {
 }
 
 export default async function Dashboard() {
-  const [stats, geldStats, nieuweKlussen, agendaVandaag, openFacturen, recenteOffertes] = await Promise.all([
+  const [stats, geldStats, nieuweKlussen, agendaVandaag, openFacturen, recenteOffertes, teLaatFacturen] = await Promise.all([
     sql`
       SELECT
         (SELECT COUNT(*)::int FROM klussen WHERE status='nieuw') AS nieuw,
@@ -30,7 +30,6 @@ export default async function Dashboard() {
     `,
     sql`
       SELECT
-        -- Waarde open offertes (incl. korting + btw)
         COALESCE((
           SELECT SUM(
             (SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
@@ -41,7 +40,6 @@ export default async function Dashboard() {
           FROM offertes WHERE status IN ('concept','gestuurd')
         ), 0) AS offertes_waarde,
 
-        -- Waarde open facturen (incl. btw)
         COALESCE((
           SELECT SUM(
             (SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
@@ -51,7 +49,6 @@ export default async function Dashboard() {
           FROM facturen WHERE status IN ('verstuurd','te_laat')
         ), 0) AS facturen_open_waarde,
 
-        -- Waarde te laat facturen
         COALESCE((
           SELECT SUM(
             (SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
@@ -61,7 +58,6 @@ export default async function Dashboard() {
           FROM facturen WHERE status = 'te_laat'
         ), 0) AS te_laat_waarde,
 
-        -- Omzet deze maand (betaald)
         COALESCE((
           SELECT SUM(
             (SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
@@ -73,7 +69,6 @@ export default async function Dashboard() {
             AND DATE_TRUNC('month', factuurdatum) = DATE_TRUNC('month', CURRENT_DATE)
         ), 0) AS omzet_maand,
 
-        -- Omzet vorige maand
         COALESCE((
           SELECT SUM(
             (SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
@@ -92,7 +87,7 @@ export default async function Dashboard() {
       JOIN klanten kt ON kt.id = k.klant_id
       WHERE k.status = 'nieuw'
       ORDER BY k.aangemaakt_op DESC
-      LIMIT 8
+      LIMIT 6
     `,
     sql`
       SELECT a.*, kt.naam AS klant_naam
@@ -109,7 +104,7 @@ export default async function Dashboard() {
       JOIN klanten kt ON kt.id = f.klant_id
       WHERE f.status IN ('verstuurd','te_laat')
       ORDER BY f.status DESC, f.factuurdatum ASC
-      LIMIT 6
+      LIMIT 5
     `,
     sql`
       SELECT o.id, o.offertenummer, o.status, o.datum, o.regels, o.korting_pct, o.btw_pct, kt.naam AS klant_naam
@@ -118,6 +113,14 @@ export default async function Dashboard() {
       WHERE o.status IN ('concept','gestuurd')
       ORDER BY o.datum DESC
       LIMIT 4
+    `,
+    sql`
+      SELECT f.id, f.factuurnummer, kt.naam AS klant_naam, f.factuurdatum
+      FROM facturen f
+      JOIN klanten kt ON kt.id = f.klant_id
+      WHERE f.status = 'te_laat'
+      ORDER BY f.factuurdatum ASC
+      LIMIT 3
     `,
   ])
 
@@ -140,148 +143,171 @@ export default async function Dashboard() {
   const nu = new Date()
   const maandNaam = nu.toLocaleDateString('nl-NL', { month: 'long' })
 
+  const hasActies =
+    nieuweKlussen.length > 0 || teLaatFacturen.length > 0 || recenteOffertes.length > 0
+
   return (
     <div>
       <div className="topbar">
         <div>
           <h1 className="page-title">Overzicht</h1>
-          <p style={{ margin: 0, fontSize: '.78rem', color: '#8ba8c4' }}>
+          <p className="page-sub">
             {nu.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            {' · '}
-            <Link href="/klussen?status=nieuw" style={{ color: s.nieuw > 0 ? '#1d4ed8' : '#8ba8c4', textDecoration: 'none', fontWeight: 700 }}>
-              {s.nieuw} nieuw
-            </Link>
-            <span style={{ margin: '0 6px', color: '#cbd5e1' }}>·</span>
-            <Link href="/klussen" style={{ color: '#475569', textDecoration: 'none', fontWeight: 700 }}>
-              {s.open} lopend
-            </Link>
-            <span style={{ margin: '0 6px', color: '#cbd5e1' }}>·</span>
-            <Link href="/klanten" style={{ color: '#475569', textDecoration: 'none', fontWeight: 700 }}>
-              {s.klanten} klanten
-            </Link>
           </p>
         </div>
         <Link href="/klussen/nieuw" className="btn btn-primary">
-          <span className="nav-ico" style={{ fontSize: 18 }}>add</span>
+          <Icon name="plus" size={16} />
           Nieuw project
         </Link>
       </div>
 
-      {/* ── Geld-statistieken ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
+      {/* ── Actiestrook: wat moet je nu doen ── */}
+      {hasActies && (
+        <div className="card" style={{ marginBottom: 18 }}>
+          <div className="section-label" style={{ marginBottom: 14 }}>
+            <Icon name="sparkles" size={14} /> Vandaag op te pakken
+          </div>
 
-        {/* Omzet deze maand */}
-        <Link href="/facturen?status=betaald" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ borderLeft: '3px solid #16a34a' }}>
-            <div className="stat-label">Omzet {maandNaam}</div>
-            <div className="stat-value" style={{ fontSize: '1.5rem', color: '#15803d' }}>{formatEuro(Number(g.omzet_maand))}</div>
-            {omzetTrend !== null && (
-              <div className="stat-sub" style={{ color: omzetTrend >= 0 ? '#16a34a' : '#dc2626' }}>
-                {omzetTrend >= 0 ? '▲' : '▼'} {Math.abs(omzetTrend)}% vs vorige maand
+          {/* Nieuwe aanvragen */}
+          {nieuweKlussen.map((k: any) => (
+            <Link key={`nw-${k.id}`} href={`/klussen/${k.id}`} className="action-row">
+              <span className="action-row-icon blue">
+                <Icon name="briefcase" size={18} />
+              </span>
+              <div className="action-row-body">
+                <div className="action-row-title">{k.klant_naam}</div>
+                <div className="action-row-meta">
+                  {k.type_werk || 'Nieuwe aanvraag'}{k.locatie ? ` · ${k.locatie}` : ''} · via {k.bron || 'handmatig'}
+                </div>
               </div>
-            )}
-            {omzetTrend === null && <div className="stat-sub">Betaalde facturen</div>}
+              <div className="action-row-side">{timeAgo(k.aangemaakt_op)}</div>
+            </Link>
+          ))}
+
+          {/* Te late facturen */}
+          {teLaatFacturen.map((f: any) => (
+            <Link key={`tl-${f.id}`} href={`/facturen/${f.id}`} className="action-row">
+              <span className="action-row-icon red">
+                <Icon name="receipt" size={18} />
+              </span>
+              <div className="action-row-body">
+                <div className="action-row-title">{f.klant_naam} · {f.factuurnummer}</div>
+                <div className="action-row-meta">Factuur is verlopen · stuur een herinnering</div>
+              </div>
+              <div className="action-row-side">Te laat</div>
+            </Link>
+          ))}
+
+          {/* Open offertes */}
+          {recenteOffertes.slice(0, 2).map((o: any) => (
+            <Link key={`of-${o.id}`} href={`/offertes/${o.id}`} className="action-row">
+              <span className="action-row-icon purple">
+                <Icon name="file-text" size={18} />
+              </span>
+              <div className="action-row-body">
+                <div className="action-row-title">{o.klant_naam}</div>
+                <div className="action-row-meta">
+                  Offerte OZVT-{String(o.offertenummer).padStart(4,'0')} · wacht op reactie
+                </div>
+              </div>
+              <div className="action-row-side">{formatEuro(totaalOfferte(o))}</div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* ── Geld-statistieken (Moneybird-rust) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
+        <Link href="/facturen?status=betaald" className="stat-link">
+          <div className="stat-card">
+            <div className="stat-label"><span className="stat-dot green" /> Omzet {maandNaam}</div>
+            <div className="stat-value">{formatEuro(Number(g.omzet_maand))}</div>
+            {omzetTrend !== null
+              ? <div className="stat-sub" style={{ color: omzetTrend >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                  {omzetTrend >= 0 ? '↑' : '↓'} {Math.abs(omzetTrend)}% vs vorige maand
+                </div>
+              : <div className="stat-sub">Betaalde facturen</div>}
           </div>
         </Link>
 
-        {/* Open offertes waarde */}
-        <Link href="/offertes" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ borderLeft: '3px solid #7c3aed' }}>
-            <div className="stat-label">Open offertes</div>
-            <div className="stat-value" style={{ fontSize: '1.5rem', color: '#7c3aed' }}>{formatEuro(Number(g.offertes_waarde))}</div>
+        <Link href="/offertes" className="stat-link">
+          <div className="stat-card">
+            <div className="stat-label"><span className="stat-dot purple" /> Open offertes</div>
+            <div className="stat-value">{formatEuro(Number(g.offertes_waarde))}</div>
             <div className="stat-sub">{s.offertes_open} offerte{s.offertes_open !== 1 ? 's' : ''} uitstaand</div>
           </div>
         </Link>
 
-        {/* Open facturen waarde */}
-        <Link href="/facturen" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ borderLeft: '3px solid #ea580c' }}>
-            <div className="stat-label">Open facturen</div>
-            <div className="stat-value" style={{ fontSize: '1.5rem', color: '#ea580c' }}>{formatEuro(Number(g.facturen_open_waarde))}</div>
+        <Link href="/facturen" className="stat-link">
+          <div className="stat-card">
+            <div className="stat-label"><span className="stat-dot orange" /> Open facturen</div>
+            <div className="stat-value">{formatEuro(Number(g.facturen_open_waarde))}</div>
             <div className="stat-sub">{s.facturen_open} factuur/facturen open</div>
           </div>
         </Link>
 
-        {/* Te laat */}
-        <Link href="/facturen?status=te_laat" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ borderLeft: `3px solid ${s.te_laat > 0 ? '#dc2626' : '#e2e8f0'}` }}>
-            <div className="stat-label">Te laat</div>
-            <div className="stat-value" style={{ fontSize: '1.5rem', color: s.te_laat > 0 ? '#dc2626' : '#8ba8c4' }}>
+        <Link href="/facturen?status=te_laat" className="stat-link">
+          <div className="stat-card">
+            <div className="stat-label"><span className={`stat-dot ${s.te_laat > 0 ? 'red' : 'green'}`} /> Te laat</div>
+            <div className="stat-value" style={{ color: s.te_laat > 0 ? 'var(--red)' : 'var(--text-soft)' }}>
               {s.te_laat > 0 ? formatEuro(Number(g.te_laat_waarde)) : '—'}
             </div>
-            <div className="stat-sub" style={{ color: s.te_laat > 0 ? '#dc2626' : '#8ba8c4' }}>
+            <div className="stat-sub" style={{ color: s.te_laat > 0 ? 'var(--red)' : 'var(--text-mute)' }}>
               {s.te_laat > 0 ? `${s.te_laat} factuur/facturen verlopen` : 'Alles op tijd'}
             </div>
           </div>
         </Link>
       </div>
 
+      {/* ── Onderaan: twee kolommen ── */}
       <div className="detail-grid">
-        {/* Links: nieuwe aanvragen */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Open facturen */}
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div className="section-label" style={{ margin: 0 }}>Nieuwe aanvragen</div>
-              <Link href="/klussen?status=nieuw" style={{ fontSize: '.78rem', color: '#3b82f6', textDecoration: 'none' }}>Alle projecten →</Link>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div className="section-label" style={{ margin: 0 }}>
+                <Icon name="receipt" size={14} /> Openstaande facturen
+              </div>
+              <Link href="/facturen" className="btn-link" style={{ fontSize: '.76rem' }}>Alle facturen →</Link>
             </div>
-            {nieuweKlussen.length === 0 ? (
-              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: 0 }}>Geen nieuwe aanvragen 🎉</p>
-            ) : (
-              <>
-                {/* Desktop tabel */}
-                <div className="table-wrap desktop-only">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Klant</th>
-                        <th>Type werk</th>
-                        <th>Bron</th>
-                        <th>Status</th>
-                        <th>Tijd</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <DashboardKlussenRijen klussen={nieuweKlussen} />
-                    </tbody>
-                  </table>
+            {openFacturen.length === 0 ? (
+              <p className="text-muted" style={{ fontSize: '.84rem', margin: 0 }}>Geen openstaande facturen.</p>
+            ) : openFacturen.map((f: any) => (
+              <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'block', textDecoration: 'none', padding: '10px 0', borderBottom: '1px solid var(--line-soft)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '.86rem', color: 'var(--navy)' }}>{f.klant_naam}</div>
+                    <div style={{ fontSize: '.74rem', color: 'var(--text-mute)' }}>{f.factuurnummer} · {new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 700, fontSize: '.88rem', color: f.status === 'te_laat' ? 'var(--red)' : 'var(--navy)' }}>
+                      {formatEuro(totaalFactuur(f))}
+                    </div>
+                    <StatusBadge status={f.status} />
+                  </div>
                 </div>
-                {/* Mobiel kaartjes */}
-                <div className="mobile-only" style={{ display: 'none' }}>
-                  {nieuweKlussen.map((k: any) => (
-                    <Link key={k.id} href={`/klussen/${k.id}`} style={{ textDecoration: 'none' }}>
-                      <div style={{ padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div>
-                            <div style={{ fontWeight: 600, fontSize: '.88rem', color: '#0d1b3e' }}>{k.klant_naam}</div>
-                            <div style={{ fontSize: '.74rem', color: '#8ba8c4', marginTop: 2 }}>{k.type_werk || '—'}</div>
-                          </div>
-                          <StatusBadge status={k.status} />
-                        </div>
-                        <div style={{ fontSize: '.72rem', color: '#94a3b8', marginTop: 4 }}>{timeAgo(k.aangemaakt_op)}</div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
+              </Link>
+            ))}
           </div>
 
-          {/* Open offertes */}
-          {recenteOffertes.length > 0 && (
+          {/* Open offertes (alleen tonen als er meer zijn dan in actiestrook) */}
+          {recenteOffertes.length > 2 && (
             <div className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <div className="section-label" style={{ margin: 0 }}>Openstaande offertes</div>
-                <Link href="/offertes" style={{ fontSize: '.78rem', color: '#3b82f6', textDecoration: 'none' }}>Alle offertes →</Link>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div className="section-label" style={{ margin: 0 }}>
+                  <Icon name="file-text" size={14} /> Andere open offertes
+                </div>
+                <Link href="/offertes" className="btn-link" style={{ fontSize: '.76rem' }}>Alle offertes →</Link>
               </div>
-              {recenteOffertes.map((o: any) => (
-                <Link key={o.id} href={`/offertes/${o.id}`} style={{ textDecoration: 'none' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '.84rem', color: '#0d1b3e' }}>{o.klant_naam}</div>
-                      <div style={{ fontSize: '.74rem', color: '#8ba8c4' }}>OZVT-{String(o.offertenummer).padStart(4,'0')} · {new Date(o.datum).toLocaleDateString('nl-NL')}</div>
+              {recenteOffertes.slice(2).map((o: any) => (
+                <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'block', textDecoration: 'none', padding: '10px 0', borderBottom: '1px solid var(--line-soft)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '.86rem', color: 'var(--navy)' }}>{o.klant_naam}</div>
+                      <div style={{ fontSize: '.74rem', color: 'var(--text-mute)' }}>OZVT-{String(o.offertenummer).padStart(4,'0')} · {new Date(o.datum).toLocaleDateString('nl-NL')}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 700, fontSize: '.9rem', color: '#7c3aed' }}>{formatEuro(totaalOfferte(o))}</div>
+                      <div style={{ fontWeight: 700, fontSize: '.88rem', color: 'var(--purple)' }}>{formatEuro(totaalOfferte(o))}</div>
                       <StatusBadge status={o.status} />
                     </div>
                   </div>
@@ -291,22 +317,20 @@ export default async function Dashboard() {
           )}
         </div>
 
-        {/* Rechts */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Agenda vandaag */}
           <div className="card">
-            <div className="section-label" style={{ marginBottom: 12 }}>
-              <span className="nav-ico" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>calendar_today</span>
-              Agenda vandaag
+            <div className="section-label">
+              <Icon name="calendar" size={14} /> Agenda vandaag
             </div>
             {agendaVandaag.length === 0 ? (
-              <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: '0 0 12px' }}>Geen afspraken vandaag.</p>
+              <p className="text-muted" style={{ fontSize: '.82rem', margin: '0 0 12px' }}>Geen afspraken vandaag.</p>
             ) : agendaVandaag.map((a: any) => (
               <div key={a.id} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 3, borderRadius: 4, background: '#3b82f6', flexShrink: 0, marginTop: 4, alignSelf: 'stretch', minHeight: 24 }} />
+                <div style={{ width: 3, borderRadius: 4, background: 'var(--accent)', flexShrink: 0, marginTop: 4, alignSelf: 'stretch', minHeight: 24 }} />
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '.84rem', color: '#0d1b3e' }}>{a.titel}</div>
-                  <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>
+                  <div style={{ fontWeight: 600, fontSize: '.84rem', color: 'var(--navy)' }}>{a.titel}</div>
+                  <div style={{ fontSize: '.74rem', color: 'var(--text-mute)' }}>
                     {new Date(a.datum_start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
                     {a.klant_naam && ` · ${a.klant_naam}`}
                   </div>
@@ -318,36 +342,25 @@ export default async function Dashboard() {
             </Link>
           </div>
 
-          {/* Open facturen */}
+          {/* Snel-stats */}
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div className="section-label" style={{ margin: 0 }}>
-                <span className="nav-ico" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>receipt_long</span>
-                Open facturen
-              </div>
-              <Link href="/facturen" style={{ fontSize: '.78rem', color: '#3b82f6', textDecoration: 'none' }}>Alle →</Link>
+            <div className="section-label">
+              <Icon name="dashboard" size={14} /> Snel overzicht
             </div>
-            {openFacturen.length === 0 ? (
-              <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: '0 0 12px' }}>Geen openstaande facturen.</p>
-            ) : openFacturen.map((f: any) => (
-              <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'block', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '.84rem', color: '#0d1b3e' }}>{f.klant_naam}</div>
-                    <div style={{ fontSize: '.74rem', color: '#8ba8c4' }}>{f.factuurnummer} · {new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700, fontSize: '.88rem', color: f.status === 'te_laat' ? '#dc2626' : '#ea580c' }}>
-                      {formatEuro(totaalFactuur(f))}
-                    </div>
-                    <StatusBadge status={f.status} />
-                  </div>
-                </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Link href="/klussen?status=nieuw" style={{ display: 'flex', justifyContent: 'space-between', textDecoration: 'none', fontSize: '.86rem', padding: '6px 0' }}>
+                <span style={{ color: 'var(--text-mute)' }}>Nieuwe aanvragen</span>
+                <span style={{ fontWeight: 700, color: s.nieuw > 0 ? 'var(--accent)' : 'var(--text-soft)' }}>{s.nieuw}</span>
               </Link>
-            ))}
-            <Link href="/facturen" className="btn btn-ghost btn-sm" style={{ marginTop: 8, width: '100%', justifyContent: 'center' }}>
-              Alle facturen
-            </Link>
+              <Link href="/klussen" style={{ display: 'flex', justifyContent: 'space-between', textDecoration: 'none', fontSize: '.86rem', padding: '6px 0' }}>
+                <span style={{ color: 'var(--text-mute)' }}>Lopende projecten</span>
+                <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{s.open}</span>
+              </Link>
+              <Link href="/klanten" style={{ display: 'flex', justifyContent: 'space-between', textDecoration: 'none', fontSize: '.86rem', padding: '6px 0' }}>
+                <span style={{ color: 'var(--text-mute)' }}>Klanten</span>
+                <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{s.klanten}</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

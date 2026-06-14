@@ -7,6 +7,7 @@ import { notFound, redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
 import StatusBadge from '@/components/StatusBadge'
+import Icon from '@/components/Icon'
 import KlusActions from './KlusActions'
 import KlusInlineEditor from './KlusInlineEditor'
 import KlusKebabMenu from './KlusKebabMenu'
@@ -89,7 +90,7 @@ export default async function KlusDetailPage({
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/klussen" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <div>
             <h1 className="page-title" style={{ marginBottom: 2 }}>{klus.klant_naam}</h1>
@@ -100,11 +101,11 @@ export default async function KlusDetailPage({
           {klus.klant_tel && (
             <>
               <a href={waUrl} target="_blank" rel="noopener" className="btn btn-success btn-sm" title="WhatsApp">
-                <span className="nav-ico" style={{ fontSize: 16 }}>chat</span>
+                <Icon name="whatsapp" size={16} />
                 WhatsApp
               </a>
               <a href={`tel:${klus.klant_tel}`} className="btn btn-ghost btn-sm" title="Bellen">
-                <span className="nav-ico" style={{ fontSize: 16 }}>call</span>
+                <Icon name="phone" size={16} />
               </a>
             </>
           )}
@@ -147,7 +148,7 @@ export default async function KlusDetailPage({
             <div className="section-label">Gekoppelde documenten</div>
 
             {offertesRows.length === 0 && facturenRows.length === 0 && (
-              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen documenten voor deze klus.</p>
+              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen documenten voor dit project.</p>
             )}
 
             {offertesRows.map((o: any) => (
@@ -173,15 +174,15 @@ export default async function KlusDetailPage({
 
             <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
               <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>
-                <span className="nav-ico" style={{ fontSize: 15 }}>description</span>
+                <Icon name="file-text" size={15} />
                 Offerte
               </Link>
               <Link href={`/facturen/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>
-                <span className="nav-ico" style={{ fontSize: 15 }}>receipt</span>
+                <Icon name="receipt" size={15} />
                 Factuur
               </Link>
               <Link href={`/afspraken/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>
-                <span className="nav-ico" style={{ fontSize: 15 }}>handshake</span>
+                <Icon name="check" size={15} />
                 Werkafspraken
               </Link>
             </div>
@@ -201,10 +202,10 @@ export default async function KlusDetailPage({
           {/* Andere klussen van klant */}
           {siblingRows.length > 0 && (
             <div className="card">
-              <div className="section-label">Andere klussen van {klus.klant_naam}</div>
+              <div className="section-label">Andere projecten van {klus.klant_naam}</div>
               {siblingRows.map((s: any) => (
                 <Link key={s.id} href={`/klussen/${s.id}`} style={{ display: 'flex', justifyContent: 'space-between', textDecoration: 'none', marginBottom: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: '.84rem', color: '#0d1b3e' }}>{s.type_werk || `Klus #${s.id}`}</span>
+                  <span style={{ fontSize: '.84rem', color: '#0d1b3e' }}>{s.type_werk || `Project #${s.id}`}</span>
                   <StatusBadge status={s.status} />
                 </Link>
               ))}

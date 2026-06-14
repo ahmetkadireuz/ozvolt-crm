@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StatusBadge from '@/components/StatusBadge'
+import Icon from '@/components/Icon'
 
 function datumNL(dt: string) {
   const d = new Date(dt)
@@ -27,7 +28,7 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
   }, [klussen, zoek])
 
   async function verwijder(k: any) {
-    if (!confirm(`Klus van ${k.klant_naam} (${k.type_werk || `#${k.id}`}) definitief verwijderen?`)) return
+    if (!confirm(`Project van ${k.klant_naam} (${k.type_werk || `#${k.id}`}) definitief verwijderen?`)) return
     setBusy(true)
     await fetch(`/api/klussen/${k.id}`, { method: 'DELETE' })
     setBusy(false)
@@ -38,7 +39,7 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
     <>
       {/* Zoekbalk */}
       <div className="list-search">
-        <span className="nav-ico ico">search</span>
+        <span className="ico"><Icon name="search" size={18} /></span>
         <input
           type="search"
           value={zoek}
@@ -48,8 +49,8 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
       </div>
 
       {lijst.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', color: '#8ba8c4', padding: '32px' }}>
-          Geen klussen gevonden{zoek ? ` voor “${zoek}”` : ''}.
+        <div className="card" style={{ textAlign: 'center', color: 'var(--text-mute)', padding: '32px' }}>
+          Geen projecten gevonden{zoek ? ` voor "${zoek}"` : ''}.
         </div>
       ) : (
         <>
@@ -79,7 +80,7 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
                           <a href={`/klussen/${k.id}`} className="btn-open">Openen</a>
                           <a href={`/facturen/nieuw?klus=${k.id}`} className="btn-row-primary">+ Factuur</a>
                           <button className="btn-row-del" title="Verwijderen" disabled={busy} onClick={() => verwijder(k)}>
-                            <span className="nav-ico" style={{ fontSize: 15 }}>delete</span>
+                            <Icon name="trash" size={15} />
                           </button>
                         </div>
                       </td>
