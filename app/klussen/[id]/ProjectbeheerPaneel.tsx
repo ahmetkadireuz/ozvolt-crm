@@ -1,5 +1,7 @@
 'use client'
 
+import Icon from '@/components/Icon'
+
 type Rapport = { id: number; titel: string; type: string | null; getekend_op: string | null; aangemaakt_op: string }
 
 interface Props {
@@ -39,7 +41,7 @@ export default function ProjectbeheerPaneel({ klusId, rapporten, omzet, kosten }
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <div className="section-label" style={{ marginBottom: 0 }}>Opleveringsrapporten</div>
           <a href={`/klussen/${klusId}/oplevering`} className="btn btn-primary btn-sm">
-            <span className="nav-ico" style={{ fontSize: 15 }}>task_alt</span>
+            <Icon name="check-circle" size={15} />
             Nieuw rapport
           </a>
         </div>

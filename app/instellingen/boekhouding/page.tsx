@@ -89,7 +89,7 @@ export default async function BoekhoudingPage() {
             </div>
           </div>
           <a href="https://moneybird.com" target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>open_in_new</span>
+            <Icon name="external" size={16} />
             Open Moneybird
           </a>
         </div>

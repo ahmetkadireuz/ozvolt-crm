@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
 import OpleveringsFormulier from './OpleveringsFormulier'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Opleveringsrapport' }
 
@@ -54,7 +55,7 @@ export default async function OpleveringPagina({
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href={`/klussen/${klusId}`} className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <div>
             <h1 className="page-title" style={{ marginBottom: 2 }}>Opleveringsrapport</h1>

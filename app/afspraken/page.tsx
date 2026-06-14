@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { sql } from '@/lib/db'
 import StatusBadge from '@/components/StatusBadge'
 import type { Metadata } from 'next'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Werkafspraken' }
 
@@ -26,7 +27,7 @@ export default async function AfsprakenPage() {
       <div className="topbar">
         <h1 className="page-title">Werkafspraken</h1>
         <Link href="/afspraken/nieuw" className="btn btn-primary btn-sm">
-          <span className="nav-ico" style={{ fontSize: 16 }}>add</span>
+          <Icon name="plus" size={16} />
           Nieuw document
         </Link>
       </div>

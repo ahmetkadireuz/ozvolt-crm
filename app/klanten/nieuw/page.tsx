@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Klant toevoegen' }
 
@@ -26,7 +27,7 @@ export default function NieuweKlantPage() {
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/klanten" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <h1 className="page-title">Klant toevoegen</h1>
         </div>
@@ -50,7 +51,7 @@ export default function NieuweKlantPage() {
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
             <button type="submit" className="btn btn-primary">
-              <span className="nav-ico" style={{ fontSize: 18 }}>person_add</span>
+              <Icon name="users" size={18} />
               Klant aanmaken
             </button>
             <Link href="/klanten" className="btn btn-ghost">Annuleren</Link>

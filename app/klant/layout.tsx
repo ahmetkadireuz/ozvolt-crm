@@ -1,39 +1,40 @@
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import Link from 'next/link'
 import '../globals.css'
+import './klant.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: { default: 'Mijn Ozvolt Portaal', template: '%s — Ozvolt' },
+  themeColor: '#0d1b3e',
 }
 
 export default function KlantLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="nl">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body style={{ background: '#f0f4f8', minHeight: '100vh' }}>
-        <header style={{
-          background: '#0d1b3e',
-          padding: '0 24px',
-          height: 56,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <html lang="nl" className={inter.variable}>
+      <body className="kp-body">
+        <header className="kp-header">
+          <Link href="/klant/dashboard" className="kp-brand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-wit.png" alt="Ozvolt" style={{ height: 28, width: 'auto', display: 'block', objectFit: 'contain' }} />
-            <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 13 }}>Klantportaal</span>
-          </div>
-          <a href="mailto:info@ozvoltelektro.nl" style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, textDecoration: 'none' }}>
+            <img src="/logo-wit.png" alt="Ozvolt Elektrotechniek" />
+            <span className="kp-brand-tag">Klantportaal</span>
+          </Link>
+          <a href="mailto:info@ozvoltelektro.nl" className="kp-header-link">
             info@ozvoltelektro.nl
           </a>
         </header>
-        <main style={{ maxWidth: 760, margin: '0 auto', padding: '32px 16px 64px' }}>
-          {children}
-        </main>
+        <main className="kp-main">{children}</main>
+        <footer className="kp-footer">
+          <span>© {new Date().getFullYear()} Ozvolt Elektrotechniek</span>
+          <a href="https://ozvoltelektro.nl" target="_blank" rel="noreferrer">ozvoltelektro.nl</a>
+        </footer>
       </body>
     </html>
   )

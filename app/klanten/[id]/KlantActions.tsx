@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useRef } from 'react'
+import Icon from '@/components/Icon'
 
 export default function KlantActions({ klant, klantId }: { klant: any; klantId: number }) {
   const router = useRouter()
@@ -191,7 +192,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
           disabled={gvUploading}
           style={{ width: '100%', justifyContent: 'center' }}
         >
-          <span className="nav-ico" style={{ fontSize: 16 }}>upload_file</span>
+          <Icon name="upload" size={16} />
           {gvUploading ? 'Uploaden…' : 'Document uploaden'}
         </button>
         {gvOk && <p style={{ color: '#16a34a', fontSize: 12, margin: '6px 0 0' }}>✓ Document geüpload</p>}
@@ -199,7 +200,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
       </div>
 
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteKlant} style={{ width: '100%', justifyContent: 'center' }}>
-        <span className="nav-ico" style={{ fontSize: 16 }}>delete</span>
+        <Icon name="trash" size={16} />
         Klant verwijderen
       </button>
     </div>

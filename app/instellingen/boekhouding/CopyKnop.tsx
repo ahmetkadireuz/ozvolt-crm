@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Icon from '@/components/Icon'
 
 export default function CopyKnop({ tekst }: { tekst: string }) {
   const [gekopieerd, setGekopieerd] = useState(false)
@@ -14,7 +15,7 @@ export default function CopyKnop({ tekst }: { tekst: string }) {
         setTimeout(() => setGekopieerd(false), 2000)
       }}
     >
-      <span className="nav-ico" style={{ fontSize: 15 }}>{gekopieerd ? 'check' : 'content_copy'}</span>
+      <Icon name={gekopieerd ? 'check' : 'copy'} size={15} />
       {gekopieerd ? 'Gekopieerd' : 'Kopieer'}
     </button>
   )

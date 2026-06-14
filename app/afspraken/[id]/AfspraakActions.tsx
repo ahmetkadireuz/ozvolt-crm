@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Icon from '@/components/Icon'
 
 export default function AfspraakActions({ afspraak, afspraakId, acceptUrl }: { afspraak: any; afspraakId: number; acceptUrl: string | null }) {
   const router = useRouter()
@@ -45,7 +46,7 @@ export default function AfspraakActions({ afspraak, afspraakId, acceptUrl }: { a
           onClick={versturen}
           disabled={!afspraak.klant_email}
         >
-          <span className="nav-ico" style={{ fontSize: 16 }}>send</span>
+          <Icon name="send" size={16} />
           E-mail versturen
         </button>
         {acceptUrl && (
@@ -54,7 +55,7 @@ export default function AfspraakActions({ afspraak, afspraakId, acceptUrl }: { a
             <div style={{ display: 'flex', gap: 6 }}>
               <input className="form-ctrl" value={acceptUrl} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(acceptUrl)}>
-                <span className="nav-ico" style={{ fontSize: 16 }}>content_copy</span>
+                <Icon name="copy" size={16} />
               </button>
             </div>
           </div>
@@ -84,14 +85,14 @@ export default function AfspraakActions({ afspraak, afspraakId, acceptUrl }: { a
               disabled={afspraak.status === s}
             >
               {STATUS_LABELS[s]}
-              {afspraak.status === s && <span className="nav-ico" style={{ fontSize: 14 }}>check</span>}
+              {afspraak.status === s && <Icon name="check" size={14} />}
             </button>
           ))}
         </div>
       </div>
 
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteAfspraak} style={{ width: '100%', justifyContent: 'center' }}>
-        <span className="nav-ico" style={{ fontSize: 16 }}>delete</span>
+        <Icon name="trash" size={16} />
         Verwijderen
       </button>
     </div>

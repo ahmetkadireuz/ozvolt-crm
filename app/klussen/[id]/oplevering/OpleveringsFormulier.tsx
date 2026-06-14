@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SignatureCanvas from '@/components/SignatureCanvas'
+import Icon from '@/components/Icon'
 
 type Foto = { url: string; caption?: string }
 
@@ -117,7 +118,7 @@ export default function OpleveringsFormulier({ klusId, klantId, klantNaam, typeW
         <div style={{ display: 'flex', gap: 8 }}>
           {rapportId && (
             <a href={`/rapporten/${rapportId}/print`} target="_blank" className="btn btn-ghost btn-sm">
-              <span className="nav-ico" style={{ fontSize: 15 }}>print</span> Afdrukken / PDF
+              <Icon name="download" size={15} /> Afdrukken / PDF
             </a>
           )}
           <button className="btn btn-primary btn-sm" onClick={opslaan} disabled={saving}>
@@ -172,7 +173,7 @@ export default function OpleveringsFormulier({ klusId, klantId, klantNaam, typeW
           className="btn btn-ghost btn-sm"
           style={{ marginTop: 4 }}
         >
-          <span className="nav-ico" style={{ fontSize: 15 }}>add</span>
+          <Icon name="plus" size={15} />
           Regel toevoegen
         </button>
       </div>
@@ -195,7 +196,7 @@ export default function OpleveringsFormulier({ klusId, klantId, klantNaam, typeW
           className="btn btn-ghost btn-sm"
           style={{ width: '100%', justifyContent: 'center' }}
         >
-          <span className="nav-ico" style={{ fontSize: 16 }}>upload</span>
+          <Icon name="upload" size={16} />
           {uploadBezig ? 'Uploaden…' : "Foto's toevoegen"}
         </button>
         {fotos.length > 0 && (

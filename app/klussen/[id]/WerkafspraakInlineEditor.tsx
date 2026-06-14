@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Icon from '@/components/Icon'
 
 interface Item {
   omschrijving: string
@@ -62,7 +63,7 @@ export default function WerkafspraakInlineEditor({ afspraakId, klantId, klusId, 
           onClick={() => setOpen(true)}
           style={{ width: '100%', justifyContent: 'center' }}
         >
-          <span className="nav-ico" style={{ fontSize: 15 }}>edit</span>
+          <Icon name="edit" size={15} />
           Werkafspraken invullen
         </button>
       ) : (
@@ -103,14 +104,14 @@ export default function WerkafspraakInlineEditor({ afspraakId, klantId, klusId, 
                   disabled={items.length === 1}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 4, opacity: items.length === 1 ? .3 : 1, marginTop: 4 }}
                 >
-                  <span className="nav-ico" style={{ fontSize: 16 }}>delete</span>
+                  <Icon name="trash" size={16} />
                 </button>
               </div>
             </div>
           ))}
 
           <button type="button" className="btn btn-ghost btn-sm" onClick={addItem}>
-            <span className="nav-ico" style={{ fontSize: 15 }}>add</span>
+            <Icon name="plus" size={15} />
             Punt toevoegen
           </button>
 

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { useAutosave } from '@/lib/use-autosave'
+import Icon from '@/components/Icon'
 
 interface Props {
   klus: any
@@ -163,7 +164,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
             disabled={portaalLaden}
             style={{ flex: 1, justifyContent: 'center' }}
           >
-            <span className="nav-ico" style={{ fontSize: 16 }}>open_in_new</span>
+            <Icon name="external" size={16} />
             {portaalLaden ? 'Laden…' : 'Open portaal'}
           </button>
           <button
@@ -173,7 +174,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
             disabled={portaalLaden}
             title="Klant-link genereren om te delen"
           >
-            <span className="nav-ico" style={{ fontSize: 16 }}>link</span>
+            <Icon name="external" size={16} />
           </button>
         </div>
         {portaalLink && (
@@ -188,7 +189,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
                 onClick={kopieerLink}
                 style={{ flex: 1, justifyContent: 'center' }}
               >
-                <span className="nav-ico" style={{ fontSize: 16 }}>{portaalGekopieerd ? 'check' : 'content_copy'}</span>
+                <Icon name={portaalGekopieerd ? 'check' : 'copy'} size={16} />
                 {portaalGekopieerd ? 'Gekopieerd!' : 'Kopieer'}
               </button>
               {klus.klant_tel && (() => {
@@ -203,7 +204,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
                     className="btn btn-success btn-sm"
                     style={{ justifyContent: 'center' }}
                   >
-                    <span className="nav-ico" style={{ fontSize: 16 }}>chat</span>
+                    <Icon name="chat" size={16} />
                     Stuur
                   </a>
                 )
@@ -264,7 +265,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
           disabled={docUploading}
           style={{ width: '100%', justifyContent: 'center' }}
         >
-          <span className="nav-ico" style={{ fontSize: 16 }}>upload_file</span>
+          <Icon name="upload" size={16} />
           {docUploading ? 'Uploaden…' : 'Document uploaden'}
         </button>
         {docFout && <p style={{ color: '#dc2626', fontSize: 12, margin: '6px 0 0' }}>{docFout}</p>}
@@ -278,7 +279,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
           className="btn btn-primary btn-sm"
           style={{ width: '100%', justifyContent: 'center' }}
         >
-          <span className="nav-ico" style={{ fontSize: 16 }}>task_alt</span>
+          <Icon name="check-circle" size={16} />
           Opleveringsrapport
         </a>
       </div>

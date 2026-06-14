@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import StatusBadge from '@/components/StatusBadge'
 import KlantActions from './KlantActions'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Klantprofiel' }
 
@@ -30,13 +31,13 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/klanten" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <h1 className="page-title">{klant.naam}</h1>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Link href={`/klussen/nieuw?klant=${klantId}`} className="btn btn-primary btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>add</span>
+            <Icon name="plus" size={16} />
             Nieuwe klus
           </Link>
         </div>
@@ -96,7 +97,7 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div className="section-label" style={{ margin: 0 }}>Offertes ({offertes.length})</div>
               <Link href={`/offertes/nieuw?klant=${klantId}`} className="btn btn-primary btn-sm">
-                <span className="nav-ico" style={{ fontSize: 14 }}>add</span>
+                <Icon name="plus" size={14} />
                 Nieuwe offerte
               </Link>
             </div>
@@ -118,7 +119,7 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div className="section-label" style={{ margin: 0 }}>Facturen ({facturen.length})</div>
               <Link href={`/facturen/nieuw?klant=${klantId}`} className="btn btn-ghost btn-sm">
-                <span className="nav-ico" style={{ fontSize: 14 }}>add</span>
+                <Icon name="plus" size={14} />
                 Nieuwe factuur
               </Link>
             </div>

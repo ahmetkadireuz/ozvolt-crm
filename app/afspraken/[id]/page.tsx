@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import AfspraakForm from './AfspraakForm'
 import AfspraakActions from './AfspraakActions'
+import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Werkafspraken' }
 
@@ -34,12 +35,12 @@ export default async function AfspraakDetailPage({ params }: { params: Promise<{
       <div className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/afspraken" className="btn btn-ghost btn-sm">
-            <span className="nav-ico" style={{ fontSize: 16 }}>arrow_back</span>
+            <Icon name="arrow-left" size={16} />
           </Link>
           <h1 className="page-title">Werkafspraken {afspraakNr}</h1>
         </div>
         <a href={`/api/afspraken/${afspraakId}/pdf`} target="_blank" rel="noopener" className="btn btn-ghost btn-sm">
-          <span className="nav-ico" style={{ fontSize: 16 }}>picture_as_pdf</span>
+          <Icon name="pdf" size={16} />
           PDF bekijken
         </a>
       </div>

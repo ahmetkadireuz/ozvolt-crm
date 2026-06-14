@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAutosave } from '@/lib/use-autosave'
+import Icon from '@/components/Icon'
 
 interface Punt {
   omschrijving: string
@@ -90,14 +91,14 @@ export default function PuntenEditor({ klusId, initialPunten }: Props) {
             </div>
             <button type="button" onClick={() => remove(i)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 4, marginTop: 4 }}>
-              <span className="nav-ico" style={{ fontSize: 16 }}>delete</span>
+              <Icon name="trash" size={16} />
             </button>
           </div>
         </div>
       ))}
 
       <button type="button" className="btn btn-ghost btn-sm" onClick={add}>
-        <span className="nav-ico" style={{ fontSize: 15 }}>add</span>
+        <Icon name="plus" size={15} />
         Afspraak toevoegen
       </button>
     </div>
