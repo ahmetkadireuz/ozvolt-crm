@@ -73,13 +73,14 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
     <>
       <aside className="sidebar" id="sidebar">
         <div className="sb-brand">
-          <div className="sb-brand-logo">
-            <Image src="/logo.png" alt="Ozvolt" width={26} height={26} style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-          </div>
-          <div>
-            <strong>Ozvolt</strong>
-            <span>Elektrotechniek</span>
-          </div>
+          <Image
+            src="/logo-transparant.png"
+            alt="Ozvolt Elektrotechniek"
+            width={170}
+            height={48}
+            priority
+            style={{ objectFit: 'contain', height: 'auto', width: 'auto', maxHeight: 44, maxWidth: '100%' }}
+          />
         </div>
 
         <nav className="sb-nav">
