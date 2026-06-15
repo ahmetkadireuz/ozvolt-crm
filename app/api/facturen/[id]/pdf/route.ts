@@ -91,7 +91,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   table.items tbody td { padding: 11px 14px; vertical-align: top; }
   table.items tbody td:not(:first-child) { text-align: right; font-size: 12.5px; }
   .td-omschrijving { font-weight: 600; color: var(--navy); font-size: 13px; }
-  .td-beschrijving { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .td-beschrijving { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: pre-wrap; }
 
   .totals-wrap { display: flex; justify-content: flex-end; margin-top: 18px; }
   .totals-box { width: 290px; }

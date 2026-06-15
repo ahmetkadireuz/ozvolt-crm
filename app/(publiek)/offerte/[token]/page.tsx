@@ -214,7 +214,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                       <tr key={i}>
                         <td>
                           <div className="td-title">{r.omschrijving || '—'}</div>
-                          {r.beschrijving && <div className="td-sub">{r.beschrijving}</div>}
+                          {r.beschrijving && <div className="td-sub" style={{ whiteSpace: 'pre-wrap' }}>{r.beschrijving}</div>}
                         </td>
                         <td>{Number(r.aantal).toLocaleString('nl-NL', { maximumFractionDigits: 2 })}</td>
                         <td>{formatEuro(Number(r.prijs))}</td>

@@ -133,7 +133,14 @@ export async function genereerFactuurPDF(params: {
     y += 22
 
     params.regels.forEach((r, i) => {
-      const rowH = r.beschrijving ? 32 : 22
+      // Hoogte vooraf meten zodat multi-line beschrijvingen niet over de volgende regel lopen
+      let beschrijvingH = 0
+      if (r.beschrijving) {
+        doc.font('Helvetica').fontSize(8)
+        beschrijvingH = doc.heightOfString(r.beschrijving, { width: 270 })
+      }
+      const rowH = Math.max(22, 19 + beschrijvingH + 6)
+
       if (i % 2 === 1) doc.rect(margin, y, W - 2 * margin, rowH).fill('#f8fafc')
       doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(9.5)
          .text(r.omschrijving || '—', margin + 10, y + 6, { width: 270 })

@@ -124,14 +124,26 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
             </button>
           </div>
 
-          {/* Rij 2: extra beschrijving */}
+          {/* Rij 2: extra beschrijving — multiline, auto-groeiend (Shift+Enter voor nieuwe regel) */}
           <div style={{ marginTop: 6 }}>
-            <input
+            <textarea
               className="form-ctrl"
-              placeholder="Extra omschrijving / toelichting (optioneel)"
+              placeholder="Extra omschrijving / toelichting — Shift+Enter voor nieuwe regel"
               value={regel.beschrijving ?? ''}
               onChange={e => update(i, 'beschrijving', e.target.value)}
-              style={{ padding: '5px 10px', fontSize: '.8rem', color: '#94a3b8', background: '#fff', borderStyle: 'dashed', fontStyle: 'italic' }}
+              onInput={e => {
+                const el = e.currentTarget
+                el.style.height = 'auto'
+                el.style.height = el.scrollHeight + 'px'
+              }}
+              ref={el => {
+                if (el) {
+                  el.style.height = 'auto'
+                  el.style.height = el.scrollHeight + 'px'
+                }
+              }}
+              rows={1}
+              style={{ padding: '6px 10px', fontSize: '.8rem', color: '#475569', background: '#fff', borderStyle: 'dashed', fontStyle: 'italic', resize: 'none', overflow: 'hidden', lineHeight: 1.5, width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' }}
             />
           </div>
 

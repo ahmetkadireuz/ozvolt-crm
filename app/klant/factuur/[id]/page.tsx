@@ -73,7 +73,7 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
               <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                 <td style={{ padding: '10px 0' }}>
                   <div style={{ fontWeight: 500, color: '#0d1b3e' }}>{r.omschrijving}</div>
-                  {r.beschrijving && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{r.beschrijving}</div>}
+                  {r.beschrijving && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, whiteSpace: 'pre-wrap' }}>{r.beschrijving}</div>}
                 </td>
                 <td style={{ textAlign: 'right', padding: '10px 0', color: '#475569' }}>{r.aantal}</td>
                 <td style={{ textAlign: 'right', padding: '10px 0', color: '#475569' }}>{formatEuro(r.prijs)}</td>
