@@ -43,14 +43,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   if (typeof body.type_werk === 'string' || typeof body.omschrijving === 'string' || typeof body.product === 'string') {
-    await sql`
-      UPDATE klussen SET
-        type_werk     = CASE WHEN ${body.type_werk    ?? null} IS NOT NULL THEN ${body.type_werk    ?? ''} ELSE type_werk END,
-        omschrijving  = CASE WHEN ${body.omschrijving ?? null} IS NOT NULL THEN ${body.omschrijving ?? ''} ELSE omschrijving END,
-        product       = CASE WHEN ${body.product      ?? null} IS NOT NULL THEN ${body.product      ?? ''} ELSE product END,
-        bijgewerkt_op = NOW()
-      WHERE id = ${klusId}
-    `
+    try {
+      // Defensief: kolom kan missen in oudere productie-db
+      await sql`ALTER TABLE klussen ADD COLUMN IF NOT EXISTS product VARCHAR(255)`
+    } catch {}
+    try {
+      if (typeof body.type_werk === 'string') {
+        await sql`UPDATE klussen SET type_werk = ${body.type_werk}, bijgewerkt_op = NOW() WHERE id = ${klusId}`
+      }
+      if (typeof body.omschrijving === 'string') {
+        await sql`UPDATE klussen SET omschrijving = ${body.omschrijving}, bijgewerkt_op = NOW() WHERE id = ${klusId}`
+      }
+      if (typeof body.product === 'string') {
+        await sql`UPDATE klussen SET product = ${body.product}, bijgewerkt_op = NOW() WHERE id = ${klusId}`
+      }
+    } catch (err) {
+      console.error('[klussen PATCH] aanvraagdetails update:', err)
+      return NextResponse.json({ error: err instanceof Error ? err.message : 'DB-fout bij opslaan' }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ ok: true })

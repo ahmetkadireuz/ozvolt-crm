@@ -51,7 +51,10 @@ export default function KlusInlineEditor({ klusId, initial }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error('Opslaan mislukt')
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error ?? 'Opslaan mislukt')
+      }
       setSavedAt(Date.now())
       router.refresh()
     } catch (err) {
