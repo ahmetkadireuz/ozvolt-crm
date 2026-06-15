@@ -27,7 +27,7 @@ export default async function NieuweOffertePage({
   async function createOfferte(formData: FormData) {
     'use server'
     let klantId = parseInt(String(formData.get('klant_id') ?? '0'))
-    const klusId = parseInt(String(formData.get('klus_id') ?? '0')) || null
+    let klusId: number | null = parseInt(String(formData.get('klus_id') ?? '0')) || null
     const nieuweNaam = String(formData.get('nieuwe_naam') ?? '').trim()
 
     if (!klantId && nieuweNaam) {
@@ -41,6 +41,17 @@ export default async function NieuweOffertePage({
       klantId = r[0].id
     }
     if (!klantId) redirect('/offertes/nieuw?fout=klant')
+
+    // Auto-koppel aan meest recente actieve klus als geen klus is meegegeven
+    if (!klusId) {
+      const klusRows = await sql`
+        SELECT id FROM klussen
+        WHERE klant_id = ${klantId} AND status <> 'afgerond'
+        ORDER BY aangemaakt_op DESC
+        LIMIT 1
+      `
+      if (klusRows[0]) klusId = klusRows[0].id
+    }
 
     const maxRow = await sql`SELECT MAX(offertenummer)::int AS max_nr FROM offertes`
     const nextNr = (maxRow[0]?.max_nr ?? 1000) + 1
