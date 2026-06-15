@@ -12,15 +12,17 @@ export default function AccepteerKnop({ offerteId, totaal }: { offerteId: number
     if (!naam.trim()) { setError('Vul uw naam in om te accepteren'); return }
     setBezig(true)
     setError('')
-    const res = await fetch(`/api/offertes/${offerteId}/accepteren`, {
+    const res = await fetch(`/api/offertes/${offerteId}/accepteren-klant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ naam, via: 'klantportaal' }),
+      body: JSON.stringify({ naam }),
     })
     if (res.ok) {
       setGeaccepteerd(true)
+      setTimeout(() => window.location.reload(), 2500)
     } else {
-      setError('Er is iets misgegaan. Probeer het opnieuw.')
+      const data = await res.json().catch(() => ({}))
+      setError(data?.error ?? 'Er is iets misgegaan. Probeer het opnieuw.')
     }
     setBezig(false)
   }

@@ -20,6 +20,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
     WHERE o.id = ${id} AND o.klant_id = ${klantId}
   `
   if (!rows[0]) notFound()
+  if (rows[0].status === 'concept') notFound()
 
   const o = rows[0]
   const regels: { omschrijving: string; beschrijving?: string; aantal: number; prijs: number; btw: number }[] = o.regels
@@ -178,16 +179,16 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; fg: string }> = {
-    concept:      { bg: '#f1f5f9', fg: '#64748b' },
-    verzonden:    { bg: '#fef9c3', fg: '#a16207' },
-    geaccepteerd: { bg: '#dcfce7', fg: '#15803d' },
-    verlopen:     { bg: '#fee2e2', fg: '#dc2626' },
+  const map: Record<string, { bg: string; fg: string; label: string }> = {
+    gestuurd:     { bg: '#fef9c3', fg: '#a16207', label: 'Wacht op uw akkoord' },
+    geaccepteerd: { bg: '#dcfce7', fg: '#15803d', label: 'Geaccepteerd' },
+    verlopen:     { bg: '#fee2e2', fg: '#dc2626', label: 'Verlopen' },
+    geweigerd:    { bg: '#fee2e2', fg: '#dc2626', label: 'Geweigerd' },
   }
-  const s = map[status] ?? { bg: '#f1f5f9', fg: '#64748b' }
+  const s = map[status] ?? { bg: '#f1f5f9', fg: '#64748b', label: status }
   return (
-    <span style={{ background: s.bg, color: s.fg, padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
-      {status}
+    <span style={{ background: s.bg, color: s.fg, padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
+      {s.label}
     </span>
   )
 }
