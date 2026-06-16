@@ -74,10 +74,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       datum: new Date().toISOString().slice(0, 10),
     })
 
-    if (termijn === 2) {
-      await sql`UPDATE facturen SET betaal_url_2 = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
-    } else {
-      await sql`UPDATE facturen SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+    // Best-effort cachen — als de kolom ontbreekt mag dit de betaling niet blokkeren
+    try {
+      if (termijn === 2) {
+        await sql`UPDATE facturen SET betaal_url_2 = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+      } else {
+        await sql`UPDATE facturen SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+      }
+    } catch (cacheErr) {
+      console.error('[klant betaal-link] cache url mislukt (genegeerd):', cacheErr)
     }
 
     return NextResponse.json({ url: betaalUrl })
