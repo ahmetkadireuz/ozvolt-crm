@@ -14,8 +14,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // Defensief: kolommen kunnen missen in oudere productie-db
   try {
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`
+    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
     await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT`
+    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`
   } catch (err) {
     console.error('[facturen 50-50] ALTER TABLE:', err)
   }

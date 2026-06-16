@@ -8,6 +8,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params
   const factuurId = parseInt(id)
 
+  try {
+    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
+  } catch {}
+
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
            k.telefoon AS klant_tel, k.type AS klant_type
