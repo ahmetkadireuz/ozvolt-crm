@@ -42,6 +42,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await sql`UPDATE offertes SET klus_id = ${klusId}, klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}), bijgewerkt_op = NOW() WHERE id = ${parseInt(body.koppel_offerte_id)}`
   }
 
+  if (body.koppel_factuur_id) {
+    await sql`UPDATE facturen SET klus_id = ${klusId}, klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}), bijgewerkt_op = NOW() WHERE id = ${parseInt(body.koppel_factuur_id)}`
+  }
+
   if (typeof body.type_werk === 'string' || typeof body.omschrijving === 'string' || typeof body.product === 'string') {
     try {
       // Defensief: kolom kan missen in oudere productie-db

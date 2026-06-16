@@ -2,14 +2,22 @@
 
 import { useState } from 'react'
 
-export default function BetaalKnop({ factuurId, totaal }: { factuurId: number; totaal: string }) {
+interface Props {
+  factuurId: number
+  totaal: string
+  termijn?: 1 | 2
+  label?: string
+}
+
+export default function BetaalKnop({ factuurId, totaal, termijn, label }: Props) {
   const [bezig, setBezig] = useState(false)
   const [error, setError] = useState('')
 
   async function betaal() {
     setBezig(true)
     setError('')
-    const res = await fetch(`/api/facturen/${factuurId}/betaal-link`, { method: 'POST' })
+    const qs = termijn ? `?termijn=${termijn}` : ''
+    const res = await fetch(`/api/facturen/${factuurId}/betaal-link${qs}`, { method: 'POST' })
     const data = await res.json()
     if (data.url) {
       window.location.href = data.url
@@ -31,7 +39,7 @@ export default function BetaalKnop({ factuurId, totaal }: { factuurId: number; t
           border: 'none', cursor: bezig ? 'wait' : 'pointer',
         }}
       >
-        {bezig ? 'Betaallink aanmaken...' : `💳 Nu betalen — ${totaal}`}
+        {bezig ? 'Betaallink aanmaken...' : `${label ?? '💳 Nu betalen'} — ${totaal}`}
       </button>
       {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 8, textAlign: 'center' }}>{error}</p>}
     </div>

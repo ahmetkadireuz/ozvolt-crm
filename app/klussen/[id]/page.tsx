@@ -13,6 +13,7 @@ import KlusInlineEditor from './KlusInlineEditor'
 import KlusKebabMenu from './KlusKebabMenu'
 import PuntenEditor from './PuntenEditor'
 import OfferteKoppelen from './OfferteKoppelen'
+import FactuurKoppelen from './FactuurKoppelen'
 import ProjectbeheerPaneel from './ProjectbeheerPaneel'
 
 export const metadata: Metadata = { title: 'Project detail' }
@@ -35,7 +36,7 @@ export default async function KlusDetailPage({
   const klusId = parseInt(id)
   if (isNaN(klusId)) notFound()
 
-  const [klusRows, offertesRows, facturenRows, ongekoppeldeOffertes, siblingRows] = await Promise.all([
+  const [klusRows, offertesRows, facturenRows, ongekoppeldeOffertes, ongekoppeldeFacturen, siblingRows] = await Promise.all([
     sql`
       SELECT k.*, kt.id AS klant_id, kt.naam AS klant_naam,
              kt.email AS klant_email, kt.telefoon AS klant_tel,
@@ -46,6 +47,7 @@ export default async function KlusDetailPage({
     sql`SELECT id, offertenummer, status, datum FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum FROM facturen WHERE klus_id = ${klusId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, offertenummer FROM offertes WHERE klus_id IS NULL AND klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY datum DESC`,
+    sql`SELECT id, factuurnummer FROM facturen WHERE (klus_id IS NULL OR klus_id <> ${klusId}) AND klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY factuurdatum DESC`,
     sql`SELECT id, type_werk, status, aangemaakt_op FROM klussen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) AND id != ${klusId} ORDER BY aangemaakt_op DESC LIMIT 5`,
   ])
 
@@ -196,6 +198,14 @@ export default async function KlusDetailPage({
             <OfferteKoppelen
               klusId={klusId}
               offertes={ongekoppeldeOffertes}
+            />
+          )}
+
+          {/* Bestaande factuur koppelen */}
+          {ongekoppeldeFacturen.length > 0 && (
+            <FactuurKoppelen
+              klusId={klusId}
+              facturen={ongekoppeldeFacturen as { id: number; factuurnummer: string }[]}
             />
           )}
 

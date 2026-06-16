@@ -96,8 +96,23 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
         <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {!isBetaald && totaal > 0 && (
             <>
-              {/* iDEAL betaalknop */}
-              <BetaalKnop factuurId={f.id} totaal={formatEuro(totaal)} />
+              {/* iDEAL betaalknop — 50/50 splitsing of in één keer */}
+              {f.betaling_50_50 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 12, padding: '14px 18px' }}>
+                    <div style={{ fontWeight: 700, color: '#0369a1', fontSize: 12, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.05em' }}>1e termijn (50%)</div>
+                    <div style={{ fontSize: 12, color: '#475569', marginBottom: 10 }}>Bij start van de werkzaamheden</div>
+                    <BetaalKnop factuurId={f.id} totaal={formatEuro(totaal / 2)} termijn={1} label="💳 1e termijn betalen" />
+                  </div>
+                  <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 12, padding: '14px 18px' }}>
+                    <div style={{ fontWeight: 700, color: '#92400e', fontSize: 12, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.05em' }}>2e termijn (50%)</div>
+                    <div style={{ fontSize: 12, color: '#475569', marginBottom: 10 }}>Na oplevering van de werkzaamheden</div>
+                    <BetaalKnop factuurId={f.id} totaal={formatEuro(totaal / 2)} termijn={2} label="💳 2e termijn betalen" />
+                  </div>
+                </div>
+              ) : (
+                <BetaalKnop factuurId={f.id} totaal={formatEuro(totaal)} />
+              )}
 
               {/* Bankoverschrijving als alternatief */}
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 20px' }}>

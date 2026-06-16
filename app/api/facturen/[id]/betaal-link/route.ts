@@ -10,7 +10,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params
   const factuurId = parseInt(id)
 
-  // Verificeer dat deze factuur van deze klant is
+  const url = new URL(req.url)
+  const termijn = (url.searchParams.get('termijn') === '2' ? 2 : 1) as 1 | 2
+
+  // Defensief: oudere productie-db kan kolommen missen
+  try {
+    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`
+    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT`
+  } catch {}
+
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
            k.telefoon AS klant_tel, k.type AS klant_type
@@ -24,8 +32,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Factuur is al betaald' }, { status: 400 })
   }
 
+  const is50_50 = !!factuur.betaling_50_50
+
+  // Cached URL? Geen dubbele Moneybird-call.
+  if (termijn === 1 && factuur.betaal_url) {
+    return NextResponse.json({ url: factuur.betaal_url })
+  }
+  if (termijn === 2 && factuur.betaal_url_2) {
+    return NextResponse.json({ url: factuur.betaal_url_2 })
+  }
+  if (termijn === 2 && !is50_50) {
+    return NextResponse.json({ error: 'Geen 50/50 betaalplan actief' }, { status: 400 })
+  }
+
   const regels = Array.isArray(factuur.regels) ? factuur.regels : []
   const totalen = berekenTotalen(regels, 0, factuur.btw_pct)
+  const volledigBedrag = totalen.inclBtw
+  const bedrag = is50_50 ? volledigBedrag / 2 : volledigBedrag
 
   try {
     const contact = await mbHaalOfMaakContact({
@@ -36,19 +59,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       type: factuur.klant_type,
     })
 
+    const omschrijving = is50_50
+      ? `Factuur ${factuur.factuurnummer} — ${factuur.klant_naam} (${termijn === 1 ? '1e' : '2e'} termijn 50%)`
+      : `Factuur ${factuur.factuurnummer} — ${factuur.klant_naam}`
+    const referentie = is50_50 ? `${factuur.factuurnummer}-T${termijn}` : factuur.factuurnummer
+
     const { betaalUrl } = await mbMaakBetaalLink({
       contactId: contact.id,
-      omschrijving: `Factuur ${factuur.factuurnummer} — ${factuur.klant_naam}`,
-      bedrag: totalen.inclBtw,
+      omschrijving,
+      bedrag,
       btwPct: Number(factuur.btw_pct ?? 21),
-      referentie: factuur.factuurnummer,
+      referentie,
       datum: new Date().toISOString().slice(0, 10),
     })
 
-    await sql`
-      UPDATE facturen SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW()
-      WHERE id = ${factuurId}
-    `
+    if (termijn === 2) {
+      await sql`UPDATE facturen SET betaal_url_2 = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+    } else {
+      await sql`UPDATE facturen SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+    }
 
     return NextResponse.json({ url: betaalUrl })
   } catch (err: unknown) {

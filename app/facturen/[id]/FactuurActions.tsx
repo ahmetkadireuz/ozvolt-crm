@@ -211,10 +211,67 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
         </div>
       </div>
 
+      <Betaalplan5050 factuurId={factuurId} initial={!!factuur.betaling_50_50} />
+
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteFactuur} style={{ width: '100%', justifyContent: 'center' }}>
         <Icon name="trash" size={16} />
         Verwijderen
       </button>
+    </div>
+  )
+}
+
+function Betaalplan5050({ factuurId, initial }: { factuurId: number; initial: boolean }) {
+  const [aan, setAan] = useState(initial)
+  const [bezig, setBezig] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function toggle() {
+    setBezig(true)
+    setError(null)
+    const next = !aan
+    const res = await fetch(`/api/facturen/${factuurId}/50-50`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: next }),
+    })
+    if (res.ok) {
+      setAan(next)
+    } else {
+      const data = await res.json().catch(() => ({}))
+      setError(data?.error ?? 'Kon niet opslaan')
+    }
+    setBezig(false)
+  }
+
+  return (
+    <div style={{ padding: 14, background: aan ? '#f0f9ff' : '#f8fafc', border: `1px solid ${aan ? '#bae6fd' : '#e2e8f0'}`, borderRadius: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div>
+          <div style={{ fontWeight: 700, color: '#0d1b3e', fontSize: 13 }}>50/50 betaalplan</div>
+          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+            {aan ? 'Klant ziet 2 iDEAL-knoppen (50% bij start + 50% na oplevering)' : 'Klant betaalt volledig in 1x'}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={toggle}
+          disabled={bezig}
+          aria-pressed={aan}
+          style={{
+            width: 44, height: 24, borderRadius: 999,
+            background: aan ? '#0369a1' : '#cbd5e1',
+            border: 'none', position: 'relative', cursor: bezig ? 'wait' : 'pointer',
+            transition: 'background .15s', flexShrink: 0,
+          }}
+        >
+          <span style={{
+            position: 'absolute', top: 2, left: aan ? 22 : 2, width: 20, height: 20, borderRadius: 999,
+            background: '#fff', transition: 'left .15s',
+          }} />
+        </button>
+      </div>
+      {error && <div style={{ marginTop: 8, fontSize: 12, color: '#dc2626' }}>{error}</div>}
     </div>
   )
 }
