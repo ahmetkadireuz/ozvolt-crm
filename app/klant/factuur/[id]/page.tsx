@@ -18,7 +18,6 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
     WHERE f.id = ${id} AND f.klant_id = ${klantId}
   `
   if (!rows[0]) notFound()
-  if (rows[0].status === 'concept') notFound()
 
   const f = rows[0]
   const regels: { omschrijving: string; beschrijving?: string; aantal: number; prijs: number }[] = f.regels

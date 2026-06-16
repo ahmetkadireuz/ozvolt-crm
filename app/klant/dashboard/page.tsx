@@ -36,7 +36,7 @@ function statusLabel(s: string) {
     bezig: 'In uitvoering',
     afgerond: 'Afgerond',
     geannuleerd: 'Geannuleerd',
-    concept: 'Concept',
+    concept: 'Wacht op uw akkoord',
     gestuurd: 'Wacht op uw akkoord',
     geaccepteerd: 'Geaccepteerd',
     geweigerd: 'Geweigerd',
@@ -58,8 +58,8 @@ export default async function KlantDashboard() {
   const [klantRows, klussen, offertes, facturen, werkafspraken, rapporten, documenten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
-    sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} AND status <> 'concept' ORDER BY datum DESC`,
-    sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct FROM facturen WHERE klant_id = ${klantId} AND status <> 'concept' ORDER BY factuurdatum DESC`,
+    sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
+    sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klant_id = ${klantId} AND jsonb_array_length(afspraken) > 0 ORDER BY datum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op, getekend_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
@@ -240,7 +240,7 @@ export default async function KlantDashboard() {
                 <div className="kp-card-side">
                   <div className="kp-card-amount">{formatEuro(bedrag)}</div>
                   <span className={`kp-badge ${isBetaald ? 'kp-badge-green' : (f.status === 'te_laat' ? 'kp-badge-red' : 'kp-badge-amber')}`}>
-                    {isBetaald ? 'Betaald' : statusLabel(f.status || 'openstaand')}
+                    {isBetaald ? 'Betaald' : (f.status === 'te_laat' ? 'Te laat' : 'Openstaand')}
                   </span>
                 </div>
               </div>
