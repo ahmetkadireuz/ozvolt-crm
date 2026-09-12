@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { berekenTotalen, formatEuro } from '@/lib/utils'
+import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels } from '@/lib/utils'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -8,13 +8,33 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_telefoon, k.locatie AS klant_adres
+           k.telefoon AS klant_telefoon, k.locatie AS klant_locatie,
+           k.factuur_naam, k.factuur_adres, k.factuur_postcode, k.factuur_plaats
     FROM facturen f
     JOIN klanten k ON k.id = f.klant_id
     WHERE f.id = ${factuurId}
   `
   const f = rows[0]
   if (!f) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
+
+  // Tenaamstelling en adres komen uit de factuurvelden van de klant, met
+  // terugval op klantnaam en locatie als die nog niet zijn ingevuld.
+  const tenaamstelling = factuurTenaamstelling({
+    naam: f.klant_naam,
+    locatie: f.klant_locatie,
+    factuur_naam: f.factuur_naam,
+    factuur_adres: f.factuur_adres,
+    factuur_postcode: f.factuur_postcode,
+    factuur_plaats: f.factuur_plaats,
+  })
+  const adresRegels = factuurAdresRegels({
+    naam: f.klant_naam,
+    locatie: f.klant_locatie,
+    factuur_naam: f.factuur_naam,
+    factuur_adres: f.factuur_adres,
+    factuur_postcode: f.factuur_postcode,
+    factuur_plaats: f.factuur_plaats,
+  })
 
   let regels: any[] = []
   if (Array.isArray(f.regels)) regels = f.regels
@@ -134,7 +154,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 <body>
 
 <div class="printbar">
-  <span class="printbar-info">Betaalnota ${f.factuurnummer} — ${f.klant_naam}</span>
+  <span class="printbar-info">Betaalnota ${f.factuurnummer} — ${tenaamstelling}</span>
   <div class="printbar-btns">
     <button class="btn-p" onclick="window.print()">🖨 Afdrukken / PDF opslaan</button>
     <button class="btn-x" onclick="window.close()">✕</button>
@@ -165,9 +185,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     <div class="info-row">
       <div class="info-card">
         <div class="info-card-label">Factuur aan</div>
-        <h3>${f.klant_naam}</h3>
+        <h3>${tenaamstelling}</h3>
         <p>
-          ${f.klant_adres ? f.klant_adres.replace(/\n/g, '<br>') + '<br>' : ''}
+          ${adresRegels.length ? adresRegels.join('<br>') + '<br>' : ''}
           ${f.klant_email ? f.klant_email + '<br>' : ''}
           ${f.klant_telefoon ? f.klant_telefoon : ''}
         </p>

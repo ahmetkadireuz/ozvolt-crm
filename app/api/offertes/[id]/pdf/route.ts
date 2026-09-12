@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { berekenTotalen, formatEuro } from '@/lib/utils'
+import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels } from '@/lib/utils'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -8,13 +8,27 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const rows = await sql`
     SELECT o.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_telefoon, k.locatie AS klant_adres
+           k.telefoon AS klant_telefoon, k.locatie AS klant_locatie,
+           k.factuur_naam, k.factuur_adres, k.factuur_postcode, k.factuur_plaats
     FROM offertes o
     JOIN klanten k ON k.id = o.klant_id
     WHERE o.id = ${offerteId}
   `
   const o = rows[0]
   if (!o) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
+
+  // Zelfde tenaamstelling als op de factuur, zodat offerte en factuur
+  // op dezelfde naam en hetzelfde adres staan.
+  const klantVelden = {
+    naam: o.klant_naam,
+    locatie: o.klant_locatie,
+    factuur_naam: o.factuur_naam,
+    factuur_adres: o.factuur_adres,
+    factuur_postcode: o.factuur_postcode,
+    factuur_plaats: o.factuur_plaats,
+  }
+  const tenaamstelling = factuurTenaamstelling(klantVelden)
+  const adresRegels = factuurAdresRegels(klantVelden)
 
   // Zorg dat regels altijd een array is
   let regels: any[] = []
@@ -219,9 +233,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     <div class="info-row">
       <div class="info-card">
         <div class="info-card-label">Offerte voor</div>
-        <h3>${o.klant_naam}</h3>
+        <h3>${tenaamstelling}</h3>
         <p>
-          ${o.klant_adres ? o.klant_adres.replace(/\n/g, '<br>') + '<br>' : ''}
+          ${adresRegels.length ? adresRegels.join('<br>') + '<br>' : ''}
           ${o.klant_email ? o.klant_email + '<br>' : ''}
           ${o.klant_telefoon ? o.klant_telefoon : ''}
         </p>

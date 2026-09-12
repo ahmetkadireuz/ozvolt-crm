@@ -8,29 +8,52 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const klantId = parseInt(id)
   const body = await req.json()
 
-  // Probeer met status_notitie, val terug zonder als kolom nog niet bestaat
+  const tekst = (v: unknown, max = 255) => {
+    const s = String(v ?? '').trim()
+    return s ? s.slice(0, max) : null
+  }
+
+  // Basisvelden bestaan altijd — deze update mag niet afhangen van migraties.
+  await sql`
+    UPDATE klanten SET
+      naam     = ${String(body.naam ?? '').slice(0, 255)},
+      email    = ${tekst(body.email)},
+      telefoon = ${tekst(body.telefoon, 50)},
+      locatie  = ${tekst(body.locatie)},
+      type     = ${['Particulier', 'Zakelijk'].includes(body.type) ? body.type : 'Particulier'}
+    WHERE id = ${klantId}
+  `
+
+  // Kolommen uit latere migraties. Ontbreken ze, dan is de basis al opgeslagen
+  // en zeggen we expliciet welke migratie nog moet lopen.
+  const ontbreekt: string[] = []
+
+  try {
+    await sql`UPDATE klanten SET status_notitie = ${tekst(body.status_notitie, 2000)} WHERE id = ${klantId}`
+  } catch {
+    ontbreekt.push('status_notitie')
+  }
+
   try {
     await sql`
       UPDATE klanten SET
-        naam = ${String(body.naam ?? '').slice(0, 255)},
-        email = ${body.email || null},
-        telefoon = ${body.telefoon || null},
-        locatie = ${body.locatie || null},
-        type = ${['Particulier','Zakelijk'].includes(body.type) ? body.type : 'Particulier'},
-        status_notitie = ${body.status_notitie || null}
+        factuur_naam     = ${tekst(body.factuur_naam)},
+        factuur_adres    = ${tekst(body.factuur_adres)},
+        factuur_postcode = ${tekst(body.factuur_postcode, 16)},
+        factuur_plaats   = ${tekst(body.factuur_plaats, 120)}
       WHERE id = ${klantId}
     `
   } catch {
-    await sql`
-      UPDATE klanten SET
-        naam = ${String(body.naam ?? '').slice(0, 255)},
-        email = ${body.email || null},
-        telefoon = ${body.telefoon || null},
-        locatie = ${body.locatie || null},
-        type = ${['Particulier','Zakelijk'].includes(body.type) ? body.type : 'Particulier'}
-      WHERE id = ${klantId}
-    `
+    ontbreekt.push('db/klant-factuurgegevens.sql')
   }
+
+  if (ontbreekt.length) {
+    return NextResponse.json({
+      ok: false,
+      error: `Deels opgeslagen. Nog niet uitgevoerd in de database: ${ontbreekt.join(', ')}`,
+    }, { status: 500 })
+  }
+
   return NextResponse.json({ ok: true })
 }
 

@@ -42,24 +42,87 @@ export async function mbZoekContact(email: string) {
   return Array.isArray(results) ? results[0] ?? null : null
 }
 
-export async function mbMaakContact(klant: {
-  naam: string; email?: string | null; telefoon?: string | null; type?: string
-}) {
-  const isZakelijk = klant.type === 'Zakelijk'
-  const payload = isZakelijk
-    ? { contact: { company_name: klant.naam, email: klant.email ?? '', phone: klant.telefoon ?? '' } }
-    : { contact: { firstname: klant.naam.split(' ')[0], lastname: klant.naam.split(' ').slice(1).join(' '), email: klant.email ?? '', phone: klant.telefoon ?? '' } }
-
-  return mbFetch('/contacts', { method: 'POST', body: JSON.stringify(payload) })
+export type MbKlant = {
+  naam: string
+  email?: string | null
+  telefoon?: string | null
+  type?: string
+  factuur_naam?: string | null
+  factuur_adres?: string | null
+  factuur_postcode?: string | null
+  factuur_plaats?: string | null
 }
 
-export async function mbHaalOfMaakContact(klant: {
-  id: number; naam: string; email?: string | null; telefoon?: string | null; type?: string
-}) {
+function gevuld(v?: string | null) {
+  return !!v && !!String(v).trim()
+}
+
+// Bouwt de contactvelden voor Moneybird. Een ingevulde factuurnaam wint van
+// de klantnaam: de factuur moet op die naam staan. De klantnaam blijft dan
+// als contactpersoon staan. Velden zonder waarde laten we weg, zodat we
+// bestaande gegevens in Moneybird niet met leegte overschrijven.
+function contactVelden(klant: MbKlant): Record<string, string> {
+  const velden: Record<string, string> = {}
+  const naam = String(klant.naam ?? '').trim()
+  const bedrijf = gevuld(klant.factuur_naam)
+    ? String(klant.factuur_naam).trim()
+    : (klant.type === 'Zakelijk' ? naam : '')
+
+  if (bedrijf) {
+    velden.company_name = bedrijf
+    // Klantnaam als contactpersoon bij het bedrijf
+    if (gevuld(klant.factuur_naam) && naam) {
+      velden.firstname = naam.split(' ')[0]
+      velden.lastname = naam.split(' ').slice(1).join(' ')
+    }
+  } else {
+    velden.firstname = naam.split(' ')[0]
+    velden.lastname = naam.split(' ').slice(1).join(' ')
+  }
+
+  if (gevuld(klant.email)) velden.email = String(klant.email).trim()
+  if (gevuld(klant.telefoon)) velden.phone = String(klant.telefoon).trim()
+  if (gevuld(klant.factuur_adres)) velden.address1 = String(klant.factuur_adres).trim()
+  if (gevuld(klant.factuur_postcode)) velden.zipcode = String(klant.factuur_postcode).trim()
+  if (gevuld(klant.factuur_plaats)) velden.city = String(klant.factuur_plaats).trim()
+
+  return velden
+}
+
+export async function mbMaakContact(klant: MbKlant) {
+  return mbFetch('/contacts', {
+    method: 'POST',
+    body: JSON.stringify({ contact: contactVelden(klant) }),
+  })
+}
+
+export async function mbWerkContactBij(contactId: string, klant: MbKlant) {
+  return mbFetch(`/contacts/${contactId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ contact: contactVelden(klant) }),
+  })
+}
+
+export async function mbHaalOfMaakContact(klant: MbKlant & { id: number }) {
   // Zoek op e-mail
   if (klant.email) {
     const gevonden = await mbZoekContact(klant.email)
-    if (gevonden) return gevonden
+    if (gevonden) {
+      // Factuurnaam of factuuradres ingevuld? Dan is het CRM de bron en
+      // werken we het bestaande contact bij, anders blijft de oude
+      // tenaamstelling op de Moneybird-factuur staan.
+      const heeftFactuurgegevens = gevuld(klant.factuur_naam) || gevuld(klant.factuur_adres)
+        || gevuld(klant.factuur_postcode) || gevuld(klant.factuur_plaats)
+      if (heeftFactuurgegevens) {
+        try {
+          return await mbWerkContactBij(gevonden.id, klant)
+        } catch (err) {
+          console.error('[moneybird contact bijwerken]', err)
+          return gevonden
+        }
+      }
+      return gevonden
+    }
   }
   // Maak nieuw aan
   return mbMaakContact(klant)

@@ -12,7 +12,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const rows = await sql`
     SELECT o.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_tel, k.type AS klant_type
+           k.telefoon AS klant_tel, k.type AS klant_type,
+           k.factuur_naam, k.factuur_adres, k.factuur_postcode, k.factuur_plaats
     FROM offertes o JOIN klanten k ON k.id = o.klant_id
     WHERE o.id = ${offerteId}
   `
@@ -32,6 +33,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       email: offerte.klant_email,
       telefoon: offerte.klant_tel,
       type: offerte.klant_type,
+      factuur_naam: offerte.factuur_naam,
+      factuur_adres: offerte.factuur_adres,
+      factuur_postcode: offerte.factuur_postcode,
+      factuur_plaats: offerte.factuur_plaats,
     })
 
     if (split) {

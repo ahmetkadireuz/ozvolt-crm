@@ -1,5 +1,5 @@
 import { sql } from '@/lib/db'
-import { berekenTotalen, formatEuro } from '@/lib/utils'
+import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import SignForm from './SignForm'
 import Icon from '@/components/Icon'
@@ -11,13 +11,26 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
 
   const rows = await sql`
     SELECT o.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_telefoon, k.locatie AS klant_adres,
+           k.telefoon AS klant_telefoon, k.locatie AS klant_locatie,
+           k.factuur_naam, k.factuur_adres, k.factuur_postcode, k.factuur_plaats,
            o.betaal_url, o.betaling_50_50, o.betaal_url_2
     FROM offertes o JOIN klanten k ON k.id = o.klant_id
     WHERE o.accept_token = ${token}
   `
   const o = rows[0]
   if (!o) notFound()
+
+  // Zelfde tenaamstelling als op de offerte-PDF en de factuur
+  const klantVelden = {
+    naam: o.klant_naam,
+    locatie: o.klant_locatie,
+    factuur_naam: o.factuur_naam,
+    factuur_adres: o.factuur_adres,
+    factuur_postcode: o.factuur_postcode,
+    factuur_plaats: o.factuur_plaats,
+  }
+  const tenaamstelling = factuurTenaamstelling(klantVelden)
+  const adresRegels = factuurAdresRegels(klantVelden)
 
   let regels: any[] = []
   if (Array.isArray(o.regels)) regels = o.regels
@@ -176,9 +189,9 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
               <div className="info-row">
                 <div>
                   <div className="info-block-label">Offerte voor</div>
-                  <div className="info-block-name">{o.klant_naam}</div>
+                  <div className="info-block-name">{tenaamstelling}</div>
                   <div className="info-block-line">
-                    {o.klant_adres && <>{o.klant_adres}<br /></>}
+                    {adresRegels.map(regel => <span key={regel}>{regel}<br /></span>)}
                     {o.klant_email && <>{o.klant_email}<br /></>}
                     {o.klant_telefoon}
                   </div>

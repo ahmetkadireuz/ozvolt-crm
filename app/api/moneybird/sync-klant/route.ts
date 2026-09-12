@@ -24,6 +24,10 @@ export async function POST(req: NextRequest) {
       email: klant.email,
       telefoon: klant.telefoon,
       type: klant.type,
+      factuur_naam: klant.factuur_naam,
+      factuur_adres: klant.factuur_adres,
+      factuur_postcode: klant.factuur_postcode,
+      factuur_plaats: klant.factuur_plaats,
     })
 
     return NextResponse.json({ ok: true, contact_id: contact.id })

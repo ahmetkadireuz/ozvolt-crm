@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
   // Haal factuur op
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_tel, k.type AS klant_type
+           k.telefoon AS klant_tel, k.type AS klant_type,
+           k.factuur_naam, k.factuur_adres, k.factuur_postcode, k.factuur_plaats
     FROM facturen f
     JOIN klanten k ON k.id = f.klant_id
     WHERE f.id = ${Number(factuurId)}
@@ -37,6 +38,10 @@ export async function POST(req: NextRequest) {
       email: factuur.klant_email,
       telefoon: factuur.klant_tel,
       type: factuur.klant_type,
+      factuur_naam: factuur.factuur_naam,
+      factuur_adres: factuur.factuur_adres,
+      factuur_postcode: factuur.factuur_postcode,
+      factuur_plaats: factuur.factuur_plaats,
     })
 
     // Stap 2: Maak factuur aan in Moneybird

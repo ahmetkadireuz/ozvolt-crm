@@ -21,6 +21,10 @@ export type Klant = {
   telefoon: string | null
   type: string
   locatie: string | null
+  factuur_naam: string | null
+  factuur_adres: string | null
+  factuur_postcode: string | null
+  factuur_plaats: string | null
   aangemaakt_op: string
   klus_count?: number
 }
