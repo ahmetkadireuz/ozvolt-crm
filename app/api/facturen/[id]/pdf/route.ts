@@ -67,7 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     font-size: 13px; line-height: 1.6;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
-  .page { width: 210mm; min-height: 297mm; margin: 0 auto; }
+  .page { width: 210mm; min-height: 297mm; margin: 0 auto; display: flex; flex-direction: column; }
 
   .header { background: var(--navy); color: #fff; padding: 0; display: grid; grid-template-columns: 1fr auto; }
   .header-left { padding: 36px 44px 32px; }
@@ -86,7 +86,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .status-laat    { background: rgba(220,38,38,.25); color: #fca5a5; border: 1px solid rgba(220,38,38,.3); }
 
   .stripe { height: 4px; background: var(--blue); }
-  .body { padding: 40px 44px 44px; }
+  .body { padding: 40px 44px 44px; flex: 1; display: flex; flex-direction: column; }
+  .body > * { flex-shrink: 0; }
 
   .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 36px; }
   .info-card { background: var(--light); border-radius: 10px; padding: 20px 22px; }
@@ -113,7 +114,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .td-omschrijving { font-weight: 600; color: var(--navy); font-size: 13px; }
   .td-beschrijving { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: pre-wrap; }
 
-  .totals-wrap { display: flex; justify-content: flex-end; margin-top: 18px; }
+  .totals-wrap { display: flex; justify-content: flex-end; margin-top: 18px; margin-bottom: 28px; }
   .totals-box { width: 290px; }
   .tot-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12.5px; border-bottom: 1px solid var(--border); }
   .tot-row:last-child { border-bottom: none; }
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .tot-final .l { color: rgba(255,255,255,.65); font-size: 13px; font-weight: 600; }
   .tot-final .v { color: #fff; font-size: 22px; font-weight: 800; }
 
-  .betaalbox { margin-top: 28px; background: var(--light); border-radius: 10px; padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--navy); }
+  .betaalbox { margin-top: auto; background: var(--light); border-radius: 10px; padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--navy); }
   .betaal-left .bl { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
   .betaal-left .iban { font-size: 14px; font-weight: 700; color: var(--navy); }
   .betaal-left .iban-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
@@ -134,7 +135,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .notities-title { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
   .notities p { font-size: 12px; color: #374151; line-height: 1.75; white-space: pre-wrap; }
 
-  .footer { background: var(--light); border-top: 1px solid var(--border); padding: 18px 44px; display: flex; justify-content: space-between; align-items: center; margin-top: 40px; }
+  .footer { background: var(--light); border-top: 1px solid var(--border); padding: 18px 44px; display: flex; justify-content: space-between; align-items: center; }
   .footer p { font-size: 10.5px; color: var(--muted); }
 
   .printbar { position: fixed; top: 0; left: 0; right: 0; background: var(--navy); z-index: 999; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
