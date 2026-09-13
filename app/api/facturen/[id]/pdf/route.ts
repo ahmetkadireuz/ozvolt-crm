@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels } from '@/lib/utils'
+import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels, factuurAdresTekst } from '@/lib/utils'
+import { requireSession } from '@/lib/session'
+import { getKlantSessie } from '@/lib/klant-sessie'
+import { genereerFactuurPDF } from '@/lib/pdf-factuur'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const factuurId = parseInt(id)
+  const wilDownload = req.nextUrl.searchParams.get('download') === '1'
 
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
@@ -17,24 +21,62 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const f = rows[0]
   if (!f) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
 
+  // Deze route is bereikbaar met een beheerderssessie of met een klantsessie.
+  // De middleware laat beide door, dus hier controleren we of een klant wel
+  // naar zijn eigen factuur kijkt en niet naar die van een ander.
+  const isBeheerder = !!(await requireSession())
+  if (!isBeheerder) {
+    const klantId = await getKlantSessie()
+    if (!klantId || klantId !== f.klant_id) {
+      return NextResponse.json({ error: 'Geen toegang' }, { status: 403 })
+    }
+  }
+
   // Tenaamstelling en adres komen uit de factuurvelden van de klant, met
   // terugval op klantnaam en locatie als die nog niet zijn ingevuld.
-  const tenaamstelling = factuurTenaamstelling({
+  const klantVelden = {
     naam: f.klant_naam,
     locatie: f.klant_locatie,
     factuur_naam: f.factuur_naam,
     factuur_adres: f.factuur_adres,
     factuur_postcode: f.factuur_postcode,
     factuur_plaats: f.factuur_plaats,
-  })
-  const adresRegels = factuurAdresRegels({
-    naam: f.klant_naam,
-    locatie: f.klant_locatie,
-    factuur_naam: f.factuur_naam,
-    factuur_adres: f.factuur_adres,
-    factuur_postcode: f.factuur_postcode,
-    factuur_plaats: f.factuur_plaats,
-  })
+  }
+  const tenaamstelling = factuurTenaamstelling(klantVelden)
+  const adresRegels = factuurAdresRegels(klantVelden)
+
+  // Echte PDF als bestand. De HTML hieronder is een printweergave, geen
+  // downloadbaar bestand, dus daarvoor gebruiken we de PDF-generator die ook
+  // de bijlage bij de factuurmail maakt.
+  if (wilDownload) {
+    let pdfRegels: any[] = []
+    if (Array.isArray(f.regels)) pdfRegels = f.regels
+    else if (typeof f.regels === 'string') { try { pdfRegels = JSON.parse(f.regels) } catch {} }
+
+    const pdf = await genereerFactuurPDF({
+      factuurnummer: f.factuurnummer,
+      klantNaam: tenaamstelling,
+      klantEmail: f.klant_email,
+      klantAdres: factuurAdresTekst(klantVelden),
+      klantTelefoon: f.klant_telefoon,
+      factuurdatum: f.factuurdatum,
+      betalingstermijn: Number(f.betalingstermijn) || 14,
+      regels: pdfRegels,
+      btwPct: Number(f.btw_pct ?? 21),
+      notities: f.notities,
+      status: f.status,
+      betaalUrl: f.betaal_url ?? null,
+    })
+
+    const bestandsnaam = `Factuur ${String(f.factuurnummer).replace(/[^A-Za-z0-9._-]+/g, '-')}.pdf`
+    return new NextResponse(new Uint8Array(pdf), {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${bestandsnaam}"`,
+        'Content-Length': String(pdf.length),
+      },
+    })
+  }
 
   let regels: any[] = []
   if (Array.isArray(f.regels)) regels = f.regels
