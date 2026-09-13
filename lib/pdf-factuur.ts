@@ -39,7 +39,40 @@ export async function genereerFactuurPDF(params: {
     doc.on('error', reject)
 
     const W = 595.28
+    const H = 841.89
     const margin = 50
+    const footerTop = 810
+    const contentBodem = footerTop - 20
+
+    function tekenFooter() {
+      doc.rect(0, footerTop, W, H - footerTop).fill(LIGHT)
+      doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(8.5)
+         .text('Ozvolt Elektrotechniek', margin, footerTop + 7)
+      doc.fillColor(MUTED).font('Helvetica').fontSize(8)
+         .text('KVK 99837366  ·  BTW NL005413208B33  ·  financien@ozvoltelektro.nl', margin, footerTop + 18)
+      doc.fillColor(MUTED).font('Helvetica').fontSize(8)
+         .text(params.factuurnummer, W - margin - 80, footerTop + 12, { width: 80, align: 'right' })
+    }
+
+    // pdfkit breekt zelf geen pagina's af bij vaste coördinaten, dus dat doen
+    // we hier. Zonder dit liep een factuur met veel regels over de footer heen
+    // en maakte pdfkit per overlopende tekstregel een losse lege pagina.
+    function nieuwePagina() {
+      tekenFooter()
+      doc.addPage()
+      return 60
+    }
+
+    function tekenTabelkop(ty: number) {
+      doc.rect(margin, ty, W - 2 * margin, 22).fill(NAVY)
+      doc.fillColor('rgba(255,255,255,0.65)').font('Helvetica-Bold').fontSize(8)
+      doc.text('OMSCHRIJVING', margin + 10, ty + 7)
+      doc.text('AANTAL', margin + 285, ty + 7, { width: 50, align: 'right' })
+      doc.text('PRIJS', margin + 340, ty + 7, { width: 60, align: 'right' })
+      doc.text('BTW', margin + 405, ty + 7, { width: 30, align: 'right' })
+      doc.text('TOTAAL', margin + 440, ty + 7, { width: 55, align: 'right' })
+      return ty + 22
+    }
 
     // ── Header achtergrond ────────────────────────────────────────────────
     doc.rect(0, 0, W, 120).fill(NAVY)
@@ -59,12 +92,14 @@ export async function genereerFactuurPDF(params: {
     doc.fillColor('rgba(255,255,255,0.6)').font('Helvetica').fontSize(10)
        .text(params.factuurnummer, W - 180, 66, { width: 130, align: 'right' })
 
-    // Status badge
-    const statusColor = params.status === 'betaald' ? '#166534' : params.status === 'te_laat' ? '#7f1d1d' : '#1e3a5f'
-    const statusText = params.status === 'betaald' ? '✓ Betaald' : params.status === 'te_laat' ? '⚠ Vervallen' : 'Verzonden'
-    doc.roundedRect(W - 120, 88, 72, 20, 4).fill(statusColor)
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8)
-       .text(statusText, W - 120, 94, { width: 72, align: 'center' })
+    // Status badge — alleen als de status de klant iets zegt. 'Verzonden'
+    // voegt niets toe op een document dat hij in handen heeft.
+    if (params.status === 'betaald' || params.status === 'te_laat') {
+      const isBetaald = params.status === 'betaald'
+      doc.roundedRect(W - 120, 88, 72, 20, 4).fill(isBetaald ? '#166534' : '#7f1d1d')
+      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8)
+         .text(isBetaald ? '✓ Betaald' : '⚠ Vervallen', W - 120, 94, { width: 72, align: 'center' })
+    }
 
     // ── Info blokken ──────────────────────────────────────────────────────
     let y = 140
@@ -121,16 +156,7 @@ export async function genereerFactuurPDF(params: {
     doc.moveTo(margin, y + 12).lineTo(W - margin, y + 12).strokeColor('#d0dce8').lineWidth(1).stroke()
 
     y += 18
-    // Tabel header
-    doc.rect(margin, y, W - 2 * margin, 22).fill(NAVY)
-    doc.fillColor('rgba(255,255,255,0.65)').font('Helvetica-Bold').fontSize(8)
-    doc.text('OMSCHRIJVING', margin + 10, y + 7)
-    doc.text('AANTAL', margin + 285, y + 7, { width: 50, align: 'right' })
-    doc.text('PRIJS', margin + 340, y + 7, { width: 60, align: 'right' })
-    doc.text('BTW', margin + 405, y + 7, { width: 30, align: 'right' })
-    doc.text('TOTAAL', margin + 440, y + 7, { width: 55, align: 'right' })
-
-    y += 22
+    y = tekenTabelkop(y)
 
     params.regels.forEach((r, i) => {
       // Hoogte vooraf meten zodat multi-line beschrijvingen niet over de volgende regel lopen
@@ -140,6 +166,11 @@ export async function genereerFactuurPDF(params: {
         beschrijvingH = doc.heightOfString(r.beschrijving, { width: 270 })
       }
       const rowH = Math.max(22, 19 + beschrijvingH + 6)
+
+      // Past de regel niet meer? Nieuwe pagina met een herhaalde tabelkop.
+      if (y + rowH > contentBodem) {
+        y = tekenTabelkop(nieuwePagina())
+      }
 
       if (i % 2 === 1) doc.rect(margin, y, W - 2 * margin, rowH).fill('#f8fafc')
       doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(9.5)
@@ -163,6 +194,8 @@ export async function genereerFactuurPDF(params: {
 
     // ── Totalen ───────────────────────────────────────────────────────────
     y += 10
+    const totalenH = 2 * 20 + 32
+    if (y + totalenH > contentBodem) y = nieuwePagina()
     const subtotaal = params.regels.reduce((s, r) => s + Number(r.aantal) * Number(r.prijs), 0)
     const btwBedrag = subtotaal * (params.btwPct / 100)
     const inclBtw = subtotaal + btwBedrag
@@ -189,33 +222,48 @@ export async function genereerFactuurPDF(params: {
     y += 42
 
     // ── Betaalgegevens ────────────────────────────────────────────────────
-    doc.rect(margin, y, W - 2 * margin, 52).fill(LIGHT)
-    doc.rect(margin, y, 4, 52).fill(NAVY)
-    doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5).text('BETAALGEGEVENS', margin + 14, y + 10)
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text('NL69 KNAB 0780 9871 79', margin + 14, y + 24)
+    // Het betaalblok hangt onderaan de pagina, vlak boven de footer. Zo staat
+    // het op elke factuur op dezelfde plek, of er nu één of tien regels zijn,
+    // in plaats van los in het wit te zweven onder een korte regellijst.
+    const betaalH = 58
+    const onlineH = params.betaalUrl ? 40 : 0
+    const tussenruimte = params.betaalUrl ? 10 : 0
+    const groepH = betaalH + tussenruimte + onlineH
+    const ankerY = footerTop - 26 - groepH
+
+    // Past het blok niet meer onder de regels, dan gaat het naar een nieuwe
+    // pagina in plaats van over de footer heen.
+    if (y > ankerY) y = nieuwePagina()
+    const blokY = Math.max(y, ankerY)
+
+    doc.rect(margin, blokY, W - 2 * margin, betaalH).fill(LIGHT)
+    doc.rect(margin, blokY, 4, betaalH).fill(NAVY)
+    doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5)
+       .text('BETAALGEGEVENS', margin + 14, blokY + 10)
+    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12)
+       .text('NL69 KNAB 0780 9871 79', margin + 14, blokY + 23)
     doc.fillColor(MUTED).font('Helvetica').fontSize(9)
-       .text(`t.n.v. Ozvolt Elektrotechniek  ·  o.v.v. ${params.factuurnummer}`, margin + 14, y + 40)
+       .text(`t.n.v. Ozvolt Elektrotechniek  ·  o.v.v. ${params.factuurnummer}`, margin + 14, blokY + 40)
+
+    // Bedrag rechts in hetzelfde blok, zodat de balk niet half leeg oogt.
+    const bedragB = 150
+    const bedragX = W - margin - 14 - bedragB
+    doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5)
+       .text('TE BETALEN', bedragX, blokY + 10, { width: bedragB, align: 'right' })
+    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(15)
+       .text(euro(inclBtw), bedragX, blokY + 21, { width: bedragB, align: 'right' })
 
     if (params.betaalUrl) {
-      y += 62
-      doc.rect(margin, y, W - 2 * margin, 36).fill('#f0fdf4')
-      doc.rect(margin, y, 4, 36).fill(GREEN)
-      doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(8).text('ONLINE BETALEN', margin + 14, y + 8)
+      const onlineY = blokY + betaalH + tussenruimte
+      doc.rect(margin, onlineY, W - 2 * margin, onlineH).fill('#f0fdf4')
+      doc.rect(margin, onlineY, 4, onlineH).fill(GREEN)
+      doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(8)
+         .text('ONLINE BETALEN', margin + 14, onlineY + 10)
       doc.fillColor('#166534').font('Helvetica').fontSize(8.5)
-         .text(params.betaalUrl, margin + 14, y + 21, { width: W - 2 * margin - 28 })
-      y += 36
+         .text(params.betaalUrl, margin + 14, onlineY + 23, { width: W - 2 * margin - 28 })
     }
 
-    // Opmerkingen sectie verwijderd
-
-    // ── Footer ────────────────────────────────────────────────────────────
-    doc.rect(0, 810, W, 32).fill(LIGHT)
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(8.5)
-       .text('Ozvolt Elektrotechniek', margin, 819)
-    doc.fillColor(MUTED).font('Helvetica').fontSize(8)
-       .text('KVK 99837366  ·  BTW NL005413208B33  ·  financien@ozvoltelektro.nl', margin, 819 + 11)
-    doc.fillColor(MUTED).font('Helvetica').fontSize(8)
-       .text(params.factuurnummer, W - margin - 80, 822, { width: 80, align: 'right' })
+    tekenFooter()
 
     doc.end()
   })
