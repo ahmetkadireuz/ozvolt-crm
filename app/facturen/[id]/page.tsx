@@ -50,10 +50,10 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
             <Icon name="eye" size={16} />
             Bekijken
           </Link>
-          <Link href={`/api/facturen/${factuurId}/pdf?download=1`} className="btn btn-ghost btn-sm">
+          <a href={`/api/facturen/${factuurId}/pdf?download=1`} download className="btn btn-ghost btn-sm">
             <Icon name="download" size={16} />
             PDF
-          </Link>
+          </a>
         </div>
       </div>
 

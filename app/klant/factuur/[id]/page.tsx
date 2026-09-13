@@ -134,8 +134,7 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
           )}
           <a
             href={`/api/facturen/${f.id}/pdf?download=1`}
-            target="_blank"
-            rel="noopener noreferrer"
+            download
             style={{
               display: 'block', textAlign: 'center',
               padding: '11px', borderRadius: 8,
