@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
+import { factuurTenaamstelling, factuurAdresRegels } from '@/lib/utils'
 import StatusBadge from '@/components/StatusBadge'
 import KlantActions from './KlantActions'
 import Icon from '@/components/Icon'
@@ -64,6 +65,19 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
               ))}
             </div>
           </div>
+
+          {/* Factuuradres — alleen als het afwijkt van de klantgegevens */}
+          {(klant.factuur_naam || klant.factuur_adres || klant.factuur_postcode || klant.factuur_plaats) && (
+            <div className="card">
+              <div className="section-label">Zo staat het op de factuur</div>
+              <div style={{ fontSize: '.84rem', lineHeight: 1.7 }}>
+                <div style={{ fontWeight: 600 }}>{factuurTenaamstelling(klant)}</div>
+                {factuurAdresRegels(klant).map(regel => (
+                  <div key={regel} style={{ color: '#374151' }}>{regel}</div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Status notitie */}
           {klant.status_notitie && (

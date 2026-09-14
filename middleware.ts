@@ -31,6 +31,13 @@ function isKlantBetaalLink(pathname: string) {
   return /^\/api\/facturen\/\d+\/betaal-link$/.test(pathname)
 }
 
+// De factuur- en offerte-PDF mogen zowel de beheerder als de klant openen.
+// De routes doen zelf de eigendomscontrole, dus hier laten we een klantsessie
+// alvast door.
+function isDocumentPdf(pathname: string) {
+  return /^\/api\/(facturen|offertes)\/\d+\/pdf$/.test(pathname)
+}
+
 const SESSION_COOKIE = 'ozvolt_crm_session'
 
 export async function middleware(req: NextRequest) {
@@ -43,6 +50,15 @@ export async function middleware(req: NextRequest) {
   res.headers.set('x-pathname', pathname)
 
   if (isPublic) return res
+
+  // Documenten mogen langs met een klantsessie, of met een token uit de mail.
+  // De route controleert dat token zelf tegen het document; hier laten we de
+  // aanvraag alleen door zodat hij de route kan bereiken.
+  if (isDocumentPdf(pathname)) {
+    const heeftKlantSessie = !!req.cookies.get('ozvolt_klant')?.value
+    const heeftToken = !!req.nextUrl.searchParams.get('token')
+    if (heeftKlantSessie || heeftToken) return res
+  }
 
   // Klantportaal routes — alleen ozvolt_klant cookie vereist
   const isKlantRoute =

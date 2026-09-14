@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen, formatEuro } from '@/lib/db'
+import { factuurTenaamstelling, factuurAdresTekst } from '@/lib/utils'
 import { requireSession } from '@/lib/session'
 import { sendMail, factuurMailHtml } from '@/lib/mail'
 import { genereerFactuurPDF } from '@/lib/pdf-factuur'
@@ -12,14 +13,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const rows = await sql`
     SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email,
-           kt.telefoon AS klant_telefoon, kt.locatie AS klant_adres,
-           kt.type AS klant_type
+           kt.telefoon AS klant_telefoon, kt.locatie AS klant_locatie,
+           kt.type AS klant_type,
+           kt.factuur_naam, kt.factuur_adres, kt.factuur_postcode, kt.factuur_plaats
     FROM facturen f JOIN klanten kt ON kt.id = f.klant_id
     WHERE f.id = ${factuurId}
   `
   const factuur = rows[0]
   if (!factuur) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
   if (!factuur.klant_email) return NextResponse.json({ error: 'Geen e-mailadres' }, { status: 400 })
+
+  const klantVelden = {
+    naam: factuur.klant_naam,
+    locatie: factuur.klant_locatie,
+    factuur_naam: factuur.factuur_naam,
+    factuur_adres: factuur.factuur_adres,
+    factuur_postcode: factuur.factuur_postcode,
+    factuur_plaats: factuur.factuur_plaats,
+  }
 
   const regels = Array.isArray(factuur.regels) ? factuur.regels : []
   const totalen = berekenTotalen(regels, 0, factuur.btw_pct)
@@ -35,9 +46,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     pdfBuffer = await genereerFactuurPDF({
       factuurnummer: factuur.factuurnummer,
-      klantNaam: factuur.klant_naam,
+      klantNaam: factuurTenaamstelling(klantVelden),
       klantEmail: factuur.klant_email,
-      klantAdres: factuur.klant_adres,
+      klantAdres: factuurAdresTekst(klantVelden),
       klantTelefoon: factuur.klant_telefoon,
       factuurdatum: factuur.factuurdatum,
       betalingstermijn: factuur.betalingstermijn ?? 14,
@@ -81,6 +92,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         email: factuur.klant_email,
         telefoon: factuur.klant_telefoon,
         type: factuur.klant_type,
+        factuur_naam: factuur.factuur_naam,
+        factuur_adres: factuur.factuur_adres,
+        factuur_postcode: factuur.factuur_postcode,
+        factuur_plaats: factuur.factuur_plaats,
       })
       const mbFactuur = await mbMaakFactuur({
         contactId: contact.id,

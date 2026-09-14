@@ -73,6 +73,26 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       WHERE id = ${offerteId}
     `
   }
+
+  // Documenttype komt uit een latere migratie. Ontbreekt de kolom, dan is de
+  // rest al opgeslagen en zeggen we welke migratie nog moet lopen.
+  let documenttypeOk = true
+  if (body.documenttype !== undefined) {
+    const type = body.documenttype === 'werkvoorstel' ? 'werkvoorstel' : 'offerte'
+    try {
+      await sql`UPDATE offertes SET documenttype = ${type} WHERE id = ${offerteId}`
+    } catch {
+      documenttypeOk = false
+    }
+  }
+
+  if (!documenttypeOk) {
+    return NextResponse.json({
+      ok: false,
+      error: 'Opgeslagen, maar het documenttype niet. Draai db/offerte-documenttype.sql in Neon.',
+    }, { status: 500 })
+  }
+
   return NextResponse.json({ ok: true })
 }
 

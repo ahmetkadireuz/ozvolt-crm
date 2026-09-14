@@ -1,20 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { berekenTotalen, formatEuro } from '@/lib/utils'
+import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels, factuurAdresTekst } from '@/lib/utils'
+import { requireSession } from '@/lib/session'
+import { getKlantSessie } from '@/lib/klant-sessie'
+import { genereerFactuurPDF } from '@/lib/pdf-factuur'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const factuurId = parseInt(id)
+  const wilDownload = req.nextUrl.searchParams.get('download') === '1'
 
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_telefoon, k.locatie AS klant_adres
+           k.telefoon AS klant_telefoon, k.locatie AS klant_locatie,
+           k.factuur_naam, k.factuur_adres, k.factuur_postcode, k.factuur_plaats
     FROM facturen f
     JOIN klanten k ON k.id = f.klant_id
     WHERE f.id = ${factuurId}
   `
   const f = rows[0]
   if (!f) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
+
+  // Deze route is bereikbaar met een beheerderssessie of met een klantsessie.
+  // De middleware laat beide door, dus hier controleren we of een klant wel
+  // naar zijn eigen factuur kijkt en niet naar die van een ander.
+  const isBeheerder = !!(await requireSession())
+  if (!isBeheerder) {
+    const klantId = await getKlantSessie()
+    if (!klantId || klantId !== f.klant_id) {
+      return NextResponse.json({ error: 'Geen toegang' }, { status: 403 })
+    }
+  }
+
+  // Tenaamstelling en adres komen uit de factuurvelden van de klant, met
+  // terugval op klantnaam en locatie als die nog niet zijn ingevuld.
+  const klantVelden = {
+    naam: f.klant_naam,
+    locatie: f.klant_locatie,
+    factuur_naam: f.factuur_naam,
+    factuur_adres: f.factuur_adres,
+    factuur_postcode: f.factuur_postcode,
+    factuur_plaats: f.factuur_plaats,
+  }
+  const tenaamstelling = factuurTenaamstelling(klantVelden)
+  const adresRegels = factuurAdresRegels(klantVelden)
+
+  // Echte PDF als bestand. De HTML hieronder is een printweergave, geen
+  // downloadbaar bestand, dus daarvoor gebruiken we de PDF-generator die ook
+  // de bijlage bij de factuurmail maakt.
+  if (wilDownload) {
+    let pdfRegels: any[] = []
+    if (Array.isArray(f.regels)) pdfRegels = f.regels
+    else if (typeof f.regels === 'string') { try { pdfRegels = JSON.parse(f.regels) } catch {} }
+
+    let pdf: Buffer
+    try {
+      pdf = await genereerFactuurPDF({
+        factuurnummer: f.factuurnummer,
+        klantNaam: tenaamstelling,
+        klantEmail: f.klant_email,
+        klantAdres: factuurAdresTekst(klantVelden),
+        klantTelefoon: f.klant_telefoon,
+        factuurdatum: f.factuurdatum,
+        betalingstermijn: Number(f.betalingstermijn) || 14,
+        regels: pdfRegels,
+        btwPct: Number(f.btw_pct ?? 21),
+        notities: f.notities,
+        status: f.status,
+        betaalUrl: f.betaal_url ?? null,
+      })
+    } catch (err) {
+      console.error('[factuur pdf]', err)
+      return NextResponse.json({
+        error: 'PDF maken mislukt',
+        detail: err instanceof Error ? err.message : String(err),
+      }, { status: 500 })
+    }
+
+    const bestandsnaam = `Factuur ${String(f.factuurnummer).replace(/[^A-Za-z0-9._-]+/g, '-')}.pdf`
+    return new NextResponse(new Uint8Array(pdf), {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${bestandsnaam}"`,
+        'Content-Length': String(pdf.length),
+      },
+    })
+  }
 
   let regels: any[] = []
   if (Array.isArray(f.regels)) regels = f.regels
@@ -47,7 +118,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     font-size: 13px; line-height: 1.6;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
-  .page { width: 210mm; min-height: 297mm; margin: 0 auto; }
+  .page { width: 210mm; min-height: 297mm; margin: 0 auto; display: flex; flex-direction: column; }
 
   .header { background: var(--navy); color: #fff; padding: 0; display: grid; grid-template-columns: 1fr auto; }
   .header-left { padding: 36px 44px 32px; }
@@ -66,7 +137,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .status-laat    { background: rgba(220,38,38,.25); color: #fca5a5; border: 1px solid rgba(220,38,38,.3); }
 
   .stripe { height: 4px; background: var(--blue); }
-  .body { padding: 40px 44px 44px; }
+  .body { padding: 40px 44px 44px; flex: 1; display: flex; flex-direction: column; }
+  .body > * { flex-shrink: 0; }
 
   .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 36px; }
   .info-card { background: var(--light); border-radius: 10px; padding: 20px 22px; }
@@ -93,7 +165,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .td-omschrijving { font-weight: 600; color: var(--navy); font-size: 13px; }
   .td-beschrijving { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: pre-wrap; }
 
-  .totals-wrap { display: flex; justify-content: flex-end; margin-top: 18px; }
+  .totals-wrap { display: flex; justify-content: flex-end; margin-top: 18px; margin-bottom: 28px; }
   .totals-box { width: 290px; }
   .tot-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12.5px; border-bottom: 1px solid var(--border); }
   .tot-row:last-child { border-bottom: none; }
@@ -103,7 +175,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .tot-final .l { color: rgba(255,255,255,.65); font-size: 13px; font-weight: 600; }
   .tot-final .v { color: #fff; font-size: 22px; font-weight: 800; }
 
-  .betaalbox { margin-top: 28px; background: var(--light); border-radius: 10px; padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--navy); }
+  .betaalbox { margin-top: auto; background: var(--light); border-radius: 10px; padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--navy); }
   .betaal-left .bl { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
   .betaal-left .iban { font-size: 14px; font-weight: 700; color: var(--navy); }
   .betaal-left .iban-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
@@ -114,7 +186,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .notities-title { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
   .notities p { font-size: 12px; color: #374151; line-height: 1.75; white-space: pre-wrap; }
 
-  .footer { background: var(--light); border-top: 1px solid var(--border); padding: 18px 44px; display: flex; justify-content: space-between; align-items: center; margin-top: 40px; }
+  .footer { background: var(--light); border-top: 1px solid var(--border); padding: 18px 44px; display: flex; justify-content: space-between; align-items: center; }
   .footer p { font-size: 10.5px; color: var(--muted); }
 
   .printbar { position: fixed; top: 0; left: 0; right: 0; background: var(--navy); z-index: 999; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
@@ -134,7 +206,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 <body>
 
 <div class="printbar">
-  <span class="printbar-info">Betaalnota ${f.factuurnummer} — ${f.klant_naam}</span>
+  <span class="printbar-info">Betaalnota ${f.factuurnummer} — ${tenaamstelling}</span>
   <div class="printbar-btns">
     <button class="btn-p" onclick="window.print()">🖨 Afdrukken / PDF opslaan</button>
     <button class="btn-x" onclick="window.close()">✕</button>
@@ -165,9 +237,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     <div class="info-row">
       <div class="info-card">
         <div class="info-card-label">Factuur aan</div>
-        <h3>${f.klant_naam}</h3>
+        <h3>${tenaamstelling}</h3>
         <p>
-          ${f.klant_adres ? f.klant_adres.replace(/\n/g, '<br>') + '<br>' : ''}
+          ${adresRegels.length ? adresRegels.join('<br>') + '<br>' : ''}
           ${f.klant_email ? f.klant_email + '<br>' : ''}
           ${f.klant_telefoon ? f.klant_telefoon : ''}
         </p>

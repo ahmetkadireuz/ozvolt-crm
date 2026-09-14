@@ -6,8 +6,20 @@ import Icon from '@/components/Icon'
 
 export default function KlantActions({ klant, klantId }: { klant: any; klantId: number }) {
   const router = useRouter()
-  const [form, setForm] = useState({ naam: klant.naam, email: klant.email ?? '', telefoon: klant.telefoon ?? '', locatie: klant.locatie ?? '', type: klant.type ?? 'Particulier', status_notitie: klant.status_notitie ?? '' })
+  const [form, setForm] = useState({
+    naam: klant.naam,
+    email: klant.email ?? '',
+    telefoon: klant.telefoon ?? '',
+    locatie: klant.locatie ?? '',
+    type: klant.type ?? 'Particulier',
+    status_notitie: klant.status_notitie ?? '',
+    factuur_naam: klant.factuur_naam ?? '',
+    factuur_adres: klant.factuur_adres ?? '',
+    factuur_postcode: klant.factuur_postcode ?? '',
+    factuur_plaats: klant.factuur_plaats ?? '',
+  })
   const [saving, setSaving] = useState(false)
+  const [saveFout, setSaveFout] = useState('')
   const [portaalLink, setPortaalLink] = useState('')
   const [linkBezig, setLinkBezig] = useState(false)
 
@@ -39,11 +51,18 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
 
   async function save() {
     setSaving(true)
-    await fetch(`/api/klanten/${klantId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
+    setSaveFout('')
+    try {
+      const res = await fetch(`/api/klanten/${klantId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) setSaveFout(data?.error ?? 'Opslaan mislukt')
+    } catch {
+      setSaveFout('Verbinding mislukt, probeer opnieuw')
+    }
     setSaving(false)
     router.refresh()
   }
@@ -105,6 +124,54 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
             style={{ resize: 'vertical', fontSize: '.82rem' }}
           />
         </div>
+        <div style={{ borderTop: '1px solid #e2e8f0', margin: '4px 0 14px', paddingTop: 14 }}>
+          <div className="section-label" style={{ marginBottom: 4 }}>Factuurgegevens</div>
+          <p style={{ fontSize: 11.5, color: '#64748b', margin: '0 0 12px', lineHeight: 1.6 }}>
+            Alleen invullen als de factuur op een andere naam of een ander adres moet
+            staan dan hierboven, bijvoorbeeld een bedrijfsnaam. Laat je dit leeg, dan
+            gebruikt de factuur de klantnaam en de locatie.
+          </p>
+          {[
+            { label: 'Naam op factuur', key: 'factuur_naam', type: 'text', placeholder: 'Bedrijfsnaam of andere tenaamstelling' },
+            { label: 'Straat en huisnummer', key: 'factuur_adres', type: 'text', placeholder: 'Straatnaam 1' },
+          ].map(f => (
+            <div key={f.key} className="form-group">
+              <label className="form-label">{f.label}</label>
+              <input
+                className="form-ctrl"
+                type={f.type}
+                placeholder={f.placeholder}
+                value={(form as any)[f.key]}
+                onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+              />
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div className="form-group" style={{ width: 120, flexShrink: 0 }}>
+              <label className="form-label">Postcode</label>
+              <input
+                className="form-ctrl"
+                type="text"
+                placeholder="1234 AB"
+                value={form.factuur_postcode}
+                onChange={e => setForm(prev => ({ ...prev, factuur_postcode: e.target.value }))}
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">Plaats</label>
+              <input
+                className="form-ctrl"
+                type="text"
+                placeholder="Plaatsnaam"
+                value={form.factuur_plaats}
+                onChange={e => setForm(prev => ({ ...prev, factuur_plaats: e.target.value }))}
+              />
+            </div>
+          </div>
+        </div>
+        {saveFout && (
+          <p style={{ fontSize: 12, color: '#dc2626', margin: '0 0 10px', lineHeight: 1.5 }}>{saveFout}</p>
+        )}
         <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center' }}>
           {saving ? 'Opslaan…' : 'Wijzigingen opslaan'}
         </button>

@@ -45,10 +45,16 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
         </div>
-        <Link href={`/api/facturen/${factuurId}/pdf`} target="_blank" className="btn btn-ghost btn-sm">
-          <Icon name="download" size={16} />
-          PDF
-        </Link>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Link href={`/api/facturen/${factuurId}/pdf`} target="_blank" className="btn btn-ghost btn-sm">
+            <Icon name="eye" size={16} />
+            Bekijken
+          </Link>
+          <a href={`/api/facturen/${factuurId}/pdf?download=1`} download className="btn btn-ghost btn-sm">
+            <Icon name="download" size={16} />
+            PDF
+          </a>
+        </div>
       </div>
 
       <div className="detail-grid">

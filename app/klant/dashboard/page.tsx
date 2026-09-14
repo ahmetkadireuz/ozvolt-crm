@@ -55,10 +55,9 @@ export default async function KlantDashboard() {
 
   await ensureProjectbeheerTables()
 
-  const [klantRows, klussen, offertes, facturen, werkafspraken, rapporten, documenten] = await Promise.all([
+  const [klantRows, klussen, facturen, werkafspraken, rapporten, documenten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
-    sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klant_id = ${klantId} AND jsonb_array_length(afspraken) > 0 ORDER BY datum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op, getekend_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
@@ -92,7 +91,7 @@ export default async function KlantDashboard() {
     <div>
       <section className="kp-hero">
         <h1>Goedendag, {voornaam}</h1>
-        <p>Hier vindt u een actueel overzicht van uw projecten, offertes en facturen.</p>
+        <p>Hier vindt u een actueel overzicht van uw projecten en facturen.</p>
       </section>
 
       {/* ── Stat-duo ── */}
@@ -150,31 +149,6 @@ export default async function KlantDashboard() {
             </div>
           )
         })}
-      </section>
-
-      {/* ── Offertes ── */}
-      <section className="kp-section">
-        <div className="kp-section-head">
-          <h2 className="kp-section-title">Offertes</h2>
-        </div>
-        {offertes.length === 0 ? (
-          <div className="kp-empty">Nog geen offertes.</div>
-        ) : offertes.map((o: any) => (
-          <Link key={o.id} href={`/klant/offerte/${o.id}`} className="kp-card-link">
-            <div className="kp-card">
-              <div className="kp-card-row">
-                <div>
-                  <div className="kp-card-title">Offerte OZVT-{String(o.offertenummer).padStart(4,'0')}</div>
-                  <div className="kp-card-meta">{new Date(o.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                </div>
-                <div className="kp-card-side">
-                  <div className="kp-card-amount">{formatEuro(totaalOfferte(o))}</div>
-                  <span className={`kp-badge ${badgeKlasse(o.status)}`}>{statusLabel(o.status)}</span>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
       </section>
 
       {/* ── Werkafspraken ── */}
