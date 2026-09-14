@@ -53,20 +53,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (Array.isArray(f.regels)) pdfRegels = f.regels
     else if (typeof f.regels === 'string') { try { pdfRegels = JSON.parse(f.regels) } catch {} }
 
-    const pdf = await genereerFactuurPDF({
-      factuurnummer: f.factuurnummer,
-      klantNaam: tenaamstelling,
-      klantEmail: f.klant_email,
-      klantAdres: factuurAdresTekst(klantVelden),
-      klantTelefoon: f.klant_telefoon,
-      factuurdatum: f.factuurdatum,
-      betalingstermijn: Number(f.betalingstermijn) || 14,
-      regels: pdfRegels,
-      btwPct: Number(f.btw_pct ?? 21),
-      notities: f.notities,
-      status: f.status,
-      betaalUrl: f.betaal_url ?? null,
-    })
+    let pdf: Buffer
+    try {
+      pdf = await genereerFactuurPDF({
+        factuurnummer: f.factuurnummer,
+        klantNaam: tenaamstelling,
+        klantEmail: f.klant_email,
+        klantAdres: factuurAdresTekst(klantVelden),
+        klantTelefoon: f.klant_telefoon,
+        factuurdatum: f.factuurdatum,
+        betalingstermijn: Number(f.betalingstermijn) || 14,
+        regels: pdfRegels,
+        btwPct: Number(f.btw_pct ?? 21),
+        notities: f.notities,
+        status: f.status,
+        betaalUrl: f.betaal_url ?? null,
+      })
+    } catch (err) {
+      console.error('[factuur pdf]', err)
+      return NextResponse.json({
+        error: 'PDF maken mislukt',
+        detail: err instanceof Error ? err.message : String(err),
+      }, { status: 500 })
+    }
 
     const bestandsnaam = `Factuur ${String(f.factuurnummer).replace(/[^A-Za-z0-9._-]+/g, '-')}.pdf`
     return new NextResponse(new Uint8Array(pdf), {

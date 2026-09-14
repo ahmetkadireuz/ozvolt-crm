@@ -56,22 +56,33 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const offerteNr = `OZVT-${String(o.offertenummer).padStart(4, '0')}`
 
-  const pdf = await genereerOffertePDF({
-    offertenummer: offerteNr,
-    klantNaam: factuurTenaamstelling(klantVelden),
-    klantEmail: o.klant_email,
-    klantAdres: factuurAdresTekst(klantVelden),
-    klantTelefoon: o.klant_telefoon,
-    datum: o.datum,
-    geldigTot: o.geldig_tot,
-    regels,
-    korting: Number(o.korting_pct ?? 0),
-    btwPct: Number(o.btw_pct ?? 21),
-    notities: o.notities,
-    geaccepteerdOp: o.accepted_at,
-    geaccepteerdDoor: o.accepted_name,
-    documenttype: o.documenttype,
-  })
+  let pdf: Buffer
+  try {
+    pdf = await genereerOffertePDF({
+      offertenummer: offerteNr,
+      klantNaam: factuurTenaamstelling(klantVelden),
+      klantEmail: o.klant_email,
+      klantAdres: factuurAdresTekst(klantVelden),
+      klantTelefoon: o.klant_telefoon,
+      datum: o.datum,
+      geldigTot: o.geldig_tot,
+      regels,
+      korting: Number(o.korting_pct ?? 0),
+      btwPct: Number(o.btw_pct ?? 21),
+      notities: o.notities,
+      geaccepteerdOp: o.accepted_at,
+      geaccepteerdDoor: o.accepted_name,
+      documenttype: o.documenttype,
+    })
+  } catch (err) {
+    // Zonder deze melding levert een mislukte PDF alleen een kale 500 op en
+    // weet je niet waar het misgaat.
+    console.error('[offerte pdf]', err)
+    return NextResponse.json({
+      error: 'PDF maken mislukt',
+      detail: err instanceof Error ? err.message : String(err),
+    }, { status: 500 })
+  }
 
   const bestandsnaam = `${documentLabel(o.documenttype)} ${offerteNr}.pdf`.replace(/[^A-Za-z0-9 ._-]+/g, '-')
   return new NextResponse(new Uint8Array(pdf), {
