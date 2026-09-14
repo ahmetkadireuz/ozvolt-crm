@@ -1,21 +1,8 @@
-import PDFDocument from 'pdfkit'
-
-const NAVY = '#1d2f4c'
-const BLUE = '#4c7191'
-const GREEN = '#15803d'
-const MUTED = '#64748b'
-const LIGHT = '#f0f4f8'
-
-function euro(n: number) {
-  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n)
-}
-
-function hex(color: string): [number, number, number] {
-  const r = parseInt(color.slice(1, 3), 16)
-  const g = parseInt(color.slice(3, 5), 16)
-  const b = parseInt(color.slice(5, 7), 16)
-  return [r, g, b]
-}
+import {
+  NAVY, BLUE, GREEN, MUTED, LIGHT,
+  W, H, MARGE, FOOTER_TOP, CONTENT_BODEM,
+  euro, maakPdf, documentHulp, REGEL_KOLOMMEN,
+} from './pdf-basis'
 
 export async function genereerFactuurPDF(params: {
   factuurnummer: string
@@ -31,48 +18,12 @@ export async function genereerFactuurPDF(params: {
   status: string
   betaalUrl?: string | null
 }): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 0, size: 'A4' })
-    const chunks: Buffer[] = []
-    doc.on('data', (c: Buffer) => chunks.push(c))
-    doc.on('end', () => resolve(Buffer.concat(chunks)))
-    doc.on('error', reject)
-
-    const W = 595.28
-    const H = 841.89
-    const margin = 50
-    const footerTop = 810
-    const contentBodem = footerTop - 20
-
-    function tekenFooter() {
-      doc.rect(0, footerTop, W, H - footerTop).fill(LIGHT)
-      doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(8.5)
-         .text('Ozvolt Elektrotechniek', margin, footerTop + 7)
-      doc.fillColor(MUTED).font('Helvetica').fontSize(8)
-         .text('KVK 99837366  ·  BTW NL005413208B33  ·  financien@ozvoltelektro.nl', margin, footerTop + 18)
-      doc.fillColor(MUTED).font('Helvetica').fontSize(8)
-         .text(params.factuurnummer, W - margin - 80, footerTop + 12, { width: 80, align: 'right' })
-    }
-
-    // pdfkit breekt zelf geen pagina's af bij vaste coördinaten, dus dat doen
-    // we hier. Zonder dit liep een factuur met veel regels over de footer heen
-    // en maakte pdfkit per overlopende tekstregel een losse lege pagina.
-    function nieuwePagina() {
-      tekenFooter()
-      doc.addPage()
-      return 60
-    }
-
-    function tekenTabelkop(ty: number) {
-      doc.rect(margin, ty, W - 2 * margin, 22).fill(NAVY)
-      doc.fillColor('rgba(255,255,255,0.65)').font('Helvetica-Bold').fontSize(8)
-      doc.text('OMSCHRIJVING', margin + 10, ty + 7)
-      doc.text('AANTAL', margin + 285, ty + 7, { width: 50, align: 'right' })
-      doc.text('PRIJS', margin + 340, ty + 7, { width: 60, align: 'right' })
-      doc.text('BTW', margin + 405, ty + 7, { width: 30, align: 'right' })
-      doc.text('TOTAAL', margin + 440, ty + 7, { width: 55, align: 'right' })
-      return ty + 22
-    }
+  return maakPdf(doc => {
+    const margin = MARGE
+    const footerTop = FOOTER_TOP
+    const contentBodem = CONTENT_BODEM
+    const { tekenFooter, nieuwePagina, tekenTabelkop: kop } = documentHulp(doc, params.factuurnummer)
+    const tekenTabelkop = (ty: number) => kop(ty, REGEL_KOLOMMEN('PRIJS'))
 
     // ── Header achtergrond ────────────────────────────────────────────────
     doc.rect(0, 0, W, 120).fill(NAVY)
@@ -264,7 +215,5 @@ export async function genereerFactuurPDF(params: {
     }
 
     tekenFooter()
-
-    doc.end()
   })
 }

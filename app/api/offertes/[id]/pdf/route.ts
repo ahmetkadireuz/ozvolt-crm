@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels } from '@/lib/utils'
+import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels, factuurAdresTekst } from '@/lib/utils'
+import { requireSession } from '@/lib/session'
+import { getKlantSessie } from '@/lib/klant-sessie'
+import { genereerOffertePDF } from '@/lib/pdf-offerte'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const offerteId = parseInt(id)
+  const wilDownload = req.nextUrl.searchParams.get('download') === '1'
 
   const rows = await sql`
     SELECT o.*, k.naam AS klant_naam, k.email AS klant_email,
@@ -16,6 +20,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   `
   const o = rows[0]
   if (!o) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
+
+  // Bereikbaar met een beheerderssessie of met een klantsessie. Bij een klant
+  // controleren we of de offerte wel van hem is.
+  const isBeheerder = !!(await requireSession())
+  if (!isBeheerder) {
+    const klantId = await getKlantSessie()
+    if (!klantId || klantId !== o.klant_id) {
+      return NextResponse.json({ error: 'Geen toegang' }, { status: 403 })
+    }
+  }
 
   // Zelfde tenaamstelling als op de factuur, zodat offerte en factuur
   // op dezelfde naam en hetzelfde adres staan.
@@ -41,6 +55,34 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
   const offerteNr = `OZVT-${String(o.offertenummer).padStart(4, '0')}`
+
+  // Echt PDF-bestand. De HTML hieronder is een printweergave; die door de
+  // browser laten printen gaf op Safari een lege pagina.
+  if (wilDownload) {
+    const pdf = await genereerOffertePDF({
+      offertenummer: offerteNr,
+      klantNaam: tenaamstelling,
+      klantEmail: o.klant_email,
+      klantAdres: factuurAdresTekst(klantVelden),
+      klantTelefoon: o.klant_telefoon,
+      datum: o.datum,
+      geldigTot: o.geldig_tot,
+      regels,
+      korting,
+      btwPct,
+      notities: o.notities,
+      geaccepteerdOp: o.accepted_at,
+      geaccepteerdDoor: o.accepted_name,
+    })
+    const bestandsnaam = `Offerte ${offerteNr.replace(/[^A-Za-z0-9._-]+/g, '-')}.pdf`
+    return new NextResponse(new Uint8Array(pdf), {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${bestandsnaam}"`,
+        'Content-Length': String(pdf.length),
+      },
+    })
+  }
   const datum = new Date(o.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
   const geldigheidLabel = o.geldig_tot
     ? new Date(o.geldig_tot).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })

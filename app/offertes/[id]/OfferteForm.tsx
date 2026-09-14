@@ -49,7 +49,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
     setSaving(true)
     await saveForm(new FormData(formRef.current))
     setSaving(false)
-    window.open(`/api/offertes/${offerteId}/pdf`, '_blank')
+    window.location.href = `/api/offertes/${offerteId}/pdf?download=1`
     router.refresh()
   }
 

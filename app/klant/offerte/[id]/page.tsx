@@ -158,9 +158,8 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
 
         {/* PDF downloaden */}
         <a
-          href={`/api/offertes/${o.id}/pdf`}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={`/api/offertes/${o.id}/pdf?download=1`}
+          download
           style={{
             display: 'block', textAlign: 'center',
             padding: '11px', borderRadius: 8,
