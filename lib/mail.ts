@@ -153,7 +153,7 @@ function divider() {
   </table>`
 }
 
-// ── Werkvoorstel mail (naar klant) ────────────────────────────────────────────
+// ── Offerte/werkvoorstel mail (naar klant) ───────────────────────────────────
 
 export function offerteMailHtml(params: {
   klantNaam: string
@@ -163,14 +163,18 @@ export function offerteMailHtml(params: {
   totaal?: string
   werkafspraakUrl?: string
   werkafspraakNr?: string
+  label?: string        // 'Offerte' of 'Werkvoorstel', afhankelijk van de klus
+  labelKlein?: string
 }) {
   const { klantNaam, offerteNr, acceptUrl, betaalUrl, totaal, werkafspraakUrl, werkafspraakNr } = params
+  const label = params.label ?? 'Offerte'
+  const labelKlein = params.labelKlein ?? label.toLowerCase()
   const voornaam = klantNaam.split(' ')[0]
   const heeftAfspraak = !!(werkafspraakUrl && werkafspraakNr)
 
   const body = `
     <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#7b92b2;text-transform:uppercase;
-       letter-spacing:0.16em;font-family:${F};">${heeftAfspraak ? 'Werkvoorstel &amp; Werkafspraken' : 'Persoonlijk werkvoorstel'}</p>
+       letter-spacing:0.16em;font-family:${F};">${heeftAfspraak ? `${label} &amp; Werkafspraken` : label}</p>
     <p style="margin:0 0 28px;font-size:30px;font-weight:900;color:#1b2d4a;letter-spacing:-0.8px;
        font-family:${F};line-height:1.1;">${offerteNr}</p>
 
@@ -179,12 +183,12 @@ export function offerteMailHtml(params: {
     </p>
     <p style="margin:0 0 32px;font-size:14.5px;color:#4a5568;line-height:1.9;font-family:${F};">
       ${heeftAfspraak
-        ? `Wij hebben uw <strong style="color:#1b2d4a;">werkvoorstel en werkafspraken</strong> klaarstaan. U kunt beide documenten hieronder digitaal bekijken en ondertekenen.`
-        : `Wij hebben een <strong style="color:#1b2d4a;">persoonlijk werkvoorstel</strong> voor u opgesteld. Bekijk het via onderstaande knop en onderteken digitaal als u akkoord gaat.`
+        ? `Wij hebben uw <strong style="color:#1b2d4a;">${labelKlein} en werkafspraken</strong> klaarstaan. U vindt ${labelKlein === 'offerte' ? 'de offerte' : 'het werkvoorstel'} als PDF in de bijlage, en u kunt beide documenten hieronder digitaal bekijken en ondertekenen.`
+        : `Wij hebben ${labelKlein === 'offerte' ? 'een' : 'een'} <strong style="color:#1b2d4a;">${labelKlein}</strong> voor u opgesteld. U vindt ${labelKlein === 'offerte' ? 'de offerte' : 'het werkvoorstel'} als PDF in de bijlage. Wilt u akkoord geven, gebruik dan de knop hieronder om digitaal te ondertekenen.`
       }
     </p>
 
-    ${primaryBtn(acceptUrl, 'Werkvoorstel bekijken &amp; ondertekenen', BRAND, '📋')}
+    ${primaryBtn(acceptUrl, `${label} bekijken &amp; ondertekenen`, BRAND, '📋')}
     ${heeftAfspraak ? primaryBtn(werkafspraakUrl!, 'Werkafspraken bekijken &amp; bevestigen', '#1a5a8a', '🔧') : ''}
     ${betaalUrl ? primaryBtn(betaalUrl, 'Direct online betalen', GREEN, '💳') : ''}
 
@@ -214,10 +218,10 @@ export function offerteMailHtml(params: {
       <span style="color:#9daab8;font-size:12px;">Ozvolt Elektrotechniek &nbsp;·&nbsp; 06 449 98 789</span>
     </p>`
 
-  return mailWrapper({ accentColor: GREEN, headerBg: BRAND, tagline: 'Werkvoorstel', body })
+  return mailWrapper({ accentColor: GREEN, headerBg: BRAND, tagline: label, body })
 }
 
-// ── Werkvoorstel bevestiging (intern naar Ozvolt) ─────────────────────────────
+// ── Bevestiging (intern naar Ozvolt) ─────────────────────────────────────────
 
 export function offerteBevestigingMailHtml(params: {
   klantNaam: string

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen, formatEuro } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 import { sendMail, offerteMailHtml } from '@/lib/mail'
+import { genereerOffertePDF } from '@/lib/pdf-offerte'
+import { factuurTenaamstelling, factuurAdresTekst, documentLabel, documentLabelKlein } from '@/lib/utils'
 import crypto from 'crypto'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -10,7 +12,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const offerteId = parseInt(id)
 
   const rows = await sql`
-    SELECT o.*, kt.naam AS klant_naam, kt.email AS klant_email
+    SELECT o.*, kt.naam AS klant_naam, kt.email AS klant_email,
+           kt.telefoon AS klant_telefoon, kt.locatie AS klant_locatie,
+           kt.factuur_naam, kt.factuur_adres, kt.factuur_postcode, kt.factuur_plaats
     FROM offertes o JOIN klanten kt ON kt.id = o.klant_id
     WHERE o.id = ${offerteId}
   `
@@ -43,14 +47,52 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const regels = Array.isArray(offerte.regels) ? offerte.regels : []
     const { berekenTotalen, formatEuro } = await import('@/lib/utils')
-    const totalen = berekenTotalen(regels, Number(offerte.korting_pct ?? 0), Number(offerte.btw_pct ?? 21))
+    const korting = Number(offerte.korting_pct ?? 0)
+    const btwPct = Number(offerte.btw_pct ?? 21)
+    const totalen = berekenTotalen(regels, korting, btwPct)
     const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4,'0')}`
+    const label = documentLabel(offerte.documenttype)
+    const labelKlein = documentLabelKlein(offerte.documenttype)
+
+    const klantVelden = {
+      naam: offerte.klant_naam,
+      locatie: offerte.klant_locatie,
+      factuur_naam: offerte.factuur_naam,
+      factuur_adres: offerte.factuur_adres,
+      factuur_postcode: offerte.factuur_postcode,
+      factuur_plaats: offerte.factuur_plaats,
+    }
+
+    // PDF als bijlage, zodat de klant het document kan bewaren en doorsturen
+    // zonder eerst een link te hoeven openen. Mislukt dit, dan gaat de mail
+    // alsnog de deur uit met alleen de ondertekenlink.
+    let pdf: Buffer | null = null
+    try {
+      pdf = await genereerOffertePDF({
+        offertenummer: offerteNr,
+        klantNaam: factuurTenaamstelling(klantVelden),
+        klantEmail: offerte.klant_email,
+        klantAdres: factuurAdresTekst(klantVelden),
+        klantTelefoon: offerte.klant_telefoon,
+        datum: offerte.datum,
+        geldigTot: offerte.geldig_tot,
+        regels,
+        korting,
+        btwPct,
+        notities: offerte.notities,
+        geaccepteerdOp: offerte.accepted_at,
+        geaccepteerdDoor: offerte.accepted_name,
+        documenttype: offerte.documenttype,
+      })
+    } catch (err) {
+      console.error('[offerte versturen] PDF-bijlage mislukt, mail gaat zonder bijlage:', err)
+    }
 
     await sendMail({
       to: offerte.klant_email,
       subject: werkafspraakNr
-        ? `Werkvoorstel ${offerteNr} + werkafspraken — Ozvolt Elektrotechniek`
-        : `Uw werkvoorstel ${offerteNr} — Ozvolt Elektrotechniek`,
+        ? `${label} ${offerteNr} + werkafspraken — Ozvolt Elektrotechniek`
+        : `Uw ${labelKlein} ${offerteNr} — Ozvolt Elektrotechniek`,
       html: offerteMailHtml({
         klantNaam: offerte.klant_naam,
         offerteNr,
@@ -59,9 +101,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         totaal: formatEuro(totalen.inclBtw),
         werkafspraakUrl,
         werkafspraakNr,
+        label,
+        labelKlein,
       }),
+      attachments: pdf
+        ? [{ filename: `${label} ${offerteNr}.pdf`, content: pdf, contentType: 'application/pdf' }]
+        : undefined,
     })
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, bijlage: !!pdf })
   } catch (err: any) {
     console.error('[mail/offerte versturen]', err)
     const msg = err?.message ?? String(err)

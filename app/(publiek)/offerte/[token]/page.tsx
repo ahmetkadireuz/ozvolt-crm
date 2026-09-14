@@ -1,5 +1,5 @@
 import { sql } from '@/lib/db'
-import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels } from '@/lib/utils'
+import { berekenTotalen, formatEuro, factuurTenaamstelling, factuurAdresRegels, documentLabel, documentLabelKlein } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import SignForm from './SignForm'
 import Icon from '@/components/Icon'
@@ -19,6 +19,11 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
   `
   const o = rows[0]
   if (!o) notFound()
+
+  // Grote klus of kleine klus bepaalt hoe het document heet richting de klant.
+  const label = documentLabel(o.documenttype)
+  const labelKlein = documentLabelKlein(o.documenttype)
+  const pdfUrl = `/api/offertes/${o.id}/pdf?download=1&token=${token}`
 
   // Zelfde tenaamstelling als op de offerte-PDF en de factuur
   const klantVelden = {
@@ -56,7 +61,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Offerte {offerteNr} — Ozvolt Elektrotechniek</title>
+        <title>{label} {offerteNr} — Ozvolt Elektrotechniek</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
         <style>{`
@@ -177,7 +182,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
             <div className="doc-header">
               <img src={`${SITE}/logo-wit.png`} alt="Ozvolt Elektrotechniek" className="doc-logo" />
               <div className="doc-meta">
-                <div className="doc-type">Offerte</div>
+                <div className="doc-type">{label}</div>
                 <div className="doc-nr">{offerteNr}</div>
               </div>
             </div>
@@ -185,10 +190,26 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
             {/* Body */}
             <div className="doc-body">
 
+              {/* Het echte document als PDF, zodat de klant het kan bewaren
+                  of doorsturen zonder deze pagina nodig te hebben. */}
+              <a
+                href={pdfUrl}
+                download
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  marginBottom: 24, padding: '10px 18px', borderRadius: 8,
+                  border: '1px solid #cbd5e1', background: '#f8fafc',
+                  color: '#334155', fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
+                }}
+              >
+                <Icon name="download" size={16} />
+                {label} downloaden als PDF
+              </a>
+
               {/* Klant + offerte info */}
               <div className="info-row">
                 <div>
-                  <div className="info-block-label">Offerte voor</div>
+                  <div className="info-block-label">{label} voor</div>
                   <div className="info-block-name">{tenaamstelling}</div>
                   <div className="info-block-line">
                     {adresRegels.map(regel => <span key={regel}>{regel}<br /></span>)}
@@ -197,7 +218,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                   </div>
                 </div>
                 <div>
-                  <div className="info-block-label">Offerte details</div>
+                  <div className="info-block-label">{label} details</div>
                   <div className="info-meta-row"><span className="info-meta-k">Nummer</span><span className="info-meta-v">{offerteNr}</span></div>
                   <div className="info-meta-row"><span className="info-meta-k">Datum</span><span className="info-meta-v">{datum}</span></div>
                   {o.geldig_tot && (

@@ -60,3 +60,28 @@ export function factuurAdresTekst(k: KlantFactuurVelden): string | null {
   const regels = factuurAdresRegels(k)
   return regels.length ? regels.join('\n') : null
 }
+
+// ── Documenttype offerte ────────────────────────────────────────────────────
+// Grote klussen gaan als werkvoorstel naar de klant, kleine als offerte.
+// De keuze staat per offerte in de database.
+
+export type Documenttype = 'offerte' | 'werkvoorstel'
+
+export function isWerkvoorstel(type?: string | null): boolean {
+  return String(type ?? '').toLowerCase() === 'werkvoorstel'
+}
+
+// 'Offerte' of 'Werkvoorstel', voor koppen en onderwerpregels.
+export function documentLabel(type?: string | null): string {
+  return isWerkvoorstel(type) ? 'Werkvoorstel' : 'Offerte'
+}
+
+// Zelfde woord met kleine letter, voor midden in een zin.
+export function documentLabelKlein(type?: string | null): string {
+  return isWerkvoorstel(type) ? 'werkvoorstel' : 'offerte'
+}
+
+// Lidwoord + woord, bijvoorbeeld "uw werkvoorstel".
+export function documentLabelBezit(type?: string | null): string {
+  return `uw ${documentLabelKlein(type)}`
+}

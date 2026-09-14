@@ -1,9 +1,9 @@
 import {
-  NAVY, BLUE, GREEN, MUTED, LIGHT,
+  NAVY, BLUE, GREEN, MUTED, LIGHT, ZACHT_OP_NAVY, TABELKOP_OP_NAVY,
   W, MARGE, FOOTER_TOP, CONTENT_BODEM,
-  euro, maakPdf, documentHulp, REGEL_KOLOMMEN,
+  euro, maakPdf, documentHulp, REGEL_KOLOMMEN, tekenKop,
 } from './pdf-basis'
-import { berekenTotalen } from './utils'
+import { berekenTotalen, documentLabel, documentLabelKlein } from './utils'
 
 function datumNL(d: string | Date) {
   return new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -23,41 +23,31 @@ export async function genereerOffertePDF(params: {
   notities?: string | null
   geaccepteerdOp?: string | null
   geaccepteerdDoor?: string | null
+  documenttype?: string | null
 }): Promise<Buffer> {
   return maakPdf(doc => {
     const margin = MARGE
     const { tekenFooter, nieuwePagina, tekenTabelkop: kop } = documentHulp(doc, params.offertenummer)
     const tekenTabelkop = (ty: number) => kop(ty, REGEL_KOLOMMEN('STUKPRIJS'))
     const isAkkoord = !!params.geaccepteerdOp
+    const label = documentLabel(params.documenttype)
+    const labelKlein = documentLabelKlein(params.documenttype)
 
-    // ── Header ────────────────────────────────────────────────────────────
-    doc.rect(0, 0, W, 120).fill(NAVY)
-    doc.rect(0, 120, W, 4).fill(BLUE)
-
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(16)
-       .text('Ozvolt Elektrotechniek', margin, 28)
-    doc.fillColor('rgba(255,255,255,0.55)').font('Helvetica').fontSize(9)
-       .text('KVK 99837366  ·  BTW NL005413208B33', margin, 50)
-
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(20)
-       .text('Offerte', W - 180, 40, { width: 130, align: 'right' })
-    doc.fillColor('rgba(255,255,255,0.6)').font('Helvetica').fontSize(10)
-       .text(params.offertenummer, W - 180, 66, { width: 130, align: 'right' })
-
-    // Alleen een badge als hij iets zegt. Een nog openstaande offerte krijgt
-    // er geen, net als bij de factuur.
-    if (isAkkoord) {
-      doc.roundedRect(W - 120, 88, 72, 20, 4).fill('#166534')
-      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8)
-         .text('✓ Akkoord', W - 120, 94, { width: 72, align: 'center' })
-    }
+    // ── Kop ───────────────────────────────────────────────────────────────
+    // Alleen een badge als hij iets zegt; een nog openstaand document
+    // krijgt er geen, net als bij de factuur.
+    tekenKop(doc, {
+      titel: label,
+      nummer: params.offertenummer,
+      badge: isAkkoord ? { tekst: '✓ Akkoord', kleur: '#166534' } : null,
+    })
 
     // ── Info blokken ──────────────────────────────────────────────────────
     let y = 140
 
     doc.rect(margin, y, 230, 100).fill(LIGHT)
     doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5)
-       .text('OFFERTE AAN', margin + 14, y + 12)
+       .text(`${label.toUpperCase()} AAN`, margin + 14, y + 12)
     doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12)
        .text(params.klantNaam, margin + 14, y + 25, { width: 200 })
     let adresY = y + 43
@@ -79,11 +69,11 @@ export async function genereerOffertePDF(params: {
     const rx = margin + 255
     doc.rect(rx, y, 240, 100).fill(LIGHT)
     doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5)
-       .text('OFFERTEGEGEVENS', rx + 14, y + 12)
+       .text('GEGEVENS', rx + 14, y + 12)
 
     const infoRows: Array<[string, string]> = [
-      ['Offertenummer', params.offertenummer],
-      ['Offertedatum', datumNL(params.datum)],
+      [`${label}nummer`, params.offertenummer],
+      ['Datum', datumNL(params.datum)],
     ]
     if (params.geldigTot) infoRows.push(['Geldig tot', datumNL(params.geldigTot)])
     if (isAkkoord) infoRows.push(['Akkoord op', datumNL(params.geaccepteerdOp as string)])
@@ -156,7 +146,7 @@ export async function genereerOffertePDF(params: {
     })
 
     doc.rect(totX, y, totWidth, 32).fill(NAVY)
-    doc.fillColor('rgba(255,255,255,0.65)').font('Helvetica').fontSize(9)
+    doc.fillColor(TABELKOP_OP_NAVY).font('Helvetica').fontSize(9)
        .text('Totaal incl. BTW', totX + 10, y + 9, { width: totWidth / 2 })
     doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(15)
        .text(euro(totalen.inclBtw), totX + totWidth / 2, y + 7, { width: totWidth / 2 - 10, align: 'right' })
@@ -194,9 +184,9 @@ export async function genereerOffertePDF(params: {
          .text(params.geaccepteerdDoor ? `Ondertekend door ${params.geaccepteerdDoor}` : 'Digitaal ondertekend via het klantportaal', margin + 14, blokY + 40)
     } else {
       doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12)
-         .text(params.geldigTot ? `Geldig tot ${datumNL(params.geldigTot)}` : 'Vrijblijvende offerte', margin + 14, blokY + 23)
+         .text(params.geldigTot ? `Geldig tot ${datumNL(params.geldigTot)}` : `Vrijblijvend ${labelKlein}`, margin + 14, blokY + 23)
       doc.fillColor(MUTED).font('Helvetica').fontSize(9)
-         .text('Akkoord? U kunt deze offerte digitaal ondertekenen in uw klantportaal.', margin + 14, blokY + 40)
+         .text(`Akkoord? U kunt dit ${labelKlein} digitaal ondertekenen via de link in de e-mail.`, margin + 14, blokY + 40)
     }
 
     tekenFooter()

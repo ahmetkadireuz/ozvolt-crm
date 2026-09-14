@@ -51,10 +51,13 @@ export async function middleware(req: NextRequest) {
 
   if (isPublic) return res
 
-  // Klant met een geldige sessie mag deze documenten ophalen. Zonder klant-
-  // cookie valt het door naar de beheerderscontrole hieronder.
-  if (isDocumentPdf(pathname) && req.cookies.get('ozvolt_klant')?.value) {
-    return res
+  // Documenten mogen langs met een klantsessie, of met een token uit de mail.
+  // De route controleert dat token zelf tegen het document; hier laten we de
+  // aanvraag alleen door zodat hij de route kan bereiken.
+  if (isDocumentPdf(pathname)) {
+    const heeftKlantSessie = !!req.cookies.get('ozvolt_klant')?.value
+    const heeftToken = !!req.nextUrl.searchParams.get('token')
+    if (heeftKlantSessie || heeftToken) return res
   }
 
   // Klantportaal routes — alleen ozvolt_klant cookie vereist

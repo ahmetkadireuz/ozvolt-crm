@@ -25,6 +25,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         datum: fd.get('datum'),
         geldig_tot: fd.get('geldig_tot'),
         notities: fd.get('notities'),
+        documenttype: fd.get('documenttype'),
         regels,
         korting_pct: kortingPct,
         btw_pct: btwPct,
@@ -44,12 +45,16 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
 
   const formRef = useRef<HTMLFormElement>(null)
 
-  async function handlePdf() {
+  // Eerst opslaan, dan pas de PDF opvragen. Anders krijg je een document
+  // met de vorige versie van de regels erin.
+  async function handlePdf(download: boolean) {
     if (!formRef.current) return
     setSaving(true)
     await saveForm(new FormData(formRef.current))
     setSaving(false)
-    window.location.href = `/api/offertes/${offerteId}/pdf?download=1`
+    const url = `/api/offertes/${offerteId}/pdf${download ? '?download=1' : ''}`
+    if (download) window.location.href = url
+    else window.open(url, '_blank')
     router.refresh()
   }
 
@@ -71,6 +76,17 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Geldig tot</label>
             <input className="form-ctrl" type="date" name="geldig_tot" defaultValue={offerte.geldig_tot?.slice(0, 10)} />
+          </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">Soort document</label>
+            <select className="form-ctrl" name="documenttype" defaultValue={offerte.documenttype ?? 'offerte'}>
+              <option value="offerte">Offerte</option>
+              <option value="werkvoorstel">Werkvoorstel</option>
+            </select>
+            <p style={{ fontSize: 11, color: '#64748b', margin: '6px 0 0', lineHeight: 1.5 }}>
+              Bepaalt hoe het document heet in de PDF, de mail en op de ondertekenpagina.
+              Kleine klus is een offerte, een groot project een werkvoorstel.
+            </p>
           </div>
         </div>
         <div className="form-group" style={{ marginTop: 12, marginBottom: 0 }}>
@@ -108,9 +124,13 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
           <Icon name="check" size={18} />
           {saving ? 'Opslaan…' : 'Offerte opslaan'}
         </button>
-        <button type="button" className="btn btn-ghost" disabled={saving} onClick={handlePdf}>
+        <button type="button" className="btn btn-ghost" disabled={saving} onClick={() => handlePdf(false)}>
+          <Icon name="eye" size={18} />
+          {saving ? 'Opslaan…' : 'Bekijken'}
+        </button>
+        <button type="button" className="btn btn-ghost" disabled={saving} onClick={() => handlePdf(true)}>
           <Icon name="download" size={18} />
-          {saving ? 'Opslaan…' : 'PDF bekijken'}
+          PDF downloaden
         </button>
       </div>
     </form>

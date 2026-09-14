@@ -20,6 +20,17 @@ const nextConfig = {
     ]
   },
   serverExternalPackages: ['@neondatabase/serverless'],
+  experimental: {
+    // Het logo in de PDF's wordt op de server van schijf gelezen. Zonder dit
+    // zit public/ niet in de bundel van de serverfunctie en valt de kop terug
+    // op de bedrijfsnaam in tekst.
+    outputFileTracingIncludes: {
+      '/api/offertes/[id]/pdf': ['./public/logo-wit-site.png'],
+      '/api/offertes/[id]/versturen': ['./public/logo-wit-site.png'],
+      '/api/facturen/[id]/pdf': ['./public/logo-wit-site.png'],
+      '/api/facturen/[id]/versturen': ['./public/logo-wit-site.png'],
+    },
+  },
 }
 
 export default nextConfig

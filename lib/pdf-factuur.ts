@@ -1,7 +1,7 @@
 import {
-  NAVY, BLUE, GREEN, MUTED, LIGHT,
+  NAVY, BLUE, GREEN, MUTED, LIGHT, ZACHT_OP_NAVY, TABELKOP_OP_NAVY,
   W, H, MARGE, FOOTER_TOP, CONTENT_BODEM,
-  euro, maakPdf, documentHulp, REGEL_KOLOMMEN,
+  euro, maakPdf, documentHulp, REGEL_KOLOMMEN, tekenKop,
 } from './pdf-basis'
 
 export async function genereerFactuurPDF(params: {
@@ -25,32 +25,16 @@ export async function genereerFactuurPDF(params: {
     const { tekenFooter, nieuwePagina, tekenTabelkop: kop } = documentHulp(doc, params.factuurnummer)
     const tekenTabelkop = (ty: number) => kop(ty, REGEL_KOLOMMEN('PRIJS'))
 
-    // ── Header achtergrond ────────────────────────────────────────────────
-    doc.rect(0, 0, W, 120).fill(NAVY)
-    doc.rect(0, 120, W, 4).fill(BLUE)
-
-    // Bedrijfsnaam in header
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(16)
-       .text('Ozvolt Elektrotechniek', margin, 28)
-    doc.fillColor('rgba(255,255,255,0.55)').font('Helvetica').fontSize(9)
-       .text('KVK 99837366  ·  BTW NL005413208B33', margin, 50)
-
-    // Betaalnota label + nummer rechts
-    doc.fillColor('rgba(255,255,255,0.45)').font('Helvetica').fontSize(8)
-       .text('DOCUMENT', W - 180, 28, { width: 130, align: 'right' })
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(20)
-       .text('Betaalnota', W - 180, 40, { width: 130, align: 'right' })
-    doc.fillColor('rgba(255,255,255,0.6)').font('Helvetica').fontSize(10)
-       .text(params.factuurnummer, W - 180, 66, { width: 130, align: 'right' })
-
-    // Status badge — alleen als de status de klant iets zegt. 'Verzonden'
-    // voegt niets toe op een document dat hij in handen heeft.
-    if (params.status === 'betaald' || params.status === 'te_laat') {
-      const isBetaald = params.status === 'betaald'
-      doc.roundedRect(W - 120, 88, 72, 20, 4).fill(isBetaald ? '#166534' : '#7f1d1d')
-      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8)
-         .text(isBetaald ? '✓ Betaald' : '⚠ Vervallen', W - 120, 94, { width: 72, align: 'center' })
-    }
+    // ── Kop ───────────────────────────────────────────────────────────────
+    // Statusbadge alleen als hij de klant iets zegt. 'Verzonden' voegt niets
+    // toe op een document dat hij al in handen heeft.
+    tekenKop(doc, {
+      titel: 'Factuur',
+      nummer: params.factuurnummer,
+      badge: params.status === 'betaald' ? { tekst: '✓ Betaald', kleur: '#166534' }
+        : params.status === 'te_laat' ? { tekst: '⚠ Vervallen', kleur: '#7f1d1d' }
+        : null,
+    })
 
     // ── Info blokken ──────────────────────────────────────────────────────
     let y = 140
@@ -167,7 +151,7 @@ export async function genereerFactuurPDF(params: {
 
     // Eindtotaal
     doc.rect(totX, y, totWidth, 32).fill(NAVY)
-    doc.fillColor('rgba(255,255,255,0.65)').font('Helvetica').fontSize(9).text('Te betalen incl. BTW', totX + 10, y + 9, { width: totWidth / 2 })
+    doc.fillColor(TABELKOP_OP_NAVY).font('Helvetica').fontSize(9).text('Te betalen incl. BTW', totX + 10, y + 9, { width: totWidth / 2 })
     doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(15).text(euro(inclBtw), totX + totWidth / 2, y + 7, { width: totWidth / 2 - 10, align: 'right' })
 
     y += 42
