@@ -24,6 +24,7 @@ const navAdmin: NavItem[] = [
   { key: '/inkoop',                     icon: 'cart',     label: 'Inkoop' },
   { key: '/groepenverklaring',          icon: 'bolt',     label: 'Groepenverklaring' },
   { key: '/instellingen/boekhouding',   icon: 'book',     label: 'Boekhouding' },
+  { key: '/fiscaal',                    icon: 'check-circle', label: 'Fiscaal' },
 ]
 
 const navComms: NavItem[] = [

@@ -35,6 +35,35 @@ async function mbFetch(path: string, options?: RequestInit) {
   }
 }
 
+// ── Lezen met paginering (fiscale module) ────────────────────────────────────
+// Moneybird: max 100 per pagina, limiet 150 requests / 5 min (429 + Retry-After).
+
+export async function mbLijst<T = any>(path: string, maxPaginas = 50): Promise<T[]> {
+  const alles: T[] = []
+  const scheider = path.includes('?') ? '&' : '?'
+  for (let page = 1; page <= maxPaginas; page++) {
+    const url = `${BASE}/${adminId()}${path}${scheider}per_page=100&page=${page}`
+    let res: Response | null = null
+    for (let poging = 0; poging < 3; poging++) {
+      res = await fetch(url, { headers: headers(), cache: 'no-store', signal: AbortSignal.timeout(15000) })
+      if (res.status !== 429) break
+      const wacht = Math.min(Number(res.headers.get('Retry-After') ?? 5), 20)
+      await new Promise(r => setTimeout(r, wacht * 1000))
+    }
+    if (!res || !res.ok) {
+      const status = res?.status ?? 0
+      if (status === 401) throw new Error('Moneybird: ongeldige API token — controleer MONEYBIRD_API_TOKEN in Vercel')
+      if (status === 403) throw new Error(`Moneybird: geen toegang tot ${path.split('?')[0]} — geef de API-token leesrechten op dit onderdeel`)
+      throw new Error(`Moneybird API fout ${status} bij ${path.split('?')[0]}`)
+    }
+    const data = await res.json()
+    if (!Array.isArray(data)) return alles
+    alles.push(...data)
+    if (data.length < 100) break
+  }
+  return alles
+}
+
 // ── Contacten ────────────────────────────────────────────────────────────────
 
 export async function mbZoekContact(email: string) {
