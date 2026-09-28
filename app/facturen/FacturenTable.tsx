@@ -110,18 +110,13 @@ export default function FacturenTable({ facturen }: { facturen: any[] }) {
                     <div style={{ minWidth: 0 }}>
                       <div className="klus-card-naam">{f.klant_naam}</div>
                       <div className="klus-card-meta">
-                        {f.factuurnummer} · {datumNL(f.factuurdatum)}
+                        {f.factuurnummer} · <span style={{ color: teLaat ? 'var(--red)' : undefined, fontWeight: teLaat ? 700 : undefined }}>vervalt {datumNL(vervalDatum)}</span>
                       </div>
                     </div>
-                    <StatusBadge status={teLaat ? 'te_laat' : f.status} />
-                  </div>
-                  <div className="klus-card-bottom">
-                    <span style={{ fontSize: '.74rem', color: teLaat ? 'var(--red)' : 'var(--text-mute)', fontWeight: teLaat ? 700 : 400 }}>
-                      Vervalt {datumNL(vervalDatum)}
-                    </span>
-                    <span style={{ fontWeight: 700, fontSize: '.92rem', color: 'var(--navy)' }}>
-                      {formatEuro(totalen.inclBtw)}
-                    </span>
+                    <div className="klus-card-side">
+                      <StatusBadge status={teLaat ? 'te_laat' : f.status} />
+                      <span className="klus-card-bedrag">{formatEuro(totalen.inclBtw)}</span>
+                    </div>
                   </div>
                 </div>
               )

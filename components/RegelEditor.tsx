@@ -66,7 +66,7 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
       <input type="hidden" name="btw_pct" value={btw} />
 
       {/* Header */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 110px 70px 36px', gap: 6, marginBottom: 6 }}>
+      <div className="regel-kop">
         <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Omschrijving</span>
         <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', textAlign: 'right' }}>Aantal</span>
         <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', textAlign: 'right' }}>Prijs (ex)</span>
@@ -77,43 +77,53 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
       {regels.map((regel, i) => (
         <div key={i} style={{ marginBottom: 10, background: 'var(--surface-mute)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}>
           {/* Rij 1: omschrijving + aantal + prijs + btw + delete */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 110px 70px 36px', gap: 6, alignItems: 'center' }}>
+          <div className="regel-grid">
             <input
-              className="form-ctrl"
+              className="form-ctrl regel-oms"
               placeholder="Omschrijving (bijv. Montagekosten)"
               value={regel.omschrijving}
               onChange={e => update(i, 'omschrijving', e.target.value)}
               style={{ padding: '7px 10px', fontWeight: 600 }}
             />
-            <input
-              className="form-ctrl"
-              type="number" min="0.1" step="0.1"
-              value={regel.aantal}
-              onChange={e => update(i, 'aantal', e.target.value)}
-              onFocus={e => e.target.select()}
-              style={{ padding: '7px 8px', textAlign: 'right' }}
-            />
-            <input
-              className="form-ctrl"
-              type="text"
-              inputMode="decimal"
-              placeholder="0,00"
-              value={prijsInput[i] ?? ''}
-              onChange={e => updatePrijsStr(i, e.target.value)}
-              onFocus={e => e.target.select()}
-              style={{ padding: '7px 8px', textAlign: 'right' }}
-            />
-            <select
-              className="form-ctrl"
-              value={regel.btw}
-              onChange={e => update(i, 'btw', e.target.value)}
-              style={{ padding: '7px 6px' }}
-            >
-              <option value={0}>0%</option>
-              <option value={9}>9%</option>
-              <option value={21}>21%</option>
-            </select>
+            <label className="regel-veld regel-aantal">
+              <span className="regel-mini">Aantal</span>
+              <input
+                className="form-ctrl"
+                type="number" min="0.1" step="0.1"
+                value={regel.aantal}
+                onChange={e => update(i, 'aantal', e.target.value)}
+                onFocus={e => e.target.select()}
+                style={{ padding: '7px 8px', textAlign: 'right' }}
+              />
+            </label>
+            <label className="regel-veld regel-prijs">
+              <span className="regel-mini">Prijs (ex)</span>
+              <input
+                className="form-ctrl"
+                type="text"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={prijsInput[i] ?? ''}
+                onChange={e => updatePrijsStr(i, e.target.value)}
+                onFocus={e => e.target.select()}
+                style={{ padding: '7px 8px', textAlign: 'right' }}
+              />
+            </label>
+            <label className="regel-veld regel-btw">
+              <span className="regel-mini">Btw</span>
+              <select
+                className="form-ctrl"
+                value={regel.btw}
+                onChange={e => update(i, 'btw', e.target.value)}
+                style={{ padding: '7px 6px' }}
+              >
+                <option value={0}>0%</option>
+                <option value={9}>9%</option>
+                <option value={21}>21%</option>
+              </select>
+            </label>
             <button
+              className="regel-del"
               type="button"
               onClick={() => removeRegel(i)}
               disabled={regels.length === 1}
@@ -143,7 +153,7 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
                 }
               }}
               rows={1}
-              style={{ padding: '6px 10px', fontSize: '.8rem', color: 'var(--text-2)', background: 'var(--surface)', borderStyle: 'dashed', fontStyle: 'italic', resize: 'none', overflow: 'hidden', lineHeight: 1.5, width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' }}
+              style={{ minHeight: 36, padding: '6px 10px', fontSize: '.8rem', color: 'var(--text-2)', background: 'var(--surface)', borderStyle: 'dashed', fontStyle: 'italic', resize: 'none', overflow: 'hidden', lineHeight: 1.5, width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' }}
             />
           </div>
 

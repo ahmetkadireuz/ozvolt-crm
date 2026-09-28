@@ -108,10 +108,10 @@ export default function OffertesTable({ offertes }: { offertes: any[] }) {
                       <div className="klus-card-naam">{o.klant_naam}</div>
                       <div className="klus-card-meta">OZVT-{String(o.offertenummer).padStart(4, '0')} · {datumNL(o.datum)}</div>
                     </div>
-                    <StatusBadge status={o.status} />
-                  </div>
-                  <div className="klus-card-bottom">
-                    <span style={{ fontWeight: 700, fontSize: '.86rem', color: 'var(--text)' }}>{formatEuro(totalen.inclBtw)}</span>
+                    <div className="klus-card-side">
+                      <StatusBadge status={o.status} />
+                      <span className="klus-card-bedrag">{formatEuro(totalen.inclBtw)}</span>
+                    </div>
                   </div>
                 </div>
               )
