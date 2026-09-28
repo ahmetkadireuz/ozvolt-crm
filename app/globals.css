@@ -310,6 +310,18 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
 .form-ctrl:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .form-ctrl::placeholder { color: var(--text-soft); }
 select.form-ctrl { cursor: pointer; }
+/* iOS: datumvelden niet breder dan hun kolom en links uitgelijnd */
+input[type="date"].form-ctrl { -webkit-appearance: none; appearance: none; min-width: 0; display: block; min-height: 40px; }
+input[type="date"].form-ctrl::-webkit-date-and-time-value { text-align: left; }
+
+/* ── Offerte-/factuurregels ── */
+.regel-kop, .regel-grid { display: grid; grid-template-columns: 1fr 80px 110px 70px 36px; gap: 6px; align-items: center; }
+.regel-kop { margin-bottom: 6px; }
+.regel-kop span { font-size: .7rem; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: .06em; }
+.regel-kop span:nth-child(2), .regel-kop span:nth-child(3) { text-align: right; }
+.regel-kop span:nth-child(4) { text-align: center; }
+.regel-veld { display: block; min-width: 0; margin: 0; }
+.regel-mini { display: none; }
 textarea.form-ctrl { resize: vertical; min-height: 90px; }
 
 /* ── Alerts ──────────────────────────────────────────── */
@@ -477,6 +489,18 @@ textarea.form-ctrl { resize: vertical; min-height: 90px; }
   .desktop-table { display: none; }
   .detail-grid { grid-template-columns: 1fr; }
   .regel-row { grid-template-columns: 1fr 55px 80px 55px 32px; }
+  .regel-kop { display: none; }
+  .regel-grid {
+    grid-template-columns: 1fr 1.3fr 1fr 36px;
+    grid-template-areas: "oms oms oms del" "aantal prijs btw btw";
+    align-items: end;
+  }
+  .regel-oms { grid-area: oms; }
+  .regel-aantal { grid-area: aantal; }
+  .regel-prijs { grid-area: prijs; }
+  .regel-btw { grid-area: btw; }
+  .regel-del { grid-area: del; align-self: center; }
+  .regel-mini { display: block; font-size: .66rem; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: .05em; margin: 0 0 3px 2px; }
 
   .topbar { flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
   .topbar > div:first-child { min-width: 0; flex: 1; }
@@ -504,6 +528,8 @@ textarea.form-ctrl { resize: vertical; min-height: 90px; }
   .klus-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
   .klus-card-naam { font-weight: 700; font-size: .92rem; color: var(--navy); }
   .klus-card-meta { font-size: .76rem; color: var(--text-mute); margin-top: 3px; }
+  .klus-card-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .klus-card-bedrag { font-weight: 800; font-size: .92rem; color: var(--text); font-variant-numeric: tabular-nums; }
   .klus-card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
 
   .filter-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
