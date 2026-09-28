@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron?token=VERVANG_MET_CRON_SECRET",
+      "path": "/api/cron",
       "schedule": "0 8 * * *"
     }
   ]

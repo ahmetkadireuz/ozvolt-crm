@@ -69,9 +69,9 @@ export default async function KlusDetailPage({
     sql`SELECT id, titel, type, getekend_op, aangemaakt_op FROM opleveringsrapporten WHERE klus_id = ${klusId} ORDER BY aangemaakt_op DESC`,
     sql`
       SELECT COALESCE(SUM(
-        (SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
+        GREATEST((SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
          FROM jsonb_array_elements(regels) r)
-        * (1 - korting_pct / 100.0)
+        - COALESCE(korting_pct, 0), 0)
       ), 0) AS omzet
       FROM offertes WHERE klus_id = ${klusId} AND status = 'geaccepteerd'
     `,

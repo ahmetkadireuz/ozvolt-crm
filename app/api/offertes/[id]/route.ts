@@ -38,6 +38,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const waItems = Array.isArray(body.wa_items) ? body.wa_items : []
 
+  // korting_pct bevat een bedrag in euro's; NUMERIC(5,2) liep vast boven € 999,99
+  if (korting > 999.99) {
+    try { await sql`ALTER TABLE offertes ALTER COLUMN korting_pct TYPE NUMERIC(10,2)` } catch (err) {
+      console.error('[offertes] korting_pct verbreden mislukt:', err)
+    }
+  }
+
   try {
     await sql`
       UPDATE offertes SET

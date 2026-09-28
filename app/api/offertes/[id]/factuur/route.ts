@@ -16,9 +16,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const nextNr = (maxRow[0]?.max_nr ?? 1000) + 1
   const factuurNr = `OZVT-${String(nextNr).padStart(4,'0')}`
 
+  // Facturen hebben geen kortingsveld: neem de offertekorting (bedrag in €) mee als negatieve regel,
+  // anders is de factuur hoger dan wat de klant heeft getekend.
+  const regels = Array.isArray(offerte.regels) ? [...offerte.regels] : []
+  const subtotaal = regels.reduce((s: number, r: any) => s + Number(r.aantal) * Number(r.prijs), 0)
+  const korting = Math.min(Number(offerte.korting_pct ?? 0), subtotaal)
+  if (korting > 0) {
+    regels.push({ omschrijving: 'Korting', aantal: 1, prijs: -Math.round(korting * 100) / 100, btw: Number(offerte.btw_pct ?? 21) })
+  }
+
   const result = await sql`
     INSERT INTO facturen (factuurnummer, klant_id, klus_id, offerte_id, status, factuurdatum, betalingstermijn, regels, btw_pct, notities)
-    VALUES (${factuurNr}, ${offerte.klant_id}, ${offerte.klus_id}, ${offerteId}, 'concept', CURRENT_DATE, 14, ${JSON.stringify(offerte.regels)}::jsonb, ${offerte.btw_pct}, ${offerte.notities})
+    VALUES (${factuurNr}, ${offerte.klant_id}, ${offerte.klus_id}, ${offerteId}, 'concept', CURRENT_DATE, 14, ${JSON.stringify(regels)}::jsonb, ${offerte.btw_pct}, ${offerte.notities})
     RETURNING id
   `
   return NextResponse.json({ factuurId: result[0].id })

@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
+import { requireSession } from '@/lib/session'
+import { getKlantSessie } from '@/lib/klant-sessie'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const offerteId = parseInt(id)
+
+  // Admin mag alles; een klant alleen eigen, verstuurde offertes
+  const isAdmin = !!(await requireSession())
+  const klantId = isAdmin ? null : await getKlantSessie()
+  if (!isAdmin && !klantId) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
 
   const rows = await sql`
     SELECT o.*, k.naam AS klant_naam, k.email AS klant_email,
@@ -14,7 +21,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     WHERE o.id = ${offerteId}
   `
   const o = rows[0]
-  if (!o) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
+  if (!o || (!isAdmin && (o.klant_id !== klantId || o.status === 'concept'))) {
+    return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
+  }
 
   // Zorg dat regels altijd een array is
   let regels: any[] = []

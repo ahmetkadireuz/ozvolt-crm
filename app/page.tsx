@@ -30,7 +30,8 @@ export default async function Dashboard() {
   }
   function totaalOfferte(o: any) {
     const sub = o.regels.reduce((acc: number, r: any) => acc + Number(r.aantal) * Number(r.prijs), 0)
-    return sub * (1 - o.korting_pct / 100) * (1 + o.btw_pct / 100)
+    // korting_pct bevat een bedrag in euro's (zie RegelEditor), geen percentage
+    return Math.max(0, sub - Number(o.korting_pct ?? 0)) * (1 + o.btw_pct / 100)
   }
 
   const omzetTrend = Number(g.omzet_vorige_maand) > 0

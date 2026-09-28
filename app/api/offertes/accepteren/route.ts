@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
   const offerte = rows[0]
   if (!offerte) return NextResponse.json({ error: 'Offerte niet gevonden' }, { status: 404 })
   if (offerte.accepted_at) return NextResponse.json({ error: 'Al geaccepteerd' }, { status: 409 })
+  if (offerte.status !== 'gestuurd') {
+    return NextResponse.json({ error: 'Deze offerte kan niet (meer) worden geaccepteerd — neem contact op met Ozvolt' }, { status: 409 })
+  }
 
   const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? ''
 

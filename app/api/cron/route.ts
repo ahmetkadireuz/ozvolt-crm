@@ -5,8 +5,11 @@ import { sql } from '@/lib/db'
 // Voeg in vercel.json toe: { "crons": [{ "path": "/api/cron", "schedule": "0 8 * * *" }] }
 
 export async function GET(req: NextRequest) {
-  const token = req.nextUrl.searchParams.get('token')
-  if (token !== process.env.CRON_SECRET) {
+  // Vercel Cron stuurt 'Authorization: Bearer <CRON_SECRET>'; ?token= blijft werken voor handmatig aanroepen
+  const secret = process.env.CRON_SECRET
+  const bearer = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  const token = bearer || req.nextUrl.searchParams.get('token')
+  if (!secret || token !== secret) {
     return NextResponse.json({ error: 'Niet geautoriseerd' }, { status: 401 })
   }
 

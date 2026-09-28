@@ -123,6 +123,8 @@ CREATE TABLE IF NOT EXISTS admin_notifications (
 -- ALTER TABLE klanten ADD COLUMN IF NOT EXISTS status_notitie TEXT;
 -- ALTER TABLE offertes ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE;
 -- ALTER TABLE offertes ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT;
+-- korting_pct bevat een bedrag in euro's (geen percentage) — ruimte voor kortingen boven € 999,99:
+-- ALTER TABLE offertes ALTER COLUMN korting_pct TYPE NUMERIC(10,2);
 
 -- Indexen voor snelheid
 CREATE INDEX IF NOT EXISTS idx_klussen_status    ON klussen(status);

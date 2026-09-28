@@ -17,7 +17,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
     FROM offertes o
     JOIN klanten k ON k.id = o.klant_id
     LEFT JOIN klussen ks ON ks.id = o.klus_id
-    WHERE o.id = ${id} AND o.klant_id = ${klantId}
+    WHERE o.id = ${id} AND o.klant_id = ${klantId} AND o.status <> 'concept'
   `
   if (!rows[0]) notFound()
 
@@ -25,7 +25,8 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
   const regels: { omschrijving: string; beschrijving?: string; aantal: number; prijs: number; btw: number }[] = o.regels
 
   const sub = regels.reduce((s, r) => s + r.aantal * r.prijs, 0)
-  const korting = sub * (o.korting_pct / 100)
+  // korting_pct bevat een bedrag in euro's (zie RegelEditor), geen percentage
+  const korting = Math.min(Number(o.korting_pct ?? 0), sub)
   const na = sub - korting
   const btw = na * (o.btw_pct / 100)
   const totaal = na + btw
@@ -94,7 +95,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
         {/* Totalen */}
         <div style={{ marginTop: 16, borderTop: '2px solid #e2e8f0', paddingTop: 12 }}>
           <TotaalRegel label="Subtotaal" waarde={formatEuro(sub)} />
-          {korting > 0 && <TotaalRegel label={`Korting (${o.korting_pct}%)`} waarde={`- ${formatEuro(korting)}`} />}
+          {korting > 0 && <TotaalRegel label="Korting" waarde={`- ${formatEuro(korting)}`} />}
           <TotaalRegel label={`BTW (${o.btw_pct}%)`} waarde={formatEuro(btw)} />
           <TotaalRegel label="Totaal incl. BTW" waarde={formatEuro(totaal)} vet />
         </div>

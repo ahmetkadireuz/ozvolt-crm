@@ -111,7 +111,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         </div>
         <div style={{ fontSize: '.78rem', color: '#8ba8c4' }}>incl. {Number(offerte.btw_pct)}% BTW</div>
         {Number(offerte.korting_pct) > 0 && (
-          <div style={{ fontSize: '.78rem', color: '#dc2626', marginTop: 2 }}>{offerte.korting_pct}% korting toegepast</div>
+          <div style={{ fontSize: '.78rem', color: '#dc2626', marginTop: 2 }}>{formatEuro(Number(offerte.korting_pct))} korting toegepast</div>
         )}
       </div>
 

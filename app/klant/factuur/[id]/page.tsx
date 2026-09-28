@@ -15,7 +15,7 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email, k.locatie AS klant_locatie
     FROM facturen f
     JOIN klanten k ON k.id = f.klant_id
-    WHERE f.id = ${id} AND f.klant_id = ${klantId}
+    WHERE f.id = ${id} AND f.klant_id = ${klantId} AND f.status <> 'concept'
   `
   if (!rows[0]) notFound()
 

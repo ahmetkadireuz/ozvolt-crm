@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql, berekenTotalen } from '@/lib/db'
+import { sql } from '@/lib/db'
 import { requireSession } from '@/lib/session'
-import { mbHaalOfMaakContact, mbMaakBetaalLink } from '@/lib/moneybird'
+import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -12,36 +12,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
   } catch {}
 
-  const rows = await sql`
-    SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_tel, k.type AS klant_type
-    FROM facturen f JOIN klanten k ON k.id = f.klant_id
-    WHERE f.id = ${factuurId}
-  `
-  const factuur = rows[0]
-  if (!factuur) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
-
-  const regels = Array.isArray(factuur.regels) ? factuur.regels : []
-  const totalen = berekenTotalen(regels, 0, factuur.btw_pct)
-
   try {
-    const contact = await mbHaalOfMaakContact({
-      id: factuur.klant_id,
-      naam: factuur.klant_naam,
-      email: factuur.klant_email,
-      telefoon: factuur.klant_tel,
-      type: factuur.klant_type,
-    })
-
-    const { betaalUrl } = await mbMaakBetaalLink({
-      contactId: contact.id,
-      omschrijving: `Betaalnota ${factuur.factuurnummer} — ${factuur.klant_naam}`,
-      bedrag: totalen.inclBtw,
-      btwPct: Number(factuur.btw_pct ?? 21),
-      referentie: factuur.factuurnummer,
-      datum: new Date().toISOString().slice(0, 10),
-    })
-
+    // Eén factuur in Moneybird: de betaallink hoort bij dezelfde factuur die in de boekhouding staat
+    const { betaalUrl } = await zorgVoorMoneybirdFactuur(factuurId)
+    if (!betaalUrl) {
+      return NextResponse.json({ error: 'Moneybird gaf geen betaallink terug — staat online betalen aan in Moneybird?' }, { status: 502 })
+    }
     await sql`UPDATE facturen SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
     return NextResponse.json({ ok: true, betaalUrl })
   } catch (err: any) {

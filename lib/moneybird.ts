@@ -96,6 +96,32 @@ export async function mbHaalOfMaakContact(klant: {
 
 // ── Verkoopfacturen ───────────────────────────────────────────────────────────
 
+// Btw-tarieven voor verkoopfacturen, per percentage (bijv. 21 → id). Gecached per instance.
+let _btwTarieven: Map<number, string> | null = null
+
+export async function mbBtwTariefId(pct: number): Promise<string | undefined> {
+  if (!_btwTarieven) {
+    try {
+      const rates = await mbLijst<any>('/tax_rates?filter=tax_rate_type:sales_invoice', 3)
+      _btwTarieven = new Map()
+      for (const r of rates) {
+        if (r.active === false) continue
+        const p = Number(r.percentage)
+        if (Number.isFinite(p) && !_btwTarieven.has(p)) _btwTarieven.set(p, String(r.id))
+      }
+    } catch (err) {
+      console.error('[moneybird] btw-tarieven ophalen mislukt:', err)
+      return undefined
+    }
+  }
+  return _btwTarieven.get(Number(pct))
+}
+
+/** Publieke betaal-/bekijklink van een (verstuurde) Moneybird-factuur */
+export function mbBetaalUrl(factuur: any): string | null {
+  return factuur?.payment_url ?? factuur?.url ?? null
+}
+
 export async function mbMaakFactuur(params: {
   contactId: string
   factuurNummer: string
@@ -104,12 +130,15 @@ export async function mbMaakFactuur(params: {
   regels: Array<{ omschrijving: string; aantal: number; prijs: number; btw: number }>
   notities?: string | null
 }) {
-  const details = params.regels.map(r => ({
-    description: r.omschrijving,
-    amount: String(r.aantal),
-    price: r.prijs.toFixed(2),
-    tax_rate_id: null, // Moneybird gebruikt tax_rate_id — stel handmatig in als nodig
-    ledger_account_id: null,
+  // Expliciet btw-tarief per regel; een meegestuurde `null` gaf regels zonder btw
+  const details = await Promise.all(params.regels.map(async r => {
+    const taxRateId = await mbBtwTariefId(r.btw)
+    return {
+      description: r.omschrijving,
+      amount: String(r.aantal),
+      price: r.prijs.toFixed(2),
+      ...(taxRateId ? { tax_rate_id: taxRateId } : {}),
+    }
   }))
 
   const datumStr = new Date(params.factuurdatum).toISOString().slice(0, 10)
@@ -122,6 +151,7 @@ export async function mbMaakFactuur(params: {
       invoice_date: datumStr,
       due_date: vervaldatum.toISOString().slice(0, 10),
       reference: params.factuurNummer,
+      prices_are_incl_tax: false,
       notes: params.notities ?? '',
       details_attributes: details,
     },
@@ -166,6 +196,7 @@ export async function mbMaakBetaalLink(params: {
   vervaldatum.setDate(vervaldatum.getDate() + 14)
 
   const nettoBedrag = params.bedrag / (1 + params.btwPct / 100)
+  const taxRateId = await mbBtwTariefId(params.btwPct)
 
   const payload = {
     sales_invoice: {
@@ -173,10 +204,12 @@ export async function mbMaakBetaalLink(params: {
       invoice_date: params.datum.slice(0, 10),
       due_date: vervaldatum.toISOString().slice(0, 10),
       reference: params.referentie,
+      prices_are_incl_tax: false,
       details_attributes: [{
         description: params.omschrijving,
         amount: '1',
         price: nettoBedrag.toFixed(2),
+        ...(taxRateId ? { tax_rate_id: taxRateId } : {}),
       }],
     },
   }
