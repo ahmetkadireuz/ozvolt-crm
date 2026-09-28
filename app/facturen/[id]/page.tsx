@@ -21,7 +21,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
   await ensureFactuurKolommen()
   const [factuurRows, klanten] = await Promise.all([
-    sql`SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email FROM facturen f JOIN klanten kt ON kt.id = f.klant_id WHERE f.id = ${factuurId}`,
+    sql`SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email, kt.telefoon AS klant_tel FROM facturen f JOIN klanten kt ON kt.id = f.klant_id WHERE f.id = ${factuurId}`,
     sql`SELECT id, naam FROM klanten ORDER BY naam`,
   ])
 

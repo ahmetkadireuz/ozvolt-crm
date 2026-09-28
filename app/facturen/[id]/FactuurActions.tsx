@@ -191,6 +191,8 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
         </div>
       </div>
 
+      <PortaalLink factuur={factuur} factuurId={factuurId} bedrag={totalen.inclBtw} />
+
       {/* Status */}
       <div className="card">
         <div className="section-label">Status</div>
@@ -270,6 +272,81 @@ function Betaalplan5050({ factuurId, factuur }: { factuurId: number; factuur: an
         </button>
       )}
       {error && <div style={{ marginTop: 8, fontSize: 12, color: '#dc2626' }}>{error}</div>}
+    </div>
+  )
+}
+
+function PortaalLink({ factuur, factuurId, bedrag }: { factuur: any; factuurId: number; bedrag: number }) {
+  const [link, setLink] = useState<string | null>(null)
+  const [bezig, setBezig] = useState(false)
+  const [gekopieerd, setGekopieerd] = useState(false)
+  // Conceptfacturen zijn niet zichtbaar in het portaal; dan landt de klant op het overzicht
+  const isConcept = factuur.status === 'concept'
+
+  async function maakLink() {
+    setBezig(true)
+    const res = await fetch('/api/klant/sessie-aanmaken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ klantId: factuur.klant_id, naar: isConcept ? undefined : `/klant/factuur/${factuurId}` }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setBezig(false)
+    if (data.link) setLink(data.link)
+    else alert('Link maken mislukt: ' + (data.error ?? 'Onbekende fout'))
+  }
+
+  async function kopieer() {
+    if (!link) return
+    await navigator.clipboard.writeText(link)
+    setGekopieerd(true)
+    setTimeout(() => setGekopieerd(false), 2500)
+  }
+
+  const voornaam = (factuur.klant_naam ?? '').split(' ')[0]
+  const tekst = `Goedendag ${voornaam}, hier is Ozvolt Elektrotechniek. Via deze link kunt u factuur ${factuur.factuurnummer} (${formatEuro(bedrag)}) bekijken en direct betalen: ${link}`
+  const tel = (factuur.klant_tel ?? '').replace(/[^0-9+]/g, '')
+  const waNum = tel.startsWith('0') ? '31' + tel.slice(1) : tel.replace(/^\+/, '')
+
+  return (
+    <div className="card">
+      <div className="section-label">Klantenportaal</div>
+      {!link ? (
+        <>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={maakLink} disabled={bezig}>
+            <Icon name="external" size={14} />
+            {bezig ? 'Bezig…' : 'Portaallink voor klant maken'}
+          </button>
+          <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginTop: 6, lineHeight: 1.5 }}>
+            {isConcept
+              ? 'Let op: deze factuur is nog concept en daarom niet zichtbaar in het portaal. De link opent het overzicht.'
+              : 'De klant komt direct op deze factuur uit. Link is 24 uur geldig.'}
+          </div>
+        </>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <input className="form-ctrl" value={link} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} onFocus={e => e.target.select()} />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button type="button" className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={kopieer}>
+              <Icon name={gekopieerd ? 'check' : 'copy'} size={14} />
+              {gekopieerd ? 'Gekopieerd!' : 'Kopieer'}
+            </button>
+            {waNum && (
+              <a href={`https://wa.me/${waNum}?text=${encodeURIComponent(tekst)}`} target="_blank" rel="noopener noreferrer"
+                className="btn btn-success btn-sm" style={{ justifyContent: 'center' }} title="Via WhatsApp sturen">
+                <Icon name="whatsapp" size={14} />
+              </a>
+            )}
+            {factuur.klant_email && (
+              <a href={`mailto:${factuur.klant_email}?subject=${encodeURIComponent(`Factuur ${factuur.factuurnummer} — Ozvolt Elektrotechniek`)}&body=${encodeURIComponent(tekst.replace(`, hier is Ozvolt Elektrotechniek. `, ',\n\n') + '\n\nMet vriendelijke groet,\nOzvolt Elektrotechniek')}`}
+                className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }} title="Via e-mail sturen">
+                <Icon name="mail" size={14} />
+              </a>
+            )}
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setLink(null)} title="Sluiten">✕</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

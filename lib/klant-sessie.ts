@@ -14,6 +14,12 @@ function hashToken(token: string) {
 // Sessie-cookie blijft 30 dagen geldig na inloggen
 const LINK_UREN = 24
 
+/** Alleen paden binnen het klantportaal als landingspagina (geen open redirect) */
+export function veiligKlantPad(pad: unknown): string | null {
+  if (typeof pad !== 'string') return null
+  return /^\/klant\/[A-Za-z0-9/_-]{1,100}$/.test(pad) && !pad.includes('//') ? pad : null
+}
+
 export async function maakKlantSessie(klantId: number, geldigUren = LINK_UREN): Promise<string> {
   const token = randomBytes(16).toString('base64url')
   const hash = hashToken(token)
