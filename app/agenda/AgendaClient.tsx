@@ -110,7 +110,7 @@ export default function AgendaClient({ items, klanten, klussen }: {
           <button className="btn btn-ghost btn-sm" onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
             <Icon name="chevron-left" size={20} />
           </button>
-          <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0d1b3e' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)' }}>
             {MAANDEN[month]} {year}
           </h2>
           <button className="btn btn-ghost btn-sm" onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
@@ -121,7 +121,7 @@ export default function AgendaClient({ items, klanten, klussen }: {
         {/* Dag headers */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 4 }}>
           {DAGEN.map(d => (
-            <div key={d} style={{ textAlign: 'center', fontSize: '.72rem', fontWeight: 700, color: '#8ba8c4', padding: '4px 0' }}>{d}</div>
+            <div key={d} style={{ textAlign: 'center', fontSize: '.72rem', fontWeight: 700, color: 'var(--text-soft)', padding: '4px 0' }}>{d}</div>
           ))}
         </div>
 
@@ -138,8 +138,8 @@ export default function AgendaClient({ items, klanten, klussen }: {
                   minHeight: 72,
                   borderRadius: 8,
                   padding: '6px 4px',
-                  background: isToday ? '#eef2ff' : '#f8fafc',
-                  border: isToday ? '2px solid #6366f1' : '1px solid #e2e8f0',
+                  background: isToday ? 'var(--accent-soft)' : 'var(--surface-mute)',
+                  border: isToday ? '2px solid var(--accent)' : '1px solid var(--line)',
                   cursor: 'pointer',
                 }}
                 onClick={() => {
@@ -148,7 +148,7 @@ export default function AgendaClient({ items, klanten, klussen }: {
                   setShowForm(true)
                 }}
               >
-                <div style={{ fontSize: '.75rem', fontWeight: isToday ? 800 : 600, color: isToday ? '#6366f1' : '#0d1b3e', marginBottom: 3 }}>
+                <div style={{ fontSize: '.75rem', fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--accent)' : 'var(--text)', marginBottom: 3 }}>
                   {day.getDate()}
                 </div>
                 {dayItems.slice(0, 3).map(item => (
@@ -165,7 +165,7 @@ export default function AgendaClient({ items, klanten, klussen }: {
                   </div>
                 ))}
                 {dayItems.length > 3 && (
-                  <div style={{ fontSize: '.6rem', color: '#8ba8c4' }}>+{dayItems.length - 3} meer</div>
+                  <div style={{ fontSize: '.6rem', color: 'var(--text-soft)' }}>+{dayItems.length - 3} meer</div>
                 )}
               </div>
             )
@@ -175,11 +175,11 @@ export default function AgendaClient({ items, klanten, klussen }: {
 
       {/* Aankomende afspraken */}
       <div className="card">
-        <h3 style={{ margin: '0 0 16px', fontSize: '.85rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: '1px' }}>
+        <h3 style={{ margin: '0 0 16px', fontSize: '.85rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: '1px' }}>
           Aankomende afspraken
         </h3>
         {localItems.filter(i => new Date(i.datum_start) >= today && i.status === 'gepland').length === 0 ? (
-          <p style={{ color: '#8ba8c4', fontSize: '.9rem', margin: 0 }}>Geen aankomende afspraken.</p>
+          <p style={{ color: 'var(--text-soft)', fontSize: '.9rem', margin: 0 }}>Geen aankomende afspraken.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {localItems
@@ -190,18 +190,18 @@ export default function AgendaClient({ items, klanten, klussen }: {
                 <div
                   key={item.id}
                   className="card"
-                  style={{ margin: 0, padding: '12px 16px', cursor: 'pointer', border: '1px solid #e2e8f0' }}
+                  style={{ margin: 0, padding: '12px 16px', cursor: 'pointer', border: '1px solid var(--line)' }}
                   onClick={() => setSelected(item)}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <div style={{ fontWeight: 700, color: '#0d1b3e', marginBottom: 4 }}>{item.titel}</div>
-                      <div style={{ fontSize: '.8rem', color: '#5b7fa6' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{item.titel}</div>
+                      <div style={{ fontSize: '.8rem', color: 'var(--text-mute)' }}>
                         <Icon name="clock" size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                         {formatDatum(item.datum_start)}
                       </div>
                       {(item.klant_naam || item.klus_naam) && (
-                        <div style={{ fontSize: '.8rem', color: '#8ba8c4', marginTop: 4 }}>
+                        <div style={{ fontSize: '.8rem', color: 'var(--text-soft)', marginTop: 4 }}>
                           {item.klant_naam && <span>👤 {item.klant_naam}</span>}
                           {item.klus_naam && <span style={{ marginLeft: 8 }}>🔧 {item.klus_naam}</span>}
                         </div>
@@ -220,17 +220,17 @@ export default function AgendaClient({ items, klanten, klussen }: {
           onClick={() => setSelected(null)}>
           <div className="card" style={{ width: 400, margin: 0 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, color: '#0d1b3e' }}>{selected.titel}</h3>
+              <h3 style={{ margin: 0, color: 'var(--text)' }}>{selected.titel}</h3>
               <button className="btn btn-ghost btn-sm" onClick={() => setSelected(null)}>✕</button>
             </div>
-            <p style={{ fontSize: '.85rem', color: '#5b7fa6', margin: '0 0 8px' }}>
+            <p style={{ fontSize: '.85rem', color: 'var(--text-mute)', margin: '0 0 8px' }}>
               <Icon name="clock" size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
               {formatDatum(selected.datum_start)}
               {selected.datum_eind && ` → ${formatDatum(selected.datum_eind)}`}
             </p>
-            {selected.klant_naam && <p style={{ fontSize: '.85rem', color: '#5b7fa6', margin: '0 0 8px' }}>👤 {selected.klant_naam}</p>}
-            {selected.klus_naam && <p style={{ fontSize: '.85rem', color: '#5b7fa6', margin: '0 0 8px' }}>🔧 {selected.klus_naam}</p>}
-            {selected.notities && <p style={{ fontSize: '.85rem', color: '#4a5568', margin: '0 0 16px', whiteSpace: 'pre-wrap' }}>{selected.notities}</p>}
+            {selected.klant_naam && <p style={{ fontSize: '.85rem', color: 'var(--text-mute)', margin: '0 0 8px' }}>👤 {selected.klant_naam}</p>}
+            {selected.klus_naam && <p style={{ fontSize: '.85rem', color: 'var(--text-mute)', margin: '0 0 8px' }}>🔧 {selected.klus_naam}</p>}
+            {selected.notities && <p style={{ fontSize: '.85rem', color: 'var(--text-2)', margin: '0 0 16px', whiteSpace: 'pre-wrap' }}>{selected.notities}</p>}
             <button className="btn btn-danger btn-sm" onClick={() => handleDelete(selected.id)}>Verwijderen</button>
           </div>
         </div>
@@ -242,7 +242,7 @@ export default function AgendaClient({ items, klanten, klussen }: {
           onClick={() => setShowForm(false)}>
           <div className="card" style={{ width: 480, margin: 0, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-              <h3 style={{ margin: 0, color: '#0d1b3e' }}>Nieuwe afspraak</h3>
+              <h3 style={{ margin: 0, color: 'var(--text)' }}>Nieuwe afspraak</h3>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>✕</button>
             </div>
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

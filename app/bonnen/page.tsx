@@ -63,14 +63,14 @@ export default async function BonnenPage() {
       {fout && (
         <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #dc2626' }}>
           <strong>Moneybird-gegevens konden niet worden opgehaald.</strong>
-          <div style={{ fontSize: '.84rem', color: '#64748b', marginTop: 4 }}>{fout}</div>
+          <div style={{ fontSize: '.84rem', color: 'var(--text-mute)', marginTop: 4 }}>{fout}</div>
         </div>
       )}
 
       {/* ── Mailkoppeling ── */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="section-label">Bonnen per e-mail</div>
-        <div style={{ fontSize: '.84rem', color: '#475569', lineHeight: 1.7 }}>
+        <div style={{ fontSize: '.84rem', color: 'var(--text-2)', lineHeight: 1.7 }}>
           {inboxAdres ? (
             <>Bonnen en facturen die op <strong>financien@ozvoltelektro.nl</strong> binnenkomen worden doorgestuurd naar
             Moneybird (<code>{inboxAdres}</code>). Moneybird leest de bijlage uit en zet hem klaar; hier controleert de AI
@@ -81,10 +81,10 @@ export default async function BonnenPage() {
             <code> MONEYBIRD_INBOX_EMAIL</code>, dan verschijnt het hier.</>
           )}
           {postvak > 0 && (
-            <div style={{ marginTop: 8, padding: '8px 12px', background: '#fff7ed', borderRadius: 8, color: '#9a3412' }}>
+            <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--soft-orange)', borderRadius: 8, color: 'var(--tint-orange)' }}>
               <strong>{postvak} document{postvak === 1 ? '' : 'en'}</strong> in het Moneybird-postvak wacht{postvak === 1 ? '' : 'en'} nog op
               verwerking.{' '}
-              <a href={`https://moneybird.com/${adminId}/documents`} target="_blank" rel="noopener noreferrer" style={{ color: '#9a3412', fontWeight: 700 }}>
+              <a href={`https://moneybird.com/${adminId}/documents`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tint-orange)', fontWeight: 700 }}>
                 Open postvak →
               </a>
             </div>

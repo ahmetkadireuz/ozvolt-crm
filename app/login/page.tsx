@@ -22,7 +22,7 @@ export default async function LoginPage({
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      background: '#f0f4f8',
+      background: 'var(--surface-mute)',
     }}>
       {/* Linker paneel — branding */}
       <div style={{
@@ -41,22 +41,18 @@ export default async function LoginPage({
         <div style={{ position: 'absolute', bottom: -60, left: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
 
         <div style={{ position: 'relative', textAlign: 'center' }}>
-          <div style={{ marginBottom: 28 }}>
-            <div style={{ width: 90, height: 90, borderRadius: 22, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-              <Image
-                src="/logo-wit.png"
-                alt="Ozvolt Elektrotechniek"
-                width={64}
-                height={64}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
+          <div style={{ marginBottom: 18, display: 'flex', justifyContent: 'center' }}>
+            <Image
+              src="/logo-transparant.png"
+              alt="Ozvolt Elektrotechniek"
+              width={220}
+              height={62}
+              priority
+              className="sb-logo"
+              style={{ objectFit: 'contain', height: 'auto', width: 220 }}
+            />
           </div>
-          <h1 style={{ color: '#fff', fontSize: '1.9rem', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-.5px' }}>
-            Ozvolt
-          </h1>
-          <p style={{ color: '#8ba8c4', margin: '0 0 8px', fontSize: '1rem', fontWeight: 600 }}>Elektrotechniek</p>
-          <p style={{ color: '#4a6580', margin: '0 0 44px', fontSize: '.82rem' }}>CRM Beheerportaal</p>
+          <p style={{ color: 'rgba(226,234,245,.6)', margin: '0 0 44px', fontSize: '.82rem', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600 }}>CRM Beheerportaal</p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
             {([
@@ -69,13 +65,13 @@ export default async function LoginPage({
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon name={item.icon} size={18} style={{ color: '#fff' }} />
                 </div>
-                <span style={{ color: '#c8d8ea', fontSize: '.88rem' }}>{item.text}</span>
+                <span style={{ color: 'rgba(226,234,245,.72)', fontSize: '.88rem' }}>{item.text}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <p style={{ position: 'absolute', bottom: 24, color: '#4a6080', fontSize: '.75rem' }}>
+        <p style={{ position: 'absolute', bottom: 24, color: 'rgba(226,234,245,.45)', fontSize: '.75rem' }}>
           © {new Date().getFullYear()} Ozvolt Elektrotechniek · KVK 99837366
         </p>
       </div>
@@ -90,17 +86,17 @@ export default async function LoginPage({
       }}>
         <div style={{ width: '100%', maxWidth: 380 }}>
           <div style={{ marginBottom: 36 }}>
-            <h2 style={{ margin: '0 0 6px', fontSize: '1.5rem', fontWeight: 900, color: '#0d1b3e' }}>
+            <h2 style={{ margin: '0 0 6px', fontSize: '1.5rem', fontWeight: 900, color: 'var(--text)' }}>
               Welkom terug
             </h2>
-            <p style={{ margin: 0, color: '#8ba8c4', fontSize: '.88rem' }}>
+            <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: '.88rem' }}>
               Log in om het CRM-portaal te openen
             </p>
           </div>
 
           {error && (
             <div style={{
-              background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10,
+              background: 'var(--soft-red)', border: '1px solid var(--tint-red-bg)', borderRadius: 10,
               padding: '12px 16px', marginBottom: 20, fontSize: '.85rem', color: '#dc2626',
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
@@ -115,7 +111,7 @@ export default async function LoginPage({
             <div>
               <label className="form-label">Gebruikersnaam</label>
               <div style={{ position: 'relative' }}>
-                <Icon name="user" size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#8ba8c4', pointerEvents: 'none' }} />
+                <Icon name="user" size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-soft)', pointerEvents: 'none' }} />
                 <input
                   className="form-ctrl"
                   type="text"
@@ -131,7 +127,7 @@ export default async function LoginPage({
             <div>
               <label className="form-label">Wachtwoord</label>
               <div style={{ position: 'relative' }}>
-                <Icon name="lock" size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#8ba8c4', pointerEvents: 'none' }} />
+                <Icon name="lock" size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-soft)', pointerEvents: 'none' }} />
                 <input
                   className="form-ctrl"
                   type="password"
@@ -153,9 +149,9 @@ export default async function LoginPage({
             </button>
           </form>
 
-          <p style={{ marginTop: 32, textAlign: 'center', fontSize: '.78rem', color: '#8ba8c4' }}>
+          <p style={{ marginTop: 32, textAlign: 'center', fontSize: '.78rem', color: 'var(--text-soft)' }}>
             Problemen met inloggen? Neem contact op via{' '}
-            <a href="mailto:info@ozvoltelektro.nl" style={{ color: '#0d1b3e', fontWeight: 600 }}>
+            <a href="mailto:info@ozvoltelektro.nl" style={{ color: 'var(--text)', fontWeight: 600 }}>
               info@ozvoltelektro.nl
             </a>
           </p>

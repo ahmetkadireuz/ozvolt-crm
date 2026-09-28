@@ -36,6 +36,8 @@ export const metadata: Metadata = {
   },
 }
 
+const THEMA_SCRIPT = `try{var t=localStorage.getItem('ozvolt-thema');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)}catch(e){}`
+
 const NO_SIDEBAR_PATHS = ['/login', '/api', '/offerte/', '/werkafspraak/', '/klant', '/rapporten/']
 const BARE_PATHS = ['/offerte/', '/werkafspraak/', '/klant', '/rapporten/'] // volledig kaal — eigen layout
 
@@ -66,7 +68,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="nl" className={inter.variable}>
+    <html lang="nl" className={`${inter.variable} crm`} suppressHydrationWarning>
+      <head>
+        {/* Gekozen thema toepassen vóór het tekenen (geen witte flits in donkere modus) */}
+        <script dangerouslySetInnerHTML={{ __html: THEMA_SCRIPT }} />
+      </head>
       <body>
         {showSidebar && <Sidebar nieuwCount={nieuwCount} notifCount={notifCount} />}
         <main className={showSidebar ? 'main-content' : ''}>

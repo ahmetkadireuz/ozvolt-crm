@@ -40,22 +40,22 @@ export default async function AfsprakenPage() {
 
       <div className="card">
         {afspraken.length === 0 ? (
-          <p style={{ color: '#8ba8c4', fontSize: '.88rem', padding: '20px 0', textAlign: 'center' }}>Nog geen werkafspraken aangemaakt.</p>
+          <p style={{ color: 'var(--text-soft)', fontSize: '.88rem', padding: '20px 0', textAlign: 'center' }}>Nog geen werkafspraken aangemaakt.</p>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 {['Nummer','Klant','Datum','Titel','Status',''].map(h => (
-                  <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: '.72rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.06em', borderBottom: '1px solid #f1f5f9' }}>{h}</th>
+                  <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: '.72rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.06em', borderBottom: '1px solid var(--line-soft)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {afspraken.map((a: any) => (
-                <tr key={a.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={a.id} style={{ borderBottom: '1px solid var(--line-soft)' }}>
                   <td style={{ padding: '10px 12px', fontWeight: 700, fontSize: '.84rem' }}>OZWA-{String(a.afspraaknummer).padStart(4, '0')}</td>
                   <td style={{ padding: '10px 12px', fontSize: '.84rem' }}>{a.klant_naam}</td>
-                  <td style={{ padding: '10px 12px', fontSize: '.82rem', color: '#8ba8c4' }}>{new Date(a.datum).toLocaleDateString('nl-NL')}</td>
+                  <td style={{ padding: '10px 12px', fontSize: '.82rem', color: 'var(--text-soft)' }}>{new Date(a.datum).toLocaleDateString('nl-NL')}</td>
                   <td style={{ padding: '10px 12px', fontSize: '.82rem' }}>{a.titel || '—'}</td>
                   <td style={{ padding: '10px 12px' }}><StatusBadge status={a.status} /></td>
                   <td style={{ padding: '10px 12px', textAlign: 'right' }}>

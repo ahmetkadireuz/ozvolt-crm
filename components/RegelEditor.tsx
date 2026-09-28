@@ -67,15 +67,15 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
 
       {/* Header */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 110px 70px 36px', gap: 6, marginBottom: 6 }}>
-        <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.06em' }}>Omschrijving</span>
-        <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', textAlign: 'right' }}>Aantal</span>
-        <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', textAlign: 'right' }}>Prijs (ex)</span>
-        <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', textAlign: 'center' }}>BTW%</span>
+        <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Omschrijving</span>
+        <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', textAlign: 'right' }}>Aantal</span>
+        <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', textAlign: 'right' }}>Prijs (ex)</span>
+        <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', textAlign: 'center' }}>BTW%</span>
         <span />
       </div>
 
       {regels.map((regel, i) => (
-        <div key={i} style={{ marginBottom: 10, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px' }}>
+        <div key={i} style={{ marginBottom: 10, background: 'var(--surface-mute)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}>
           {/* Rij 1: omschrijving + aantal + prijs + btw + delete */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 110px 70px 36px', gap: 6, alignItems: 'center' }}>
             <input
@@ -143,14 +143,14 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
                 }
               }}
               rows={1}
-              style={{ padding: '6px 10px', fontSize: '.8rem', color: '#475569', background: '#fff', borderStyle: 'dashed', fontStyle: 'italic', resize: 'none', overflow: 'hidden', lineHeight: 1.5, width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' }}
+              style={{ padding: '6px 10px', fontSize: '.8rem', color: 'var(--text-2)', background: 'var(--surface)', borderStyle: 'dashed', fontStyle: 'italic', resize: 'none', overflow: 'hidden', lineHeight: 1.5, width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' }}
             />
           </div>
 
           {/* Regelsubtotaal */}
           {regel.prijs > 0 && (
-            <div style={{ textAlign: 'right', fontSize: '.75rem', color: '#8ba8c4', marginTop: 4 }}>
-              {regel.aantal} × {formatEuro(regel.prijs)} = <strong style={{ color: '#0d1b3e' }}>{formatEuro(regel.aantal * regel.prijs)}</strong>
+            <div style={{ textAlign: 'right', fontSize: '.75rem', color: 'var(--text-soft)', marginTop: 4 }}>
+              {regel.aantal} × {formatEuro(regel.prijs)} = <strong style={{ color: 'var(--text)' }}>{formatEuro(regel.aantal * regel.prijs)}</strong>
             </div>
           )}
         </div>
@@ -166,7 +166,7 @@ export default function RegelEditor({ initialRegels = [], kortingBedrag = 0, btw
         <div className="form-group" style={{ margin: 0 }}>
           <label className="form-label">Korting (€)</label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8ba8c4', fontSize: '.88rem', pointerEvents: 'none' }}>€</span>
+            <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-soft)', fontSize: '.88rem', pointerEvents: 'none' }}>€</span>
             <input
               className="form-ctrl"
               type="text"

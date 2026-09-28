@@ -65,8 +65,8 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
   return (
     <form onSubmit={handleSubmit} ref={formRef}>
       {vergrendeld && (
-        <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #16a34a', fontSize: '.84rem', color: '#475569' }}>
-          <strong style={{ color: '#15803d' }}>Getekend — vergrendeld.</strong> Regels, prijzen en korting liggen vast.
+        <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #16a34a', fontSize: '.84rem', color: 'var(--text-2)' }}>
+          <strong style={{ color: 'var(--tint-green)' }}>Getekend — vergrendeld.</strong> Regels, prijzen en korting liggen vast.
           Alleen de werkafspraken kun je nog bijwerken. Voor andere wijzigingen maak je een nieuwe offerte.
         </div>
       )}
@@ -109,7 +109,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="section-label">Werkafspraken</div>
-        <div style={{ fontSize: '.78rem', color: '#8ba8c4', marginBottom: 12 }}>
+        <div style={{ fontSize: '.78rem', color: 'var(--text-soft)', marginBottom: 12 }}>
           Wat doet Ozvolt, wat doet de klant? Voeg per punt toe wie verantwoordelijk is.
         </div>
         <WerkafsprakenEditor

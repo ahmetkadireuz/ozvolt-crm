@@ -161,11 +161,11 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
       <div className="inkoop-grid">
         {/* Sidebar lijsten — verborgen op mobiel */}
         <div className="desktop-only">
-          <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+          <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
             Inkooplijsten
           </div>
           {localLijsten.length === 0 ? (
-            <div className="card" style={{ padding: '24px 16px', textAlign: 'center', color: '#8ba8c4', fontSize: '.85rem' }}>
+            <div className="card" style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-soft)', fontSize: '.85rem' }}>
               Nog geen lijsten
             </div>
           ) : (
@@ -180,16 +180,16 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                     key={lijst.id}
                     onClick={() => setActiveLijst(lijst)}
                     style={{
-                      background: isActive ? '#0d1b3e' : '#fff',
-                      color: isActive ? '#fff' : '#0d1b3e',
-                      border: `1px solid ${isActive ? '#0d1b3e' : '#e2e8f0'}`,
+                      background: isActive ? 'var(--primary)' : 'var(--surface)',
+                      color: isActive ? '#fff' : 'var(--text)',
+                      border: `1px solid ${isActive ? 'var(--primary)' : 'var(--line)'}`,
                       borderRadius: 10, padding: '12px 14px', cursor: 'pointer',
                     }}
                   >
                     <div style={{ fontWeight: 700, marginBottom: 4 }}>{lijst.titel}</div>
                     {lijst.klant_naam && <div style={{ fontSize: '.75rem', opacity: .7, marginBottom: 2 }}>👤 {lijst.klant_naam}</div>}
                     {lijst.klus_naam && <div style={{ fontSize: '.75rem', opacity: .7, marginBottom: 6 }}>🔧 {lijst.klus_naam}</div>}
-                    <div style={{ height: 4, background: isActive ? 'rgba(255,255,255,.3)' : '#e2e8f0', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: 4, background: isActive ? 'rgba(255,255,255,.3)' : 'var(--line)', borderRadius: 2, overflow: 'hidden' }}>
                       <div style={{ height: '100%', background: isActive ? '#fff' : '#16a34a', width: `${pct}%`, transition: 'width .3s' }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
@@ -207,22 +207,22 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
         <div>
           {!activeLijst ? (
             <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-              <Icon name="cart" size={48} style={{ color: '#8ba8c4', display: 'block', margin: '0 auto 12px' }} />
-              <p style={{ color: '#8ba8c4', margin: 0 }}>Selecteer een lijst of maak een nieuwe aan.</p>
+              <Icon name="cart" size={48} style={{ color: 'var(--text-soft)', display: 'block', margin: '0 auto 12px' }} />
+              <p style={{ color: 'var(--text-soft)', margin: 0 }}>Selecteer een lijst of maak een nieuwe aan.</p>
             </div>
           ) : (
             <div className="card">
               {/* Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ margin: '0 0 4px', color: '#0d1b3e' }}>{activeLijst.titel}</h2>
+                  <h2 style={{ margin: '0 0 4px', color: 'var(--text)' }}>{activeLijst.titel}</h2>
                   {activeLijst.klant_naam && (
-                    <div style={{ fontSize: '.82rem', color: '#5b7fa6', marginBottom: 2 }}>
+                    <div style={{ fontSize: '.82rem', color: 'var(--text-mute)', marginBottom: 2 }}>
                       👤 <strong>{activeLijst.klant_naam}</strong>
                       {activeLijst.klus_naam && <span> — 🔧 {activeLijst.klus_naam}</span>}
                     </div>
                   )}
-                  <div style={{ fontSize: '.78rem', color: '#8ba8c4', marginTop: 4 }}>
+                  <div style={{ fontSize: '.78rem', color: 'var(--text-soft)', marginTop: 4 }}>
                     {gedaan}/{lijstItems.length} afgevinkt · BTW {btw}%
                   </div>
                 </div>
@@ -234,8 +234,8 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                 <div className="desktop-only" style={{
                   display: 'grid',
                   gridTemplateColumns: '28px 1fr 120px 100px 80px 90px 90px 80px 64px',
-                  gap: 6, padding: '0 4px 6px', borderBottom: '2px solid #e2e8f0', marginBottom: 6,
-                  fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.05em',
+                  gap: 6, padding: '0 4px 6px', borderBottom: '2px solid var(--line)', marginBottom: 6,
+                  fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.05em',
                 }}>
                   <div /><div>Omschrijving</div><div>Artikelnr.</div><div>Leverancier</div>
                   <div>Aantal</div><div>Prijs p/st. ex</div><div>Totaal ex</div><div>Totaal incl</div><div />
@@ -245,7 +245,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
               {/* Items */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
                 {lijstItems.length === 0 && (
-                  <p style={{ color: '#8ba8c4', fontSize: '.85rem', margin: '8px 0 16px' }}>Nog geen items. Voeg hieronder toe.</p>
+                  <p style={{ color: 'var(--text-soft)', fontSize: '.85rem', margin: '8px 0 16px' }}>Nog geen items. Voeg hieronder toe.</p>
                 )}
                 {lijstItems.map(item => {
                   const totEx = item.prijs_ex_btw != null ? Number(item.prijs_ex_btw) * Number(item.aantal) : null
@@ -258,8 +258,8 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                         display: 'grid',
                         gridTemplateColumns: '28px 1fr 120px 100px 80px 90px 90px 80px 64px',
                         gap: 6, alignItems: 'center', padding: '8px 4px',
-                        background: item.afgevinkt ? '#f0fdf4' : '#f8fafc',
-                        borderRadius: 8, border: `1px solid ${item.afgevinkt ? '#bbf7d0' : '#e2e8f0'}`,
+                        background: item.afgevinkt ? 'var(--soft-green)' : 'var(--surface-mute)',
+                        borderRadius: 8, border: `1px solid ${item.afgevinkt ? 'var(--tint-green-bg)' : 'var(--line)'}`,
                       }}>
                         <input type="checkbox" checked={item.afgevinkt} onChange={() => toggleItem(item)}
                           style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#16a34a', margin: '0 auto' }} />
@@ -293,13 +293,13 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                         ) : (
                           <>
                             <div style={{ opacity: item.afgevinkt ? .5 : 1 }}>
-                              <div style={{ fontWeight: 600, fontSize: '.84rem', color: '#0d1b3e', textDecoration: item.afgevinkt ? 'line-through' : 'none' }}>{item.omschrijving}</div>
-                              <div style={{ fontSize: '.72rem', color: '#8ba8c4' }}>{item.aantal} {item.eenheid}</div>
+                              <div style={{ fontWeight: 600, fontSize: '.84rem', color: 'var(--text)', textDecoration: item.afgevinkt ? 'line-through' : 'none' }}>{item.omschrijving}</div>
+                              <div style={{ fontSize: '.72rem', color: 'var(--text-soft)' }}>{item.aantal} {item.eenheid}</div>
                             </div>
-                            <div style={{ fontSize: '.8rem', color: '#374151' }}>{item.artikelnummer || <span style={{ color: '#d1d5db' }}>—</span>}</div>
-                            <div style={{ fontSize: '.8rem', color: '#374151' }}>{item.leverancier || <span style={{ color: '#d1d5db' }}>—</span>}</div>
+                            <div style={{ fontSize: '.8rem', color: 'var(--text-2)' }}>{item.artikelnummer || <span style={{ color: 'var(--text-faint)' }}>—</span>}</div>
+                            <div style={{ fontSize: '.8rem', color: 'var(--text-2)' }}>{item.leverancier || <span style={{ color: 'var(--text-faint)' }}>—</span>}</div>
                             <div style={{ fontSize: '.82rem', fontWeight: 600 }}>{item.aantal} {item.eenheid}</div>
-                            <div style={{ fontSize: '.82rem' }}>{item.prijs_ex_btw != null ? euro(Number(item.prijs_ex_btw)) : <span style={{ color: '#d1d5db' }}>—</span>}</div>
+                            <div style={{ fontSize: '.82rem' }}>{item.prijs_ex_btw != null ? euro(Number(item.prijs_ex_btw)) : <span style={{ color: 'var(--text-faint)' }}>—</span>}</div>
                             <div style={{ fontSize: '.84rem', fontWeight: 700 }}>{totEx != null ? euro(totEx) : '—'}</div>
                             <div style={{ fontSize: '.84rem', fontWeight: 700, color: totIncl != null ? '#16a34a' : '#d1d5db' }}>{totIncl != null ? euro(totIncl) : '—'}</div>
                             <div style={{ display: 'flex', gap: 2 }}>
@@ -319,24 +319,24 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                       {/* Mobiel kaartje */}
                       <div className="mobile-only" style={{
                         padding: '10px 12px', marginBottom: 4,
-                        background: item.afgevinkt ? '#f0fdf4' : '#fff',
-                        borderRadius: 10, border: `1px solid ${item.afgevinkt ? '#bbf7d0' : '#e2e8f0'}`,
+                        background: item.afgevinkt ? 'var(--soft-green)' : 'var(--surface)',
+                        borderRadius: 10, border: `1px solid ${item.afgevinkt ? 'var(--tint-green-bg)' : 'var(--line)'}`,
                       }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                           <input type="checkbox" checked={item.afgevinkt} onChange={() => toggleItem(item)}
                             style={{ width: 20, height: 20, marginTop: 2, cursor: 'pointer', accentColor: '#16a34a', flexShrink: 0 }} />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: '.9rem', color: '#0d1b3e', textDecoration: item.afgevinkt ? 'line-through' : 'none', opacity: item.afgevinkt ? .5 : 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--text)', textDecoration: item.afgevinkt ? 'line-through' : 'none', opacity: item.afgevinkt ? .5 : 1 }}>
                               {item.omschrijving}
                             </div>
-                            <div style={{ fontSize: '.76rem', color: '#64748b', marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>
+                            <div style={{ fontSize: '.76rem', color: 'var(--text-mute)', marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>
                               <span>{item.aantal} {item.eenheid}</span>
                               {item.artikelnummer && <span>Art: {item.artikelnummer}</span>}
                               {item.leverancier && <span>{item.leverancier}</span>}
                             </div>
                             {(totEx != null || totIncl != null) && (
                               <div style={{ marginTop: 6, display: 'flex', gap: 12 }}>
-                                {totEx != null && <span style={{ fontSize: '.8rem', color: '#374151', fontWeight: 600 }}>{euro(totEx)} ex</span>}
+                                {totEx != null && <span style={{ fontSize: '.8rem', color: 'var(--text-2)', fontWeight: 600 }}>{euro(totEx)} ex</span>}
                                 {totIncl != null && <span style={{ fontSize: '.8rem', color: '#16a34a', fontWeight: 700 }}>{euro(totIncl)} incl</span>}
                               </div>
                             )}
@@ -354,22 +354,22 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
 
               {/* Totaalbalk */}
               {heeftPrijzen && (
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '14px 20px', marginBottom: 20 }}>
+                <div style={{ background: 'var(--surface-mute)', border: '1px solid var(--line)', borderRadius: 10, padding: '14px 20px', marginBottom: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 40 }}>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
+                      <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
                         Subtotaal ex BTW
                       </div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0d1b3e' }}>{euro(totaalEx)}</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)' }}>{euro(totaalEx)}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
+                      <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
                         BTW {btw}%
                       </div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#64748b' }}>{euro(totaalBtw)}</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-mute)' }}>{euro(totaalBtw)}</div>
                     </div>
-                    <div style={{ textAlign: 'right', borderLeft: '2px solid #e2e8f0', paddingLeft: 32 }}>
-                      <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
+                    <div style={{ textAlign: 'right', borderLeft: '2px solid var(--line)', paddingLeft: 32 }}>
+                      <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
                         Totaal inkoop incl BTW
                       </div>
                       <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#16a34a' }}>{euro(totaalIncl)}</div>
@@ -379,8 +379,8 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
               )}
 
               {/* Nieuw item invoer */}
-              <div style={{ background: '#f0f4f8', borderRadius: 10, padding: '16px', border: '1px dashed #cbd5e1' }}>
-                <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
+              <div style={{ background: 'var(--surface-mute)', borderRadius: 10, padding: '16px', border: '1px dashed var(--line-strong)' }}>
+                <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
                   Artikel toevoegen
                 </div>
                 <form onSubmit={voegItemToe} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -422,7 +422,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                       {EENHEDEN.map(u => <option key={u}>{u}</option>)}
                     </select>
                     <div style={{ position: 'relative', width: 130 }}>
-                      <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8ba8c4', fontWeight: 700, fontSize: '.85rem', pointerEvents: 'none' }}>€</span>
+                      <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-soft)', fontWeight: 700, fontSize: '.85rem', pointerEvents: 'none' }}>€</span>
                       <input
                         className="form-ctrl" style={{ paddingLeft: 24 }}
                         type="number" min="0" step="0.01" placeholder="Prijs ex BTW"
@@ -436,13 +436,13 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                     </button>
                   </div>
                   {itemFout && (
-                    <div style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px', fontSize: '.82rem', color: '#991b1b', marginTop: 4 }}>
+                    <div style={{ background: 'var(--tint-red-bg)', border: '1px solid var(--tint-red-bg)', borderRadius: 8, padding: '8px 12px', fontSize: '.82rem', color: 'var(--tint-red)', marginTop: 4 }}>
                       ⚠️ {itemFout}
                     </div>
                   )}
                   {/* Preview bedrag als je prijs en aantal hebt ingevuld */}
                   {nieuwItem.prijs_ex_btw && nieuwItem.aantal && (
-                    <div style={{ fontSize: '.78rem', color: '#5b7fa6', paddingLeft: 4 }}>
+                    <div style={{ fontSize: '.78rem', color: 'var(--text-mute)', paddingLeft: 4 }}>
                       {euro(parseFloat(nieuwItem.prijs_ex_btw) * (parseFloat(nieuwItem.aantal) || 1))} ex BTW
                       &nbsp;·&nbsp;
                       {euro(parseFloat(nieuwItem.prijs_ex_btw) * (parseFloat(nieuwItem.aantal) || 1) * (1 + btw / 100))} incl BTW ({btw}%)
@@ -497,7 +497,7 @@ export default function InkoopClient({ lijsten, items, klanten, klussen }: {
                 </select>
               </div>
               <div>
-                <label className="form-label">Klus koppelen <span style={{ color: '#8ba8c4', fontWeight: 400 }}>(optioneel)</span></label>
+                <label className="form-label">Klus koppelen <span style={{ color: 'var(--text-soft)', fontWeight: 400 }}>(optioneel)</span></label>
                 <select className="form-ctrl" value={lijstForm.klus_id}
                   onChange={e => setLijstForm(f => ({ ...f, klus_id: e.target.value }))}
                   disabled={!lijstForm.klant_id}>

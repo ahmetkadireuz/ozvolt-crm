@@ -47,7 +47,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
             <h1 className="page-title">Factuur {factuur.factuurnummer}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <StatusBadge status={factuur.status} />
-              <span style={{ color: '#8ba8c4', fontSize: '.78rem' }}>{factuur.klant_naam}</span>
+              <span style={{ color: 'var(--text-soft)', fontSize: '.78rem' }}>{factuur.klant_naam}</span>
             </div>
           </div>
         </div>

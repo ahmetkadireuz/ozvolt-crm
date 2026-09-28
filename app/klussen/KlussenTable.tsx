@@ -76,13 +76,13 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
                   {lijst.map((k: any) => (
                     <tr key={k.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/klussen/${k.id}`)}>
                       <td>
-                        <div style={{ fontWeight: 700, color: '#0d1b3e' }}>{k.klant_naam}</div>
-                        {k.locatie && <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 1 }}>{k.locatie}</div>}
+                        <div style={{ fontWeight: 700, color: 'var(--text)' }}>{k.klant_naam}</div>
+                        {k.locatie && <div style={{ fontSize: '.75rem', color: 'var(--text-soft)', marginTop: 1 }}>{k.locatie}</div>}
                       </td>
-                      <td style={{ color: '#334155' }}>{k.type_werk || '—'}</td>
+                      <td style={{ color: 'var(--text-2)' }}>{k.type_werk || '—'}</td>
                       <td><span className="via-badge">{k.bron || 'handmatig'}</span></td>
                       <td><StatusBadge status={k.status} /></td>
-                      <td className="mono" style={{ color: '#64748b', fontSize: '.78rem' }}>{datumNL(k.aangemaakt_op)}</td>
+                      <td className="mono" style={{ color: 'var(--text-mute)', fontSize: '.78rem' }}>{datumNL(k.aangemaakt_op)}</td>
                       <td onClick={e => e.stopPropagation()}>
                         <div className="row-actions">
                           <a href={`/klussen/${k.id}`} className="btn-open">Openen</a>
@@ -135,7 +135,7 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
                       <StatusBadge status={k.status} />
                     </div>
                     <div className="klus-card-bottom">
-                      <span style={{ fontSize: '.74rem', color: '#8ba8c4' }}>
+                      <span style={{ fontSize: '.74rem', color: 'var(--text-soft)' }}>
                         <span className="via-badge" style={{ marginRight: 6 }}>{k.bron || 'handmatig'}</span>
                         {datumNL(k.aangemaakt_op)}
                       </span>

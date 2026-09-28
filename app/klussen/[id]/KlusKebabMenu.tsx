@@ -39,7 +39,7 @@ export default function KlusKebabMenu({ klusId, klantNaam }: { klusId: number; k
         <div
           style={{
             position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 30,
-            minWidth: 200, background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0',
+            minWidth: 200, background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--line)',
             boxShadow: '0 12px 32px rgba(13,27,62,.12)', padding: 6,
           }}
         >

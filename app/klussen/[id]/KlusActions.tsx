@@ -140,7 +140,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
       <div className="card">
         <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Interne notities</span>
-          <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
+          <span style={{ fontSize: 11, color: 'var(--text-soft)', fontWeight: 600 }}>
             {notitiesBezig ? 'Opslaan…' : notitiesSaved ? '✓ Opgeslagen' : ''}
           </span>
         </div>
@@ -179,7 +179,7 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
         </div>
         {portaalLink && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
-            <div style={{ background: '#f1f5f9', borderRadius: 8, padding: '8px 10px', fontSize: 11, color: '#374151', wordBreak: 'break-all', lineHeight: 1.5, fontFamily: 'monospace' }}>
+            <div style={{ background: 'var(--surface-mute)', borderRadius: 8, padding: '8px 10px', fontSize: 11, color: 'var(--text-2)', wordBreak: 'break-all', lineHeight: 1.5, fontFamily: 'monospace' }}>
               {portaalLink}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -226,9 +226,9 @@ export default function KlusActions({ klus, statuses, statusLabels, klusId, docu
         {docs.length > 0 && (
           <div style={{ marginBottom: 10 }}>
             {docs.map(d => (
-              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, padding: '6px 8px', background: '#f8fafc', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, padding: '6px 8px', background: 'var(--surface-mute)', borderRadius: 6, border: '1px solid var(--line)' }}>
                 <span style={{ fontSize: 14 }}>📄</span>
-                <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, fontSize: 12, color: '#0d1b3e', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, fontSize: 12, color: 'var(--text)', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {d.naam}
                 </a>
                 <button

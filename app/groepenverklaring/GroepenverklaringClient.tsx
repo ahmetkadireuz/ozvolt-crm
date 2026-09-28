@@ -74,7 +74,7 @@ export default function GroepenverklaringClient({ klanten, klussen }: { klanten:
         {/* Projectgegevens */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="card">
-            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Projectgegevens</div>
+            <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Projectgegevens</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
                 <label className="form-label">Klant</label>
@@ -119,7 +119,7 @@ export default function GroepenverklaringClient({ klanten, klussen }: { klanten:
           </div>
 
           <div className="card">
-            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Installatie details</div>
+            <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Installatie details</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div>
@@ -153,7 +153,7 @@ export default function GroepenverklaringClient({ klanten, klussen }: { klanten:
         {/* Groepen */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1 }}>Groepen ({groepen.length})</div>
+            <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1 }}>Groepen ({groepen.length})</div>
             <button className="btn btn-ghost btn-sm" onClick={voegGroepToe}>
               <Icon name="plus" size={16} />
               Groep toevoegen
@@ -161,7 +161,7 @@ export default function GroepenverklaringClient({ klanten, klussen }: { klanten:
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {groepen.map((groep, i) => (
-              <div key={i} style={{ padding: '12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+              <div key={i} style={{ padding: '12px', background: 'var(--surface-mute)', borderRadius: 8, border: '1px solid var(--line)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <span style={{ width: 24, height: 24, background: '#0d1b3e', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 800, flexShrink: 0 }}>{groep.nummer}</span>
                   <input className="form-ctrl" style={{ flex: 1 }} value={groep.naam} onChange={e => updateGroep(i, 'naam', e.target.value)} placeholder="Naam groep" />
@@ -171,20 +171,20 @@ export default function GroepenverklaringClient({ klanten, klussen }: { klanten:
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: 6 }}>
                   <div>
-                    <label style={{ fontSize: '.7rem', color: '#8ba8c4', display: 'block', marginBottom: 3 }}>Ampere</label>
+                    <label style={{ fontSize: '.7rem', color: 'var(--text-soft)', display: 'block', marginBottom: 3 }}>Ampere</label>
                     <select className="form-ctrl" value={groep.ampere} onChange={e => updateGroep(i, 'ampere', e.target.value)}>
                       {['10', '16', '20', '25', '32'].map(a => <option key={a}>{a}A</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: '.7rem', color: '#8ba8c4', display: 'block', marginBottom: 3 }}>Volt</label>
+                    <label style={{ fontSize: '.7rem', color: 'var(--text-soft)', display: 'block', marginBottom: 3 }}>Volt</label>
                     <select className="form-ctrl" value={groep.vermogen} onChange={e => updateGroep(i, 'vermogen', e.target.value)}>
                       <option value="230">230V</option>
                       <option value="400">400V</option>
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: '.7rem', color: '#8ba8c4', display: 'block', marginBottom: 3 }}>Type</label>
+                    <label style={{ fontSize: '.7rem', color: 'var(--text-soft)', display: 'block', marginBottom: 3 }}>Type</label>
                     <select className="form-ctrl" value={groep.type} onChange={e => updateGroep(i, 'type', e.target.value)}>
                       {GROEP_TYPEN.map(t => <option key={t}>{t}</option>)}
                     </select>

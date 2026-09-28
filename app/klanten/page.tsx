@@ -44,7 +44,7 @@ export default async function KlantenPage({ searchParams }: { searchParams: Prom
           <input className="form-ctrl" type="search" name="q" defaultValue={q} placeholder="Zoek op naam, e-mail of locatie…" style={{ width: 280 }} />
           <button type="submit" className="btn btn-ghost btn-sm">Zoeken</button>
         </form>
-        <span style={{ marginLeft: 'auto', color: '#8ba8c4', fontSize: '.8rem' }}>{klanten.length} klanten</span>
+        <span style={{ marginLeft: 'auto', color: 'var(--text-soft)', fontSize: '.8rem' }}>{klanten.length} klanten</span>
       </div>
 
       <KlantenTable klanten={klanten as any[]} />

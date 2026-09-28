@@ -51,7 +51,7 @@ export default function AfspraakActions({ afspraak, afspraakId, acceptUrl }: { a
         </button>
         {acceptUrl && (
           <div>
-            <div style={{ fontSize: '.72rem', color: '#8ba8c4', marginBottom: 4 }}>Bevestigingslink:</div>
+            <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginBottom: 4 }}>Bevestigingslink:</div>
             <div style={{ display: 'flex', gap: 6 }}>
               <input className="form-ctrl" value={acceptUrl} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(acceptUrl)}>
@@ -61,7 +61,7 @@ export default function AfspraakActions({ afspraak, afspraakId, acceptUrl }: { a
           </div>
         )}
         {afspraak.sent_at && (
-          <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 8 }}>
+          <div style={{ fontSize: '.75rem', color: 'var(--text-soft)', marginTop: 8 }}>
             Verzonden: {new Date(afspraak.sent_at).toLocaleString('nl-NL')}
           </div>
         )}

@@ -69,7 +69,7 @@ export default function WerkafspraakInlineEditor({ afspraakId, klantId, klusId, 
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {items.map((item, i) => (
-            <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px' }}>
+            <div key={i} style={{ background: 'var(--surface-mute)', border: '1px solid var(--line)', borderRadius: 8, padding: '10px 12px' }}>
               <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
                 <span style={{ width: 20, height: 20, borderRadius: '50%', background: '#1d2f4c', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 9 }}>{i + 1}</span>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>

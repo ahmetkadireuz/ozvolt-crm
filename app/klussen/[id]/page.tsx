@@ -88,7 +88,7 @@ export default async function KlusDetailPage({
           </Link>
           <div>
             <h1 className="page-title" style={{ marginBottom: 2 }}>{klus.klant_naam}</h1>
-            <span className="mono" style={{ color: '#8ba8c4' }}>Project #{klus.id} · {new Date(klus.aangemaakt_op).toLocaleDateString('nl-NL')}</span>
+            <span className="mono" style={{ color: 'var(--text-soft)' }}>Project #{klus.id} · {new Date(klus.aangemaakt_op).toLocaleDateString('nl-NL')}</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -116,15 +116,15 @@ export default async function KlusDetailPage({
           <div className="card">
             <div className="section-label">Klantgegevens</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px', fontSize: '.84rem' }}>
-              <div><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>Naam</span>{klus.klant_naam}</div>
-              <div><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>Type</span>{klus.klant_type}</div>
-              <div><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>Telefoon</span>
-                {klus.klant_tel ? <a href={`tel:${klus.klant_tel}`} style={{ color: '#0d1b3e', textDecoration: 'none', fontWeight: 600 }}>{klus.klant_tel}</a> : '—'}
+              <div><span style={{ color: 'var(--text-soft)', display: 'block', fontSize: '.72rem' }}>Naam</span>{klus.klant_naam}</div>
+              <div><span style={{ color: 'var(--text-soft)', display: 'block', fontSize: '.72rem' }}>Type</span>{klus.klant_type}</div>
+              <div><span style={{ color: 'var(--text-soft)', display: 'block', fontSize: '.72rem' }}>Telefoon</span>
+                {klus.klant_tel ? <a href={`tel:${klus.klant_tel}`} style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: 600 }}>{klus.klant_tel}</a> : '—'}
               </div>
-              <div><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>E-mail</span>
+              <div><span style={{ color: 'var(--text-soft)', display: 'block', fontSize: '.72rem' }}>E-mail</span>
                 {klus.klant_email ? <a href={`mailto:${klus.klant_email}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>{klus.klant_email}</a> : '—'}
               </div>
-              <div style={{ gridColumn: '1/-1' }}><span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>Locatie</span>{klus.klant_locatie || '—'}</div>
+              <div style={{ gridColumn: '1/-1' }}><span style={{ color: 'var(--text-soft)', display: 'block', fontSize: '.72rem' }}>Locatie</span>{klus.klant_locatie || '—'}</div>
             </div>
             <Link href={`/klanten/${klus.klant_id}`} className="btn btn-ghost btn-sm" style={{ marginTop: 14 }}>
               Klantprofiel →
@@ -142,14 +142,14 @@ export default async function KlusDetailPage({
             <div className="section-label">Gekoppelde documenten</div>
 
             {offertesRows.length === 0 && facturenRows.length === 0 && (
-              <p style={{ color: '#8ba8c4', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen documenten voor dit project.</p>
+              <p style={{ color: 'var(--text-soft)', fontSize: '.84rem', margin: '0 0 12px' }}>Nog geen documenten voor dit project.</p>
             )}
 
             {offertesRows.map((o: any) => (
               <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
                 <div>
-                  <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Offerte OZVT-{String(o.offertenummer).padStart(4,'0')}</span>
-                  <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '.84rem' }}>Offerte OZVT-{String(o.offertenummer).padStart(4,'0')}</span>
+                  <span style={{ color: 'var(--text-soft)', fontSize: '.75rem', marginLeft: 8 }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</span>
                 </div>
                 <StatusBadge status={o.status} />
               </Link>
@@ -158,8 +158,8 @@ export default async function KlusDetailPage({
             {facturenRows.map((f: any) => (
               <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
                 <div>
-                  <span style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>Factuur {f.factuurnummer}</span>
-                  <span style={{ color: '#8ba8c4', fontSize: '.75rem', marginLeft: 8 }}>{new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '.84rem' }}>Factuur {f.factuurnummer}</span>
+                  <span style={{ color: 'var(--text-soft)', fontSize: '.75rem', marginLeft: 8 }}>{new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</span>
                 </div>
                 <StatusBadge status={f.status} />
               </Link>
@@ -207,7 +207,7 @@ export default async function KlusDetailPage({
               <div className="section-label">Andere projecten van {klus.klant_naam}</div>
               {siblingRows.map((s: any) => (
                 <Link key={s.id} href={`/klussen/${s.id}`} style={{ display: 'flex', justifyContent: 'space-between', textDecoration: 'none', marginBottom: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: '.84rem', color: '#0d1b3e' }}>{s.type_werk || `Project #${s.id}`}</span>
+                  <span style={{ fontSize: '.84rem', color: 'var(--text)' }}>{s.type_werk || `Project #${s.id}`}</span>
                   <StatusBadge status={s.status} />
                 </Link>
               ))}

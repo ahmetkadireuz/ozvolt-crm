@@ -19,9 +19,9 @@ export type BonItem = {
 type Grootboek = { id: string; naam: string; type: string }
 
 const NIVEAU: Record<string, { kleur: string; bg: string; label: string }> = {
-  actie: { kleur: '#dc2626', bg: '#fef2f2', label: 'Actie' },
-  let_op: { kleur: '#ea580c', bg: '#fff7ed', label: 'Let op' },
-  info: { kleur: '#1d4fa3', bg: '#eef3fb', label: 'Info' },
+  actie: { kleur: '#dc2626', bg: 'var(--soft-red)', label: 'Actie' },
+  let_op: { kleur: '#ea580c', bg: 'var(--soft-orange)', label: 'Let op' },
+  info: { kleur: '#1d4fa3', bg: 'var(--accent-soft)', label: 'Info' },
 }
 
 function heeftVoorstel(item: BonItem) {
@@ -147,11 +147,11 @@ function BonKaart({ item, grootboeken, naam, adminId, bezig, fout, onAnalyseer, 
     if (confirm(`Deze wijziging(en) doorvoeren in Moneybird?\n\n${tekst}`)) onToepassen(wijzigingen)
   }
 
-  const badge = status === 'toegepast' ? { t: 'Toegepast', c: '#15803d', b: '#dcfce7' }
-    : status === 'genegeerd' ? { t: 'Genegeerd', c: '#475569', b: '#f1f5f9' }
-    : status === 'fout' ? { t: 'Fout', c: '#991b1b', b: '#fee2e2' }
-    : a ? (heeftVoorstel(item) ? { t: 'Controleren', c: '#9a3412', b: '#ffedd5' } : { t: 'In orde', c: '#15803d', b: '#dcfce7' })
-    : { t: 'Nieuw', c: '#1d4ed8', b: '#dbeafe' }
+  const badge = status === 'toegepast' ? { t: 'Toegepast', c: '#15803d', b: 'var(--tint-green-bg)' }
+    : status === 'genegeerd' ? { t: 'Genegeerd', c: 'var(--text-2)', b: 'var(--surface-mute)' }
+    : status === 'fout' ? { t: 'Fout', c: '#991b1b', b: 'var(--tint-red-bg)' }
+    : a ? (heeftVoorstel(item) ? { t: 'Controleren', c: '#9a3412', b: 'var(--tint-orange-bg)' } : { t: 'In orde', c: '#15803d', b: 'var(--tint-green-bg)' })
+    : { t: 'Nieuw', c: '#1d4ed8', b: 'var(--tint-blue-bg)' }
 
   return (
     <div className="card" style={{ padding: 0 }}>
@@ -182,17 +182,17 @@ function BonKaart({ item, grootboeken, naam, adminId, bezig, fout, onAnalyseer, 
             <>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', fontSize: '.74rem', marginBottom: 10 }}>
                 <span className="via-badge">Btw aftrekbaar: {a.btw_aftrekbaar}</span>
-                {a.is_investering && <span className="via-badge" style={{ color: '#15803d' }}>Investering (KIA)</span>}
+                {a.is_investering && <span className="via-badge" style={{ color: 'var(--tint-green)' }}>Investering (KIA)</span>}
                 {a.factuurnummer && <span className="via-badge">Nr. {a.factuurnummer}</span>}
               </div>
-              {a.btw_toelichting && <p style={{ fontSize: '.8rem', color: '#475569', margin: '0 0 10px' }}>{a.btw_toelichting}</p>}
+              {a.btw_toelichting && <p style={{ fontSize: '.8rem', color: 'var(--text-2)', margin: '0 0 10px' }}>{a.btw_toelichting}</p>}
 
               {a.aandachtspunten.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
                   {a.aandachtspunten.map((p, i) => {
                     const n = NIVEAU[p.niveau] ?? NIVEAU.info
                     return (
-                      <div key={i} style={{ borderLeft: `3px solid ${n.kleur}`, background: n.bg, borderRadius: 6, padding: '6px 10px', fontSize: '.8rem', color: '#334155' }}>
+                      <div key={i} style={{ borderLeft: `3px solid ${n.kleur}`, background: n.bg, borderRadius: 6, padding: '6px 10px', fontSize: '.8rem', color: 'var(--text-2)' }}>
                         <strong style={{ color: n.kleur }}>{n.label}:</strong> {p.tekst}
                       </div>
                     )
@@ -210,7 +210,7 @@ function BonKaart({ item, grootboeken, naam, adminId, bezig, fout, onAnalyseer, 
                         <div style={{ fontSize: '.8rem' }}>
                           <div style={{ fontWeight: 600 }}>{r.omschrijving || '(geen omschrijving)'} <span className="mono" style={{ color: 'var(--text-mute)' }}>{formatEuro(r.bedrag_excl)}</span></div>
                           <div style={{ color: 'var(--text-mute)', fontSize: '.74rem' }}>Nu: {naam.get(r.huidig_grootboek_id ?? '') ?? 'geen categorie'}</div>
-                          {r.reden && <div style={{ color: '#475569', fontSize: '.74rem', marginTop: 2 }}>{r.reden}</div>}
+                          {r.reden && <div style={{ color: 'var(--text-2)', fontSize: '.74rem', marginTop: 2 }}>{r.reden}</div>}
                         </div>
                         <select className="form-ctrl" value={keuze[r.detail_id] ?? ''} disabled={status === 'toegepast'}
                           onChange={e => setKeuze(k => ({ ...k, [r.detail_id]: e.target.value }))}

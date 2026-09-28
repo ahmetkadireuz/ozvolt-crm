@@ -21,7 +21,7 @@ const typeConfig: Record<string, { icon: IconName; color: string }> = {
   afspraak_morgen:  { icon: 'calendar',        color: '#8b5cf6' },
   klus_stilstand:   { icon: 'hourglass',       color: '#f59e0b' },
   offerte_verlopen: { icon: 'timer-off',       color: '#f97316' },
-  info:             { icon: 'info',            color: '#6b7280' },
+  info:             { icon: 'info',            color: 'var(--text-mute)' },
 }
 
 function timeAgo(dt: string) {
@@ -84,8 +84,8 @@ export default function NotificatiesClient({ notifs }: { notifs: Notif[] }) {
 
       {visible.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <Icon name="bell" size={48} style={{ color: '#8ba8c4', display: 'block', margin: '0 auto 12px' }} />
-          <p style={{ color: '#8ba8c4', margin: 0 }}>
+          <Icon name="bell" size={48} style={{ color: 'var(--text-soft)', display: 'block', margin: '0 auto 12px' }} />
+          <p style={{ color: 'var(--text-soft)', margin: 0 }}>
             {filter === 'ongelezen' ? 'Geen ongelezen meldingen.' : 'Geen meldingen.'}
           </p>
         </div>
@@ -99,8 +99,8 @@ export default function NotificatiesClient({ notifs }: { notifs: Notif[] }) {
                 key={notif.id}
                 style={{
                   display: 'flex', alignItems: 'flex-start', gap: 14,
-                  background: notif.gelezen ? '#fff' : '#f0f4ff',
-                  border: `1px solid ${notif.gelezen ? '#e2e8f0' : '#c7d2fe'}`,
+                  background: notif.gelezen ? 'var(--surface)' : 'var(--accent-soft)',
+                  border: `1px solid ${notif.gelezen ? 'var(--line)' : 'var(--tint-blue-bg)'}`,
                   borderRadius: 12, padding: '14px 16px',
                   transition: 'background .2s',
                 }}
@@ -114,13 +114,13 @@ export default function NotificatiesClient({ notifs }: { notifs: Notif[] }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {notif.link ? (
                     <Link href={notif.link} style={{ textDecoration: 'none' }} onClick={() => markRead(notif.id)}>
-                      <div style={{ fontWeight: notif.gelezen ? 600 : 800, color: '#0d1b3e', marginBottom: 2 }}>{notif.titel}</div>
+                      <div style={{ fontWeight: notif.gelezen ? 600 : 800, color: 'var(--text)', marginBottom: 2 }}>{notif.titel}</div>
                     </Link>
                   ) : (
-                    <div style={{ fontWeight: notif.gelezen ? 600 : 800, color: '#0d1b3e', marginBottom: 2 }}>{notif.titel}</div>
+                    <div style={{ fontWeight: notif.gelezen ? 600 : 800, color: 'var(--text)', marginBottom: 2 }}>{notif.titel}</div>
                   )}
-                  {notif.bericht && <div style={{ fontSize: '.82rem', color: '#5b7fa6', marginBottom: 4 }}>{notif.bericht}</div>}
-                  <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{timeAgo(notif.aangemaakt_op)}</div>
+                  {notif.bericht && <div style={{ fontSize: '.82rem', color: 'var(--text-mute)', marginBottom: 4 }}>{notif.bericht}</div>}
+                  <div style={{ fontSize: '.75rem', color: 'var(--text-soft)' }}>{timeAgo(notif.aangemaakt_op)}</div>
                 </div>
 
                 {/* Acties */}

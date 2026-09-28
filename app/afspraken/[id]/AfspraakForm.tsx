@@ -74,10 +74,10 @@ export default function AfspraakForm({ afspraak, klanten, afspraakId }: { afspra
 
       <div className="card">
         <div className="section-label">Werkafspraken</div>
-        <p style={{ fontSize: '.78rem', color: '#8ba8c4', marginBottom: 14 }}>Voeg per regel één afspraak toe. Geef aan wie verantwoordelijk is.</p>
+        <p style={{ fontSize: '.78rem', color: 'var(--text-soft)', marginBottom: 14 }}>Voeg per regel één afspraak toe. Geef aan wie verantwoordelijk is.</p>
 
         {items.map((item, i) => (
-          <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', marginBottom: 10 }}>
+          <div key={i} style={{ background: 'var(--surface-mute)', border: '1px solid var(--line)', borderRadius: 10, padding: '12px 14px', marginBottom: 10 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1d2f4c', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 8 }}>{i + 1}</div>
               <div style={{ flex: 1 }}>
@@ -93,7 +93,7 @@ export default function AfspraakForm({ afspraak, klanten, afspraakId }: { afspra
                   placeholder="Toelichting / voorwaarden (optioneel)"
                   value={item.toelichting ?? ''}
                   onChange={e => updateItem(i, 'toelichting', e.target.value)}
-                  style={{ fontSize: '.8rem', color: '#94a3b8', fontStyle: 'italic', borderStyle: 'dashed', marginBottom: 6 }}
+                  style={{ fontSize: '.8rem', color: 'var(--text-soft)', fontStyle: 'italic', borderStyle: 'dashed', marginBottom: 6 }}
                 />
                 <select
                   className="form-ctrl"

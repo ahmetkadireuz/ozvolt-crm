@@ -12,15 +12,15 @@ import ProfielForm from './ProfielForm'
 export const metadata: Metadata = { title: 'Fiscaal' }
 
 const KLEUR: Record<Signaal['niveau'], { rand: string; bg: string; label: string }> = {
-  actie:        { rand: '#dc2626', bg: '#fef2f2', label: 'Actie' },
-  waarschuwing: { rand: '#ea580c', bg: '#fff7ed', label: 'Let op' },
-  kans:         { rand: '#16a34a', bg: '#f0fdf4', label: 'Kans' },
-  info:         { rand: '#1d4fa3', bg: '#eef3fb', label: 'Info' },
+  actie:        { rand: '#dc2626', bg: 'var(--soft-red)', label: 'Actie' },
+  waarschuwing: { rand: '#ea580c', bg: 'var(--soft-orange)', label: 'Let op' },
+  kans:         { rand: '#16a34a', bg: 'var(--soft-green)', label: 'Kans' },
+  info:         { rand: '#1d4fa3', bg: 'var(--accent-soft)', label: 'Info' },
 }
 
 function Balk({ pct, kleur }: { pct: number; kleur: string }) {
   return (
-    <div style={{ height: 10, background: '#eef2f7', borderRadius: 99, overflow: 'hidden', marginTop: 8 }}>
+    <div style={{ height: 10, background: 'var(--line-soft)', borderRadius: 99, overflow: 'hidden', marginTop: 8 }}>
       <div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: '100%', background: kleur, borderRadius: 99 }} />
     </div>
   )
@@ -28,8 +28,8 @@ function Balk({ pct, kleur }: { pct: number; kleur: string }) {
 
 function Rij({ label, bedrag, sterk, min }: { label: string; bedrag: number | null; sterk?: boolean; min?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: '.84rem', fontWeight: sterk ? 800 : 400 }}>
-      <span style={{ color: sterk ? 'var(--text)' : '#475569' }}>{label}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--line-soft)', fontSize: '.84rem', fontWeight: sterk ? 800 : 400 }}>
+      <span style={{ color: sterk ? 'var(--text)' : 'var(--text-2)' }}>{label}</span>
       <span className="mono" style={{ fontSize: '.82rem' }}>{bedrag == null ? '—' : `${min ? '− ' : ''}${formatEuro(bedrag)}`}</span>
     </div>
   )
@@ -58,7 +58,7 @@ export default async function FiscaalPage({ searchParams }: { searchParams: { ja
       <div className="topbar">
         <div>
           <h1 className="page-title">Fiscaal {jaar}</h1>
-          <p style={{ margin: 0, fontSize: '.78rem', color: '#8ba8c4' }}>
+          <p style={{ margin: 0, fontSize: '.78rem', color: 'var(--text-soft)' }}>
             Belastingreserve, KIA en aandachtspunten — live uit Moneybird.
           </p>
         </div>
@@ -77,7 +77,7 @@ export default async function FiscaalPage({ searchParams }: { searchParams: { ja
       {fout && (
         <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #dc2626' }}>
           <strong>Moneybird-gegevens konden niet worden opgehaald.</strong>
-          <div style={{ fontSize: '.84rem', color: '#64748b', marginTop: 4 }}>{fout}</div>
+          <div style={{ fontSize: '.84rem', color: 'var(--text-mute)', marginTop: 4 }}>{fout}</div>
         </div>
       )}
 
@@ -102,7 +102,7 @@ export default async function FiscaalPage({ searchParams }: { searchParams: { ja
             </div>
             <div className="stat-card" style={{ borderLeft: '3px solid #16a34a' }}>
               <div className="stat-label">Per maand apart zetten</div>
-              <div className="stat-value" style={{ fontSize: '1.35rem', color: '#15803d' }}>{formatEuro(a.perMaand)}</div>
+              <div className="stat-value" style={{ fontSize: '1.35rem', color: 'var(--tint-green)' }}>{formatEuro(a.perMaand)}</div>
               <div className="stat-sub">
                 Jaar: {formatEuro(a.prognose.extra)} · al apart {formatEuro(profiel.reserve_apart)}
                 {a.resterendeMaanden > 0 && ` · ${a.resterendeMaanden} mnd`}
@@ -116,10 +116,10 @@ export default async function FiscaalPage({ searchParams }: { searchParams: { ja
               <div className="section-label">KIA — investeringsaftrek</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.86rem' }}>
                 <span><strong>{formatEuro(a.kiaTotaal)}</strong> geïnvesteerd</span>
-                <span style={{ color: '#64748b' }}>drempel {formatEuro(t.kia.ondergrens)}</span>
+                <span style={{ color: 'var(--text-mute)' }}>drempel {formatEuro(t.kia.ondergrens)}</span>
               </div>
               <Balk pct={(a.kiaTotaal / t.kia.ondergrens) * 100} kleur={a.kiaTotaal >= t.kia.ondergrens ? '#16a34a' : '#1d4fa3'} />
-              <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: 8, lineHeight: 1.6 }}>
+              <div style={{ fontSize: '.78rem', color: 'var(--text-mute)', marginTop: 8, lineHeight: 1.6 }}>
                 {a.kiaTotaal >= t.kia.ondergrens
                   ? <>KIA: {formatEuro(a.kiaAftrek)} aftrek ≈ <strong>{formatEuro(a.kiaVoordeel)}</strong> minder belasting.</>
                   : <>Nog {formatEuro(a.kiaTekort)} tot de drempel. Alleen bedrijfsmiddelen ≥ {formatEuro(t.kia.minPerBedrijfsmiddel)} per stuk tellen mee.</>}
@@ -131,10 +131,10 @@ export default async function FiscaalPage({ searchParams }: { searchParams: { ja
               <div className="section-label">Urencriterium</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.86rem' }}>
                 <span><strong>Niet geregistreerd</strong></span>
-                <span style={{ color: '#64748b' }}>nodig: &gt; {a.urenNodig.toLocaleString('nl-NL')} uur</span>
+                <span style={{ color: 'var(--text-mute)' }}>nodig: &gt; {a.urenNodig.toLocaleString('nl-NL')} uur</span>
               </div>
               <Balk pct={0} kleur="#ea580c" />
-              <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: 8, lineHeight: 1.6 }}>
+              <div style={{ fontSize: '.78rem', color: 'var(--text-mute)', marginTop: 8, lineHeight: 1.6 }}>
                 Naast {t.urencriterium.toLocaleString('nl-NL')} uur moet een starter méér uren in het bedrijf steken dan in
                 loondienst (± {a.urenLoondienstJaar.toLocaleString('nl-NL')} uur). Zelfstandigen- en startersaftrek zijn
                 daarom {profiel.urencriterium ? <strong>wél</strong> : <strong>niet</strong>} meegerekend.
@@ -152,9 +152,9 @@ export default async function FiscaalPage({ searchParams }: { searchParams: { ja
                   <div key={i} style={{ borderLeft: `4px solid ${k.rand}`, background: k.bg, borderRadius: 8, padding: '10px 12px' }}>
                     <div style={{ fontSize: '.7rem', fontWeight: 800, color: k.rand, textTransform: 'uppercase', letterSpacing: '.04em' }}>{k.label}</div>
                     <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '.9rem', marginTop: 2 }}>{s.titel}</div>
-                    <div style={{ fontSize: '.82rem', color: '#475569', marginTop: 4, lineHeight: 1.6 }}>{s.tekst}</div>
+                    <div style={{ fontSize: '.82rem', color: 'var(--text-2)', marginTop: 4, lineHeight: 1.6 }}>{s.tekst}</div>
                     {s.items && s.items.length > 0 && (
-                      <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: '.78rem', color: '#334155', lineHeight: 1.7 }}>
+                      <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: '.78rem', color: 'var(--text-2)', lineHeight: 1.7 }}>
                         {s.items.map((it, j) => (
                           <li key={j}>
                             {it.docId
@@ -195,21 +195,21 @@ export default async function FiscaalPage({ searchParams }: { searchParams: { ja
 
             <div className="card">
               <div className="section-label">Moneybird-check: waar staan je uitgaven?</div>
-              <p style={{ fontSize: '.78rem', color: '#64748b', margin: '0 0 8px' }}>
+              <p style={{ fontSize: '.78rem', color: 'var(--text-mute)', margin: '0 0 8px' }}>
                 {cijfers.aantalVerkoopfacturen} verkoopfacturen · {cijfers.aantalDocumenten} inkoopfacturen/bonnen in {jaar}.
               </p>
-              {cijfers.kostenPerGrootboek.length === 0 && <p style={{ fontSize: '.84rem', color: '#94a3b8' }}>Nog geen inkoop geboekt.</p>}
+              {cijfers.kostenPerGrootboek.length === 0 && <p style={{ fontSize: '.84rem', color: 'var(--text-soft)' }}>Nog geen inkoop geboekt.</p>}
               {cijfers.kostenPerGrootboek.map(g => (
-                <div key={g.naam} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: '.82rem' }}>
+                <div key={g.naam} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--line-soft)', fontSize: '.82rem' }}>
                   <span>
                     {g.naam}
-                    <span style={{ color: '#94a3b8', fontSize: '.72rem' }}> · {g.aantal}× · {typeLabel(g.type)}</span>
+                    <span style={{ color: 'var(--text-soft)', fontSize: '.72rem' }}> · {g.aantal}× · {typeLabel(g.type)}</span>
                   </span>
                   <span className="mono">{formatEuro(g.bedrag)}</span>
                 </div>
               ))}
               {a.afschrijving > 0 && (
-                <p style={{ fontSize: '.74rem', color: '#64748b', marginTop: 8 }}>
+                <p style={{ fontSize: '.74rem', color: 'var(--text-mute)', marginTop: 8 }}>
                   Afschrijving investeringen geschat op {formatEuro(a.afschrijving)} (20% per jaar, naar rato).
                 </p>
               )}
@@ -224,7 +224,7 @@ export default async function FiscaalPage({ searchParams }: { searchParams: { ja
         <ProfielForm profiel={profiel} />
       </div>
 
-      <p style={{ fontSize: '.74rem', color: '#94a3b8', lineHeight: 1.6 }}>
+      <p style={{ fontSize: '.74rem', color: 'var(--text-soft)', lineHeight: 1.6 }}>
         Schatting op basis van Moneybird en de tarieven {t?.jaar ?? jaar} (bron: Belastingdienst). Uitgangspunten: geen fiscaal
         partner, huurwoning, geen andere aftrekposten, factuurstelsel. Dit vervangt geen aangifte of boekhouder — controleer grote
         beslissingen altijd.

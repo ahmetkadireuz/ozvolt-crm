@@ -97,9 +97,9 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
       {/* Totaal */}
       <div className="card">
         <div className="section-label">Bedrag</div>
-        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0d1b3e', marginBottom: 4 }}>{formatEuro(totalen.inclBtw)}</div>
-        <div style={{ fontSize: '.78rem', color: '#8ba8c4' }}>incl. {Number(factuur.btw_pct)}% BTW</div>
-        <div style={{ fontSize: '.78rem', color: '#8ba8c4', marginTop: 4 }}>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>{formatEuro(totalen.inclBtw)}</div>
+        <div style={{ fontSize: '.78rem', color: 'var(--text-soft)' }}>incl. {Number(factuur.btw_pct)}% BTW</div>
+        <div style={{ fontSize: '.78rem', color: 'var(--text-soft)', marginTop: 4 }}>
           Vervaldatum: {vervalDatum.toLocaleDateString('nl-NL')}
         </div>
       </div>
@@ -130,7 +130,7 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
           </button>
 
           {/* Online betaallink (Moneybird) */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8, marginTop: 2 }}>
+          <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2 }}>
             {factuur.betaal_url ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700 }}>✓ Online betaallink actief</div>
@@ -157,7 +157,7 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
           </div>
 
           {/* Moneybird boekhouden */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 8, marginTop: 2 }}>
+          <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2 }}>
             {factuur.moneybird_id ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -251,16 +251,16 @@ function Betaalplan5050({ factuurId, factuur }: { factuurId: number; factuur: an
   }
 
   return (
-    <div style={{ padding: 14, background: gesplitst ? '#f0f9ff' : '#f8fafc', border: `1px solid ${gesplitst ? '#bae6fd' : '#e2e8f0'}`, borderRadius: 10 }}>
-      <div style={{ fontWeight: 700, color: '#0d1b3e', fontSize: 13 }}>50/50 betaalplan</div>
-      <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, lineHeight: 1.5 }}>
+    <div style={{ padding: 14, background: gesplitst ? 'var(--soft-blue)' : 'var(--surface-mute)', border: `1px solid ${gesplitst ? 'var(--tint-blue-bg)' : 'var(--line)'}`, borderRadius: 10 }}>
+      <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: 13 }}>50/50 betaalplan</div>
+      <div style={{ fontSize: 11, color: 'var(--text-mute)', marginTop: 2, lineHeight: 1.5 }}>
         {soort === 'voorschot' && <>Dit is de <strong>voorschotfactuur</strong> (50%). Het restant staat op de eindfactuur.</>}
         {soort === 'eind' && <>Dit is de <strong>eindfactuur</strong>. Het betaalde voorschot staat als aftrekregel op de factuur.</>}
         {soort === 'normaal' && !oudeStijl && 'Klant betaalt in 1x. Splitsen maakt een voorschotfactuur (50% bij start) en een eindfactuur (na oplevering).'}
         {oudeStijl && 'Oude 50/50-werkwijze (twee betaallinks op één factuur). Laat deze factuur zo afhandelen.'}
       </div>
       {gekoppeld && (
-        <a href={`/facturen/${gekoppeld.id}`} style={{ display: 'inline-block', marginTop: 8, fontSize: 12, color: '#0369a1', fontWeight: 700 }}>
+        <a href={`/facturen/${gekoppeld.id}`} style={{ display: 'inline-block', marginTop: 8, fontSize: 12, color: 'var(--tint-blue)', fontWeight: 700 }}>
           {soort === 'voorschot' ? 'Eindfactuur' : 'Voorschotfactuur'} {gekoppeld.factuurnummer} →
         </a>
       )}

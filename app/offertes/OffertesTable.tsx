@@ -70,16 +70,16 @@ export default function OffertesTable({ offertes }: { offertes: any[] }) {
                     const verlopen = o.geldig_tot && new Date(o.geldig_tot) < new Date() && !['geaccepteerd', 'geweigerd'].includes(o.status)
                     return (
                       <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/offertes/${o.id}`)}>
-                        <td className="mono" style={{ color: '#8ba8c4' }}>{String(o.offertenummer).padStart(4, '0')}</td>
+                        <td className="mono" style={{ color: 'var(--text-soft)' }}>{String(o.offertenummer).padStart(4, '0')}</td>
                         <td>
-                          <div style={{ fontWeight: 700, color: '#0d1b3e' }}>{o.klant_naam}</div>
-                          {o.locatie && <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 1 }}>{o.locatie}</div>}
+                          <div style={{ fontWeight: 700, color: 'var(--text)' }}>{o.klant_naam}</div>
+                          {o.locatie && <div style={{ fontSize: '.75rem', color: 'var(--text-soft)', marginTop: 1 }}>{o.locatie}</div>}
                         </td>
-                        <td className="mono" style={{ color: '#64748b', fontSize: '.78rem' }}>
+                        <td className="mono" style={{ color: 'var(--text-mute)', fontSize: '.78rem' }}>
                           {datumNL(o.datum)}
                           {verlopen && <div style={{ color: '#dc2626', fontSize: '.7rem', fontWeight: 700 }}>verlopen</div>}
                         </td>
-                        <td className="mono" style={{ fontWeight: 700, color: '#0d1b3e' }}>{formatEuro(totalen.inclBtw)}</td>
+                        <td className="mono" style={{ fontWeight: 700, color: 'var(--text)' }}>{formatEuro(totalen.inclBtw)}</td>
                         <td><StatusBadge status={o.status} /></td>
                         <td onClick={e => e.stopPropagation()}>
                           <div className="row-actions">
@@ -111,7 +111,7 @@ export default function OffertesTable({ offertes }: { offertes: any[] }) {
                     <StatusBadge status={o.status} />
                   </div>
                   <div className="klus-card-bottom">
-                    <span style={{ fontWeight: 700, fontSize: '.86rem', color: '#0d1b3e' }}>{formatEuro(totalen.inclBtw)}</span>
+                    <span style={{ fontWeight: 700, fontSize: '.86rem', color: 'var(--text)' }}>{formatEuro(totalen.inclBtw)}</span>
                   </div>
                 </div>
               )
