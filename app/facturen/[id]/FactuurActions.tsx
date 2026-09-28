@@ -211,7 +211,7 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
         </div>
       </div>
 
-      <Betaalplan5050 factuurId={factuurId} initial={!!factuur.betaling_50_50} />
+      <Betaalplan5050 factuurId={factuurId} factuur={factuur} />
 
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteFactuur} style={{ width: '100%', justifyContent: 'center' }}>
         <Icon name="trash" size={16} />
@@ -221,56 +221,53 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
   )
 }
 
-function Betaalplan5050({ factuurId, initial }: { factuurId: number; initial: boolean }) {
-  const [aan, setAan] = useState(initial)
+function Betaalplan5050({ factuurId, factuur }: { factuurId: number; factuur: any }) {
+  const router = useRouter()
   const [bezig, setBezig] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const soort: string = factuur.soort ?? 'normaal'
+  const gesplitst = soort === 'voorschot' || soort === 'eind'
+  const gekoppeld = factuur.gekoppelde_factuur as { id: number; factuurnummer: string; status: string } | null
+  const oudeStijl = !gesplitst && !!factuur.betaling_50_50
 
-  async function toggle() {
+  async function wissel() {
+    const vraag = gesplitst
+      ? 'Splitsing terugdraaien? De eindfactuur wordt verwijderd en deze factuur krijgt weer alle regels.'
+      : 'Factuur splitsen in een voorschotfactuur (50%, deze factuur) en een eindfactuur (restant)? Vul eerst alle regels in.'
+    if (!confirm(vraag)) return
     setBezig(true)
     setError(null)
-    const next = !aan
     const res = await fetch(`/api/facturen/${factuurId}/50-50`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled: next }),
+      body: JSON.stringify({ enabled: !gesplitst }),
     })
-    if (res.ok) {
-      setAan(next)
-    } else {
-      const data = await res.json().catch(() => ({}))
-      setError(data?.error ?? 'Kon niet opslaan')
-    }
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) setError(data?.error ?? 'Kon niet opslaan')
+    else if (gesplitst && soort === 'eind' && gekoppeld) router.push(`/facturen/${gekoppeld.id}`)
+    else router.refresh()
     setBezig(false)
   }
 
   return (
-    <div style={{ padding: 14, background: aan ? '#f0f9ff' : '#f8fafc', border: `1px solid ${aan ? '#bae6fd' : '#e2e8f0'}`, borderRadius: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <div>
-          <div style={{ fontWeight: 700, color: '#0d1b3e', fontSize: 13 }}>50/50 betaalplan</div>
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-            {aan ? 'Klant ziet 2 iDEAL-knoppen (50% bij start + 50% na oplevering)' : 'Klant betaalt volledig in 1x'}
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={toggle}
-          disabled={bezig}
-          aria-pressed={aan}
-          style={{
-            width: 44, height: 24, borderRadius: 999,
-            background: aan ? '#0369a1' : '#cbd5e1',
-            border: 'none', position: 'relative', cursor: bezig ? 'wait' : 'pointer',
-            transition: 'background .15s', flexShrink: 0,
-          }}
-        >
-          <span style={{
-            position: 'absolute', top: 2, left: aan ? 22 : 2, width: 20, height: 20, borderRadius: 999,
-            background: '#fff', transition: 'left .15s',
-          }} />
-        </button>
+    <div style={{ padding: 14, background: gesplitst ? '#f0f9ff' : '#f8fafc', border: `1px solid ${gesplitst ? '#bae6fd' : '#e2e8f0'}`, borderRadius: 10 }}>
+      <div style={{ fontWeight: 700, color: '#0d1b3e', fontSize: 13 }}>50/50 betaalplan</div>
+      <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, lineHeight: 1.5 }}>
+        {soort === 'voorschot' && <>Dit is de <strong>voorschotfactuur</strong> (50%). Het restant staat op de eindfactuur.</>}
+        {soort === 'eind' && <>Dit is de <strong>eindfactuur</strong>. Het betaalde voorschot staat als aftrekregel op de factuur.</>}
+        {soort === 'normaal' && !oudeStijl && 'Klant betaalt in 1x. Splitsen maakt een voorschotfactuur (50% bij start) en een eindfactuur (na oplevering).'}
+        {oudeStijl && 'Oude 50/50-werkwijze (twee betaallinks op één factuur). Laat deze factuur zo afhandelen.'}
       </div>
+      {gekoppeld && (
+        <a href={`/facturen/${gekoppeld.id}`} style={{ display: 'inline-block', marginTop: 8, fontSize: 12, color: '#0369a1', fontWeight: 700 }}>
+          {soort === 'voorschot' ? 'Eindfactuur' : 'Voorschotfactuur'} {gekoppeld.factuurnummer} →
+        </a>
+      )}
+      {!oudeStijl && factuur.status === 'concept' && !factuur.moneybird_id && (
+        <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center', marginTop: 10 }} onClick={wissel} disabled={bezig}>
+          {bezig ? 'Bezig…' : gesplitst ? 'Splitsing terugdraaien' : 'Splits in voorschot + eindfactuur'}
+        </button>
+      )}
       {error && <div style={{ marginTop: 8, fontSize: 12, color: '#dc2626' }}>{error}</div>}
     </div>
   )

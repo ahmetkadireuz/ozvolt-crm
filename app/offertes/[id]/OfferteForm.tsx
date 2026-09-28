@@ -16,8 +16,11 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
   const [waItems, setWaItems] = useState<WaItem[]>(offerte.wa_items ?? [])
   const [bijlagen, setBijlagen] = useState<Bijlage[]>(offerte.bijlagen ?? [])
 
+  const vergrendeld = !!offerte.accepted_at
+  const [melding, setMelding] = useState<string | null>(null)
+
   async function saveForm(fd: FormData) {
-    await fetch(`/api/offertes/${offerteId}`, {
+    const res = await fetch(`/api/offertes/${offerteId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -31,6 +34,12 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         wa_items: waItems,
       }),
     })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setMelding(data?.error ?? 'Opslaan mislukt')
+    } else {
+      setMelding(null)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -55,6 +64,15 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
 
   return (
     <form onSubmit={handleSubmit} ref={formRef}>
+      {vergrendeld && (
+        <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #16a34a', fontSize: '.84rem', color: '#475569' }}>
+          <strong style={{ color: '#15803d' }}>Getekend — vergrendeld.</strong> Regels, prijzen en korting liggen vast.
+          Alleen de werkafspraken kun je nog bijwerken. Voor andere wijzigingen maak je een nieuwe offerte.
+        </div>
+      )}
+      {melding && !vergrendeld && (
+        <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #dc2626', fontSize: '.84rem' }}>{melding}</div>
+      )}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="section-label">Gegevens</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

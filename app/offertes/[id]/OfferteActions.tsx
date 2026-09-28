@@ -60,18 +60,21 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
 
   const [betaallinkLoading, setBetaallinkLoading] = useState(false)
 
-  async function maakBetaallinks() {
-    if (!confirm('Online betaallink(s) (via Moneybird) aanmaken voor dit werkvoorstel?')) return
+  async function maakBetaallinks(split: boolean) {
+    const vraag = split
+      ? 'Voorschotfactuur (50%) aanmaken en in Moneybird zetten? De eindfactuur (restant) blijft als concept klaarstaan voor na oplevering.'
+      : 'Factuur (100%) aanmaken en in Moneybird zetten met een online betaallink?'
+    if (!confirm(vraag)) return
     setBetaallinkLoading(true)
     try {
       const res = await fetch(`/api/offertes/${offerteId}/betaallinks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ betaling_50_50: offerte.betaling_50_50 }),
+        body: JSON.stringify({ betaling_50_50: split }),
       })
       const text = await res.text()
       const data = text ? JSON.parse(text) : {}
-      if (data.ok) { alert('Betaallinks aangemaakt!'); router.refresh() }
+      if (data.ok) { alert('Betaallink aangemaakt!'); router.refresh() }
       else alert('Fout: ' + (data.error || `Server error ${res.status}`))
     } catch (err: any) {
       alert('Fout: ' + (err?.message ?? 'Onbekend'))
@@ -255,18 +258,23 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
             )}
           </div>
         ) : null}
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          style={{ width: '100%', justifyContent: 'center' }}
-          onClick={maakBetaallinks}
-          disabled={betaallinkLoading}
-        >
-          <Icon name="payments" size={16} />
-          {betaallinkLoading ? 'Bezig...' : offerte.betaal_url ? 'Betaallinks vernieuwen' : 'Betaallinks aanmaken'}
-        </button>
+        {!offerte.betaal_url && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => maakBetaallinks(false)} disabled={betaallinkLoading}>
+              <Icon name="payments" size={16} />
+              {betaallinkLoading ? 'Bezig...' : 'Betaallink — volledig bedrag'}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => maakBetaallinks(true)} disabled={betaallinkLoading}>
+              <Icon name="payments" size={16} />
+              {betaallinkLoading ? 'Bezig...' : 'Betaallink — 50% voorschot'}
+            </button>
+          </div>
+        )}
         <div style={{ fontSize: '.72rem', color: '#8ba8c4', marginTop: 6 }}>
-          Klant betaalt via iDEAL of bankoverschrijving (Moneybird)
+          Maakt de factuur aan en zet hem in Moneybird; de klant betaalt via iDEAL of overschrijving.
+          {offerte.betaal_url && ' De link hoort bij de factuur hieronder — een nieuwe link is niet nodig.'}
         </div>
       </div>
 

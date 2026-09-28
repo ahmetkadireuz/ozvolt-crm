@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
+import { maakFactuur } from '@/lib/facturen'
 import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Nieuwe factuur' }
@@ -29,7 +30,6 @@ export default async function NieuweFactuurPage({
     let klantId = parseInt(String(formData.get('klant_id') ?? '0'))
     let klusId: number | null = parseInt(String(formData.get('klus_id') ?? '0')) || null
     const nieuweNaam = String(formData.get('nieuwe_naam') ?? '').trim()
-    const betaling5050 = formData.get('betaling_50_50') === 'on'
 
     if (!klantId && nieuweNaam) {
       const r = await sql`
@@ -54,19 +54,8 @@ export default async function NieuweFactuurPage({
       if (klusRows[0]) klusId = klusRows[0].id
     }
 
-    // Defensief: kolom kan missen in oudere productie-db
-    try {
-      await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`
-      await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT`
-    } catch {}
-
-    const maxRow = await sql`SELECT MAX(CAST(REGEXP_REPLACE(factuurnummer, '[^0-9]', '', 'g') AS INTEGER)) AS max_nr FROM facturen`
-    const nextNr = (maxRow[0]?.max_nr ?? 1000) + 1
-    const result = await sql`
-      INSERT INTO facturen (factuurnummer, klant_id, klus_id, status, factuurdatum, betalingstermijn, regels, btw_pct, betaling_50_50)
-      VALUES (${`OZVT-${String(nextNr).padStart(4,'0')}`}, ${klantId}, ${klusId}, 'concept', CURRENT_DATE, 14, '[]'::jsonb, 21, ${betaling5050})
-      RETURNING id`
-    redirect(`/facturen/${result[0].id}`)
+    const result = await maakFactuur({ klant_id: klantId, klus_id: klusId, regels: [], btw_pct: 21 })
+    redirect(`/facturen/${result.id}`)
   }
 
   const terugUrl = vooringevuldKlusId
@@ -131,15 +120,9 @@ export default async function NieuweFactuurPage({
             </div>
           </div>
 
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, cursor: 'pointer' }}>
-            <input type="checkbox" name="betaling_50_50" style={{ marginTop: 2, width: 16, height: 16, cursor: 'pointer' }} />
-            <div>
-              <div style={{ fontWeight: 700, color: '#0d1b3e', fontSize: 13 }}>50/50 betaalplan</div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                Klant ziet 2 iDEAL-knoppen in het portaal (50% bij start, 50% na oplevering).
-              </div>
-            </div>
-          </label>
+          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
+            50/50 betalen? Vul eerst de regels in en zet daarna op de factuur het 50/50-betaalplan aan.
+          </p>
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="submit" className="btn btn-primary">Factuur aanmaken</button>

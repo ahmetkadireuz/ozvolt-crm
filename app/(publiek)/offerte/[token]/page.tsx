@@ -261,10 +261,16 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                         <span style={{ fontSize: 12, fontWeight: 500, opacity: .7 }}>Eerste termijn (50%)</span>
                         <span>{formatEuro(totalen.inclBtw / 2)}</span>
                       </a>
-                      <a href={o.betaal_url_2 ?? '#'} className="pay-btn" style={{ background: '#475569', justifyContent: 'center', flexDirection: 'column', textAlign: 'center', gap: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 500, opacity: .7 }}>Tweede termijn (50%)</span>
-                        <span>{formatEuro(totalen.inclBtw / 2)}</span>
-                      </a>
+                      {o.betaal_url_2 ? (
+                        <a href={o.betaal_url_2} className="pay-btn" style={{ background: '#475569', justifyContent: 'center', flexDirection: 'column', textAlign: 'center', gap: 4 }}>
+                          <span style={{ fontSize: 12, fontWeight: 500, opacity: .7 }}>Tweede termijn (50%)</span>
+                          <span>{formatEuro(totalen.inclBtw / 2)}</span>
+                        </a>
+                      ) : (
+                        <div style={{ fontSize: 12, color: '#64748b', alignSelf: 'center', lineHeight: 1.5 }}>
+                          Tweede termijn (50%): u ontvangt de eindfactuur na oplevering.
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <a href={o.betaal_url} className="pay-btn">
