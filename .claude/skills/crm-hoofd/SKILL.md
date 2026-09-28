@@ -81,5 +81,6 @@ raken — dan bundelen, zodat ze elkaar niet in de weg zitten.
 - Vraagt de gebruiker later "hoe staat het ervoor", kijk dan met
   `mcp__Claude_Code_Remote__list_sessions` (tag `crm-hoofd`) / `get_session` en de open PR's
   in `ahmetkadireuz/ozvolt-crm`, en vat samen.
-- Fiscale of boekhoudkundige inhoudsvragen horen bij `/boekhouder`; laat die rol bepalen
-  wát er fiscaal moet kloppen, jij bepaalt hoe het in het CRM komt.
+- Inhoudelijke vragen horen bij de vakrollen: fiscaal → `/boekhouder`, prijzen/offertes →
+  `/calculator`, techniek/NEN/rapporten → `/keurmeester`. Laat die rol bepalen
+  wát er inhoudelijk moet kloppen, jij bepaalt hoe het in het CRM komt.
