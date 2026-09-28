@@ -35,6 +35,22 @@ async function mbFetch(path: string, options?: RequestInit) {
   }
 }
 
+// Generiek verzoek voor andere modules (bonnen-controle)
+export function mbApi(path: string, options?: RequestInit) {
+  return mbFetch(path, options)
+}
+
+/** Downloadt een bijlage van een inkoopdocument als bytes (volgt de redirect naar de opslag). */
+export async function mbDownloadBijlage(docPad: 'purchase_invoices' | 'receipts' | 'typeless_documents', docId: string, bijlageId: string) {
+  const res = await fetch(`${BASE}/${adminId()}/documents/${docPad}/${docId}/attachments/${bijlageId}/download`, {
+    headers: { Authorization: `Bearer ${process.env.MONEYBIRD_API_TOKEN}` },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(30000),
+  })
+  if (!res.ok) throw new Error(`Bijlage downloaden mislukt (HTTP ${res.status})`)
+  return { data: Buffer.from(await res.arrayBuffer()), contentType: res.headers.get('content-type') ?? '' }
+}
+
 // ── Lezen met paginering (fiscale module) ────────────────────────────────────
 // Moneybird: max 100 per pagina, limiet 150 requests / 5 min (429 + Retry-After).
 

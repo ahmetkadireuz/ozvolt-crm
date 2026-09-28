@@ -21,6 +21,7 @@ const navVerkoop: NavItem[] = [
 
 const navAdmin: NavItem[] = [
   { key: '/kosten',                     icon: 'payments', label: 'Kosten' },
+  { key: '/bonnen',                     icon: 'receipt',  label: 'Bonnen' },
   { key: '/inkoop',                     icon: 'cart',     label: 'Inkoop' },
   { key: '/groepenverklaring',          icon: 'bolt',     label: 'Groepenverklaring' },
   { key: '/instellingen/boekhouding',   icon: 'book',     label: 'Boekhouding' },
