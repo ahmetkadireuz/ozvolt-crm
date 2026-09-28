@@ -50,7 +50,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0d1b3e' }}>
-              Offerte #{o.offertenummer}
+              Offerte OZVT-{String(o.offertenummer).padStart(4, '0')}
             </h1>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
               Datum: {new Date(o.datum).toLocaleDateString('nl-NL')}

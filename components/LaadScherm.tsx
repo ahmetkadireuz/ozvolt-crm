@@ -1,5 +1,5 @@
 // Direct zichtbaar laadscherm tijdens navigeren (server haalt gegevens op)
-export default function Laden() {
+export default function LaadScherm() {
   return (
     <div aria-busy="true" aria-label="Laden">
       <div className="topbar">

@@ -3,11 +3,13 @@ import { sql, berekenTotalen } from '@/lib/db'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { mbHaalOfMaakContact, mbMaakBetaalLink } from '@/lib/moneybird'
 import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
+import { idealAan } from '@/lib/betalen'
 import { ensureFactuurKolommen } from '@/lib/facturen'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const klantId = await getKlantSessie()
   if (!klantId) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
+  if (!idealAan()) return NextResponse.json({ error: 'Online betalen via iDEAL is uitgeschakeld — betaal via overschrijving' }, { status: 403 })
 
   const { id } = await params
   const factuurId = parseInt(id)

@@ -4,6 +4,7 @@ import { requireSession } from '@/lib/session'
 import { sendMail, factuurMailHtml } from '@/lib/mail'
 import { genereerFactuurPDF } from '@/lib/pdf-factuur'
 import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
+import { idealAan } from '@/lib/betalen'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -26,7 +27,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const vervalDatum = new Date(factuur.factuurdatum)
   vervalDatum.setDate(vervalDatum.getDate() + (factuur.betalingstermijn ?? 14))
 
-  const betaalUrl: string | null = factuur.betaal_url ?? null
+  // iDEAL-link alleen meesturen als iDEAL aanstaat; standaard betaalt de klant direct via overschrijving
+  const betaalUrl: string | null = idealAan() ? (factuur.betaal_url ?? null) : null
 
   await sql`UPDATE facturen SET status = 'verstuurd', bijgewerkt_op = NOW() WHERE id = ${factuurId}`
 

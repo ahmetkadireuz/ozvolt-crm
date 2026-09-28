@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: { default: 'Mijn Ozvolt Portaal', template: '%s — Ozvolt' },
-  themeColor: '#0d1b3e',
+  themeColor: '#15233b',
 }
 
 export default function KlantLayout({ children }: { children: React.ReactNode }) {
@@ -23,11 +23,11 @@ export default function KlantLayout({ children }: { children: React.ReactNode })
         <header className="kp-header">
           <Link href="/klant/dashboard" className="kp-brand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-wit.png" alt="Ozvolt Elektrotechniek" />
+            <img src="/logo-transparant.png" alt="Ozvolt Elektrotechniek" />
             <span className="kp-brand-tag">Klantportaal</span>
           </Link>
           <a href="mailto:info@ozvoltelektro.nl" className="kp-header-link">
-            info@ozvoltelektro.nl
+            Contact<span className="lang"> · info@ozvoltelektro.nl</span>
           </a>
         </header>
         <main className="kp-main">{children}</main>

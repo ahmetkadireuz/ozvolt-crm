@@ -3,6 +3,7 @@ import { sql } from '@/lib/db'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
 import { requireSession } from '@/lib/session'
 import { getKlantSessie } from '@/lib/klant-sessie'
+import { BEDRIJF, betaalQrSvg, ibanLeesbaar } from '@/lib/betalen'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -35,6 +36,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const vervalDatum = new Date(f.factuurdatum)
   vervalDatum.setDate(vervalDatum.getDate() + (Number(f.betalingstermijn) || 14))
   const teLaat = f.status !== 'betaald' && vervalDatum < new Date()
+  // QR voor directe overschrijving (scanbaar met o.a. ING, Knab, bunq, ASN/SNS/RegioBank)
+  const betaalQr = f.status !== 'betaald' ? await betaalQrSvg(Math.round(totalen.inclBtw * 100) / 100, f.factuurnummer) : null
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
@@ -112,6 +115,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .tot-final .l { color: rgba(255,255,255,.65); font-size: 13px; font-weight: 600; }
   .tot-final .v { color: #fff; font-size: 22px; font-weight: 800; }
 
+  .betaal-qr { width: 104px; text-align: center; margin-left: 18px; }
+  .betaal-qr svg { width: 104px; height: 104px; background: #fff; border-radius: 6px; }
+  .betaal-qr .qr-t { font-size: 8.5px; color: var(--muted); margin-top: 3px; line-height: 1.3; }
   .betaalbox { margin-top: 28px; background: var(--light); border-radius: 10px; padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--navy); }
   .betaal-left .bl { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
   .betaal-left .iban { font-size: 14px; font-weight: 700; color: var(--navy); }
@@ -234,13 +240,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     <div class="betaalbox">
       <div class="betaal-left">
         <div class="bl">Betaalgegevens</div>
-        <div class="iban">IBAN: NL69 KNAB 0780 9871 79</div>
-        <div class="iban-sub">t.n.v. Ozvolt Elektrotechniek &nbsp;·&nbsp; Kenmerk: ${f.factuurnummer}</div>
+        <div class="iban">IBAN: ${ibanLeesbaar()}</div>
+        <div class="iban-sub">t.n.v. ${BEDRIJF.naam} &nbsp;·&nbsp; Kenmerk: ${f.factuurnummer}</div>
       </div>
       <div class="betaal-right">
         <div class="bl">Te betalen</div>
         <div class="betaal-amount">${formatEuro(totalen.inclBtw)}</div>
       </div>
+      ${betaalQr ? `<div class="betaal-qr">${betaalQr}<div class="qr-t">Scan met uw bank-app</div></div>` : ''}
     </div>
 
   </div>
