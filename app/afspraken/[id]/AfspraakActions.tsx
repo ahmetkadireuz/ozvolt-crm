@@ -83,6 +83,7 @@ export default function AfspraakActions({ afspraak, afspraakId, acceptUrl }: { a
               className={`btn btn-sm ${afspraak.status === s ? 'btn-primary' : 'btn-ghost'}`}
               style={{ justifyContent: 'space-between' }}
               disabled={afspraak.status === s}
+              aria-pressed={afspraak.status === s}
             >
               {STATUS_LABELS[s]}
               {afspraak.status === s && <Icon name="check" size={14} />}
@@ -91,7 +92,7 @@ export default function AfspraakActions({ afspraak, afspraakId, acceptUrl }: { a
         </div>
       </div>
 
-      <button type="button" className="btn btn-danger btn-sm" onClick={deleteAfspraak} style={{ width: '100%', justifyContent: 'center' }}>
+      <button type="button" className="btn btn-danger-outline btn-sm" onClick={deleteAfspraak} style={{ width: '100%', justifyContent: 'center' }}>
         <Icon name="trash" size={16} />
         Verwijderen
       </button>

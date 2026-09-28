@@ -14,6 +14,15 @@ let _ensured = false
 
 export async function ensureFactuurKolommen(): Promise<void> {
   if (_ensured) return
+  // Snelle check: kolommen al aanwezig? Eén query i.p.v. zes DDL-rondes na een koude start.
+  try {
+    const ok = await sql`
+      SELECT COUNT(*)::int AS n FROM information_schema.columns
+      WHERE table_name = 'facturen'
+        AND column_name IN ('betaal_url', 'betaal_url_2', 'betaling_50_50', 'soort', 'gekoppelde_factuur_id')
+    `
+    if (ok[0]?.n === 5) { _ensured = true; return }
+  } catch { /* val terug op de volledige migratie */ }
   await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
   await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT`
   await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`

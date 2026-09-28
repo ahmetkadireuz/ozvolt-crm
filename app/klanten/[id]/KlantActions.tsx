@@ -199,7 +199,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
         {gvFout && <p style={{ color: '#dc2626', fontSize: 12, margin: '6px 0 0' }}>{gvFout}</p>}
       </div>
 
-      <button type="button" className="btn btn-danger btn-sm" onClick={deleteKlant} style={{ width: '100%', justifyContent: 'center' }}>
+      <button type="button" className="btn btn-danger-outline btn-sm" onClick={deleteKlant} style={{ width: '100%', justifyContent: 'center' }}>
         <Icon name="trash" size={16} />
         Klant verwijderen
       </button>

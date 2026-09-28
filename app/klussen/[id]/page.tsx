@@ -36,7 +36,11 @@ export default async function KlusDetailPage({
   const klusId = parseInt(id)
   if (isNaN(klusId)) notFound()
 
-  const [klusRows, offertesRows, facturenRows, ongekoppeldeOffertes, ongekoppeldeFacturen, siblingRows] = await Promise.all([
+  // Alles in één ronde naar de database; optionele onderdelen mogen falen zonder de pagina te breken
+  await ensureProjectbeheerTables()
+  const leeg = () => [] as any[]
+  const [klusRows, offertesRows, facturenRows, ongekoppeldeOffertes, ongekoppeldeFacturen, siblingRows,
+         documentenRows, portaalRows, rapporten, omzetRows, kostenRows] = await Promise.all([
     sql`
       SELECT k.*, kt.id AS klant_id, kt.naam AS klant_naam,
              kt.email AS klant_email, kt.telefoon AS klant_tel,
@@ -49,23 +53,9 @@ export default async function KlusDetailPage({
     sql`SELECT id, offertenummer FROM offertes WHERE klus_id IS NULL AND klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer FROM facturen WHERE (klus_id IS NULL OR klus_id <> ${klusId}) AND klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY factuurdatum DESC`,
     sql`SELECT id, type_werk, status, aangemaakt_op FROM klussen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) AND id != ${klusId} ORDER BY aangemaakt_op DESC LIMIT 5`,
-  ])
-
-  let documenten: any[] = []
-  try {
-    documenten = await sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY aangemaakt_op DESC`
-  } catch {}
-
-  // portaal_punten kolom kan nog niet bestaan — veilig ophalen
-  let portaalPunten: any[] = []
-  try {
-    const p = await sql`SELECT portaal_punten FROM klussen WHERE id = ${klusId}`
-    portaalPunten = Array.isArray(p[0]?.portaal_punten) ? p[0].portaal_punten : []
-  } catch {}
-
-  // Rapporten en eenvoudig financieel overzicht
-  await ensureProjectbeheerTables()
-  const [rapporten, omzetRows, kostenRows] = await Promise.all([
+    sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY aangemaakt_op DESC`.catch(leeg),
+    // portaal_punten kolom kan nog niet bestaan — veilig ophalen
+    sql`SELECT portaal_punten FROM klussen WHERE id = ${klusId}`.catch(leeg),
     sql`SELECT id, titel, type, getekend_op, aangemaakt_op FROM opleveringsrapporten WHERE klus_id = ${klusId} ORDER BY aangemaakt_op DESC`,
     sql`
       SELECT COALESCE(SUM(
@@ -77,6 +67,8 @@ export default async function KlusDetailPage({
     `,
     sql`SELECT COALESCE(SUM(bedrag), 0) AS totaal FROM kosten WHERE klus_id = ${klusId}`,
   ])
+  const documenten: any[] = documentenRows
+  const portaalPunten: any[] = Array.isArray(portaalRows[0]?.portaal_punten) ? portaalRows[0].portaal_punten : []
   const omzet = Number(omzetRows[0]?.omzet ?? 0)
   const kostenTotaal = Number(kostenRows[0]?.totaal ?? 0)
 

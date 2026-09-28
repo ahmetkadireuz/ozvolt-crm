@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 
+let _kolommenOk = false
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireSession()
@@ -15,10 +17,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Omschrijving is verplicht' }, { status: 400 })
     }
 
-    // Zorg dat alle kolommen bestaan
-    await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS artikelnummer VARCHAR(100)`
-    await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS prijs_ex_btw NUMERIC`
-    await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS leverancier TEXT`
+    // Zorg dat alle kolommen bestaan (één keer per serverinstantie, niet bij elk artikel)
+    if (!_kolommenOk) {
+      await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS artikelnummer VARCHAR(100)`
+      await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS prijs_ex_btw NUMERIC`
+      await sql`ALTER TABLE inkoop_items ADD COLUMN IF NOT EXISTS leverancier TEXT`
+      _kolommenOk = true
+    }
 
     const rows = await sql`
       INSERT INTO inkoop_items (lijst_id, omschrijving, artikelnummer, aantal, eenheid, leverancier, prijs_ex_btw)

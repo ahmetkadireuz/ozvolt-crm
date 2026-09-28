@@ -115,7 +115,7 @@ export default async function Dashboard() {
       )}
 
       {/* ── Geld-statistieken (Moneybird-rust) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
+      <div className="stat-grid">
         <Link href="/facturen?status=betaald" className="stat-link">
           <div className="stat-card">
             <div className="stat-label"><span className="stat-dot green" /> Omzet {maandNaam}</div>
@@ -140,7 +140,7 @@ export default async function Dashboard() {
           <div className="stat-card">
             <div className="stat-label"><span className="stat-dot orange" /> Open facturen</div>
             <div className="stat-value">{formatEuro(Number(g.facturen_open_waarde))}</div>
-            <div className="stat-sub">{s.facturen_open} factuur/facturen open</div>
+            <div className="stat-sub">{s.facturen_open} {s.facturen_open === 1 ? 'factuur' : 'facturen'} open</div>
           </div>
         </Link>
 
@@ -151,7 +151,7 @@ export default async function Dashboard() {
               {s.te_laat > 0 ? formatEuro(Number(g.te_laat_waarde)) : '—'}
             </div>
             <div className="stat-sub" style={{ color: s.te_laat > 0 ? 'var(--red)' : 'var(--text-mute)' }}>
-              {s.te_laat > 0 ? `${s.te_laat} factuur/facturen verlopen` : 'Alles op tijd'}
+              {s.te_laat > 0 ? `${s.te_laat} ${s.te_laat === 1 ? 'factuur' : 'facturen'} verlopen` : 'Alles op tijd'}
             </div>
           </div>
         </Link>

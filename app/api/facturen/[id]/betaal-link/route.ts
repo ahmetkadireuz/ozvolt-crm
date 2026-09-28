@@ -3,6 +3,7 @@ import { sql, berekenTotalen } from '@/lib/db'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { mbHaalOfMaakContact, mbMaakBetaalLink } from '@/lib/moneybird'
 import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
+import { ensureFactuurKolommen } from '@/lib/facturen'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const klantId = await getKlantSessie()
@@ -15,11 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const termijn = (url.searchParams.get('termijn') === '2' ? 2 : 1) as 1 | 2
 
   // Defensief: oudere productie-db kan kolommen missen
-  try {
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT`
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`
-  } catch {}
+  try { await ensureFactuurKolommen() } catch {}
 
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,

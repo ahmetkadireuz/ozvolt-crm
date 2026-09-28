@@ -203,6 +203,7 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
               className={`btn btn-sm ${factuur.status === s ? 'btn-primary' : 'btn-ghost'}`}
               style={{ justifyContent: 'space-between' }}
               disabled={factuur.status === s}
+              aria-pressed={factuur.status === s}
             >
               {STATUS_LABELS[s]}
               {factuur.status === s && <Icon name="check" size={14} />}
@@ -213,7 +214,7 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
 
       <Betaalplan5050 factuurId={factuurId} factuur={factuur} />
 
-      <button type="button" className="btn btn-danger btn-sm" onClick={deleteFactuur} style={{ width: '100%', justifyContent: 'center' }}>
+      <button type="button" className="btn btn-danger-outline btn-sm" onClick={deleteFactuur} style={{ width: '100%', justifyContent: 'center' }}>
         <Icon name="trash" size={16} />
         Verwijderen
       </button>

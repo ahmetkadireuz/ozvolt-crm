@@ -11,6 +11,16 @@ let _ensured = false
 export async function ensureProjectbeheerTables(): Promise<void> {
   if (_ensured) return
 
+  // Snelle check: staat alles er al? Dan één query i.p.v. negen DDL-rondes na elke koude start.
+  try {
+    const ok = await sql`
+      SELECT to_regclass('project_meerwerk') IS NOT NULL
+         AND EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'opleveringsrapporten' AND column_name = 'getekend_op') AS ok
+    `
+    if (ok[0]?.ok) { _ensured = true; return }
+  } catch { /* val terug op de volledige migratie */ }
+
   await sql`
     CREATE TABLE IF NOT EXISTS project_uren (
       id            SERIAL PRIMARY KEY,

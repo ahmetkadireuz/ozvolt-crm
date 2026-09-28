@@ -2,15 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
+import { ensureFactuurKolommen } from '@/lib/facturen'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
   const { id } = await params
   const factuurId = parseInt(id)
 
-  try {
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
-  } catch {}
+  await ensureFactuurKolommen()
 
   try {
     // Eén factuur in Moneybird: de betaallink hoort bij dezelfde factuur die in de boekhouding staat
