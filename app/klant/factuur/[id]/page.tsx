@@ -7,6 +7,7 @@ import { sql, formatEuro } from '@/lib/db'
 import { BEDRIJF, betaalQrSvg, ibanLeesbaar, idealAan } from '@/lib/betalen'
 import Overschrijving from '../../_components/Overschrijving'
 import BetaalKnop from './BetaalKnop'
+import Icon from '@/components/Icon'
 
 export default async function KlantFactuurPagina({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -112,7 +113,8 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
           ))}
 
           <a href={`/api/facturen/${f.id}/pdf`} target="_blank" rel="noopener noreferrer" className="kp-btn kp-btn-ghost">
-            📄 Factuur downloaden (pdf)
+            <Icon name="download" size={16} />
+            Factuur downloaden (pdf)
           </a>
         </div>
       </div>

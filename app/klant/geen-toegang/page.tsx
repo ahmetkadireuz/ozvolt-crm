@@ -1,7 +1,9 @@
+import Icon from '@/components/Icon'
+
 export default function GeenToegang() {
   return (
     <div style={{ textAlign: 'center', paddingTop: 64 }}>
-      <div style={{ fontSize: 48 }}>🔒</div>
+      <Icon name="lock" size={48} strokeWidth={1.4} style={{ color: '#64748b' }} />
       <h1 style={{ color: '#0d1b3e', marginTop: 16 }}>Link verlopen of ongeldig</h1>
       <p style={{ color: '#64748b', maxWidth: 400, margin: '12px auto 0' }}>
         Deze toegangslink is niet meer geldig. Neem contact op met Ozvolt Elektrotechniek voor een nieuwe link.

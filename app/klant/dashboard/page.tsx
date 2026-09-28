@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
 import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
+import Icon from '@/components/Icon'
 
 type Regel = { aantal: number; prijs: number }
 
@@ -127,7 +128,7 @@ export default async function KlantDashboard() {
           <div className="kp-todo">
             {teDoen.map(t => (
               <Link key={t.href} href={t.href} className="kp-todo-item">
-                <span className={`kp-todo-icon ${t.soort}`}>{t.soort === 'pay' ? '💶' : '✍️'}</span>
+                <span className={`kp-todo-icon ${t.soort}`}><Icon name={t.soort === 'pay' ? 'payments' : 'edit'} size={20} strokeWidth={1.8} /></span>
                 <span className="kp-todo-body">
                   <span className="kp-todo-title" style={{ display: 'block' }}>{t.titel}</span>
                   <span className="kp-todo-meta" style={{ display: 'block' }}>{t.meta}</span>

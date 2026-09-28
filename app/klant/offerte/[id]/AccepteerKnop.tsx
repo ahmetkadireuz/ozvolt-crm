@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Icon from '@/components/Icon'
 
 export default function AccepteerKnop({ offerteId, totaal }: { offerteId: number; totaal: string }) {
   const [naam, setNaam] = useState('')
@@ -30,7 +31,7 @@ export default function AccepteerKnop({ offerteId, totaal }: { offerteId: number
   if (geaccepteerd) {
     return (
       <div style={{ padding: 20, background: '#f0fdf4', borderRadius: 12, border: '1px solid #bbf7d0', textAlign: 'center' }}>
-        <div style={{ fontSize: 28 }}>✅</div>
+        <Icon name="check-circle" size={32} style={{ color: '#16a34a' }} />
         <div style={{ fontWeight: 700, color: '#15803d', marginTop: 8 }}>Offerte geaccepteerd!</div>
         <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>U ontvangt een bevestiging per e-mail.</div>
       </div>
