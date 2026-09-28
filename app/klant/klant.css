@@ -259,3 +259,5 @@ a.kp-chip:hover { background: rgba(255, 255, 255, .16); }
   .kp-todo-cta { display: none; }
   .kp-table .hide-sm { display: none; }
 }
+.kp-todo-icon.pay { color: var(--kp-amber); }
+.kp-todo-icon.sign { color: var(--kp-accent); }

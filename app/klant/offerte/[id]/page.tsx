@@ -5,6 +5,7 @@ import { redirect, notFound } from 'next/navigation'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
 import AccepteerKnop from './AccepteerKnop'
+import Icon from '@/components/Icon'
 
 export default async function KlantOffertePagina({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -137,7 +138,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
                 background: '#f8fafc', borderRadius: 8,
                 border: '1px solid #e2e8f0', textDecoration: 'none',
               }}>
-                <span style={{ fontSize: 20 }}>{b.type?.includes('pdf') ? '📄' : '📎'}</span>
+                <Icon name={b.type?.includes('pdf') ? 'pdf' : 'file-text'} size={20} style={{ color: '#475569', flexShrink: 0 }} />
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e' }}>{b.naam}</span>
                 <span style={{ fontSize: 11, color: '#64748b', marginLeft: 'auto' }}>Downloaden ↓</span>
               </a>
@@ -163,7 +164,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            display: 'block', textAlign: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             padding: '11px', borderRadius: 8,
             border: '1px solid #cbd5e1',
             color: '#475569', fontSize: 14, fontWeight: 600,
@@ -171,7 +172,8 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
             marginTop: 12,
           }}
         >
-          📄 PDF downloaden
+          <Icon name="download" size={16} />
+          PDF downloaden
         </a>
       </div>
     </div>
