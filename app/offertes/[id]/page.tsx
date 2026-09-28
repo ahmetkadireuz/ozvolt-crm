@@ -73,7 +73,7 @@ export default async function OfferteDetailPage({
             <h1 className="page-title">Offerte OZVT-{String(offerte.offertenummer).padStart(4,'0')}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <StatusBadge status={offerte.status} />
-              <span style={{ color: '#8ba8c4', fontSize: '.78rem' }}>{offerte.klant_naam}</span>
+              <span style={{ color: 'var(--text-soft)', fontSize: '.78rem' }}>{offerte.klant_naam}</span>
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default async function OfferteDetailPage({
       {/* Kosten & marge sectie */}
       <div style={{ marginTop: 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#0d1b3e', margin: 0 }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
             Kosten &amp; marge — {offerte.klant_naam}
           </h2>
           <Link href="/kosten" className="btn btn-ghost btn-sm">
@@ -112,13 +112,13 @@ export default async function OfferteDetailPage({
         {/* Marge samenvatting */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
           {[
-            { label: 'Offerte ex BTW', value: formatEuro(totalen.naTotaal), color: '#0d1b3e' },
+            { label: 'Offerte ex BTW', value: formatEuro(totalen.naTotaal), color: 'var(--text)' },
             { label: 'Totaal kosten', value: formatEuro(totaalKosten), color: '#dc2626' },
             { label: 'Bruto marge', value: formatEuro(marge), color: marge >= 0 ? '#16a34a' : '#dc2626' },
             { label: 'Marge %', value: `${margePct.toFixed(1)}%`, color: margePct >= 30 ? '#16a34a' : margePct >= 15 ? '#f59e0b' : '#dc2626' },
           ].map(stat => (
             <div key={stat.label} className="card" style={{ padding: '14px 16px' }}>
-              <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>{stat.label}</div>
+              <div style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>{stat.label}</div>
               <div style={{ fontSize: '1.2rem', fontWeight: 900, color: stat.color }}>{stat.value}</div>
             </div>
           ))}
@@ -127,9 +127,9 @@ export default async function OfferteDetailPage({
         {/* Kostentabel */}
         <div className="card" style={{ padding: 0 }}>
           {kosten.length === 0 ? (
-            <div style={{ padding: '32px', textAlign: 'center', color: '#8ba8c4', fontSize: '.85rem' }}>
+            <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-soft)', fontSize: '.85rem' }}>
               Geen kosten geregistreerd voor deze klant.{' '}
-              <Link href="/kosten" style={{ color: '#0d1b3e', fontWeight: 600 }}>Kosten toevoegen →</Link>
+              <Link href="/kosten" style={{ color: 'var(--text)', fontWeight: 600 }}>Kosten toevoegen →</Link>
             </div>
           ) : (
             <div className="table-wrap">
@@ -147,17 +147,17 @@ export default async function OfferteDetailPage({
                 <tbody>
                   {kosten.map((k: any) => (
                     <tr key={k.id}>
-                      <td style={{ fontSize: '.82rem', color: '#8ba8c4' }}>
+                      <td style={{ fontSize: '.82rem', color: 'var(--text-soft)' }}>
                         {new Date(k.datum).toLocaleDateString('nl-NL')}
                       </td>
                       <td>
-                        <span style={{ fontSize: '.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#f1f5f9', color: '#475569' }}>
+                        <span style={{ fontSize: '.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--surface-mute)', color: 'var(--text-2)' }}>
                           {CAT_LABELS[k.categorie] ?? k.categorie}
                         </span>
                       </td>
                       <td style={{ fontWeight: 500 }}>{k.omschrijving}</td>
-                      <td style={{ fontSize: '.82rem', color: '#8ba8c4' }}>{k.leverancier ?? '—'}</td>
-                      <td style={{ fontSize: '.82rem', color: '#5b7fa6' }}>{k.klus_naam ?? '—'}</td>
+                      <td style={{ fontSize: '.82rem', color: 'var(--text-soft)' }}>{k.leverancier ?? '—'}</td>
+                      <td style={{ fontSize: '.82rem', color: 'var(--text-mute)' }}>{k.klus_naam ?? '—'}</td>
                       <td style={{ textAlign: 'right', fontWeight: 700, color: '#dc2626' }}>
                         {formatEuro(Number(k.bedrag))}
                       </td>

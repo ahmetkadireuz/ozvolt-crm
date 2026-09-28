@@ -10,6 +10,7 @@ import StatusBadge from '@/components/StatusBadge'
 import Icon from '@/components/Icon'
 import FactuurForm from './FactuurForm'
 import FactuurActions from './FactuurActions'
+import { ensureFactuurKolommen } from '@/lib/facturen'
 
 export const metadata: Metadata = { title: 'Factuur' }
 
@@ -18,6 +19,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
   const factuurId = parseInt(id)
   if (isNaN(factuurId)) notFound()
 
+  await ensureFactuurKolommen()
   const [factuurRows, klanten] = await Promise.all([
     sql`SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email FROM facturen f JOIN klanten kt ON kt.id = f.klant_id WHERE f.id = ${factuurId}`,
     sql`SELECT id, naam FROM klanten ORDER BY naam`,
@@ -25,6 +27,10 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
   const factuur = JSON.parse(JSON.stringify(factuurRows[0]))
   if (!factuur) notFound()
+  if (factuur.gekoppelde_factuur_id) {
+    const g = await sql`SELECT id, factuurnummer, status FROM facturen WHERE id = ${factuur.gekoppelde_factuur_id}`
+    factuur.gekoppelde_factuur = g[0] ? JSON.parse(JSON.stringify(g[0])) : null
+  }
 
   const totalen = berekenTotalen(factuur.regels ?? [], 0, factuur.btw_pct)
   const klanten2 = JSON.parse(JSON.stringify(klanten))
@@ -41,7 +47,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
             <h1 className="page-title">Factuur {factuur.factuurnummer}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <StatusBadge status={factuur.status} />
-              <span style={{ color: '#8ba8c4', fontSize: '.78rem' }}>{factuur.klant_naam}</span>
+              <span style={{ color: 'var(--text-soft)', fontSize: '.78rem' }}>{factuur.klant_naam}</span>
             </div>
           </div>
         </div>

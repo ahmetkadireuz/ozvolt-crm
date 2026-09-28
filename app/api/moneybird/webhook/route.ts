@@ -6,12 +6,15 @@ import { sql } from '@/lib/db'
 // URL: https://portaal.ozvoltelektro.nl/api/moneybird/webhook
 
 export async function POST(req: NextRequest) {
-  const body = await req.json()
+  const body = await req.json().catch(() => null)
+  if (!body) return NextResponse.json({ ok: false, error: 'Ongeldige body' }, { status: 400 })
 
-  // Moneybird event types die we afhandelen
-  const { entity_type, entity_id, action } = body
+  // Moneybird stuurt o.a. 'sales_invoice_state_changed_to_paid', '..._to_late' en
+  // 'sales_invoice_updated'. We reageren op elk SalesInvoice-event en halen de status
+  // zelf op bij Moneybird — een vervalst bericht kan dus geen status forceren.
+  const { entity_type, entity_id } = body
 
-  if (entity_type === 'SalesInvoice' && (action === 'payment_created' || action === 'invoice_updated')) {
+  if (entity_type === 'SalesInvoice' && entity_id) {
     try {
       // Zoek factuur op via moneybird_id
       const rows = await sql`

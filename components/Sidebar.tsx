@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import Icon, { IconName } from './Icon'
+import ThemaKnop from './ThemaKnop'
 
 type NavItem = { key: string; icon: IconName; label: string }
 
@@ -21,9 +22,11 @@ const navVerkoop: NavItem[] = [
 
 const navAdmin: NavItem[] = [
   { key: '/kosten',                     icon: 'payments', label: 'Kosten' },
+  { key: '/bonnen',                     icon: 'receipt',  label: 'Bonnen' },
   { key: '/inkoop',                     icon: 'cart',     label: 'Inkoop' },
   { key: '/groepenverklaring',          icon: 'bolt',     label: 'Groepenverklaring' },
   { key: '/instellingen/boekhouding',   icon: 'book',     label: 'Boekhouding' },
+  { key: '/fiscaal',                    icon: 'check-circle', label: 'Fiscaal' },
 ]
 
 const navComms: NavItem[] = [
@@ -79,6 +82,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
             width={170}
             height={48}
             priority
+            className="sb-logo"
             style={{ objectFit: 'contain', height: 'auto', width: 'auto', maxHeight: 44, maxWidth: '100%' }}
           />
         </div>
@@ -97,6 +101,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
         </nav>
 
         <div className="sb-foot">
+          <ThemaKnop />
           <button
             type="button"
             className="logout-link"

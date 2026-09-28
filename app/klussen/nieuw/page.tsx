@@ -70,8 +70,8 @@ export default async function NieuweKlusPage() {
               </select>
             </div>
 
-            <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px 16px', marginTop: 4 }}>
-              <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#8ba8c4', marginBottom: 12, textTransform: 'uppercase' }}>Of nieuwe klant</div>
+            <div style={{ background: 'var(--surface-mute)', borderRadius: 10, padding: '14px 16px', marginTop: 4 }}>
+              <div style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text-soft)', marginBottom: 12, textTransform: 'uppercase' }}>Of nieuwe klant</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Naam</label>

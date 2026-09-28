@@ -25,9 +25,9 @@ interface Props {
 }
 
 const DOOR_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  ozvolt:      { label: 'Ozvolt',      color: '#1b2d4a', bg: '#e8edf5' },
+  ozvolt:      { label: 'Ozvolt',      color: 'var(--text)', bg: 'var(--tint-gray-bg)' },
   klant:       { label: 'Klant',       color: '#7c3aed', bg: '#f3f0ff' },
-  gezamenlijk: { label: 'Gezamenlijk', color: '#0f7a3a', bg: '#f0fdf4' },
+  gezamenlijk: { label: 'Gezamenlijk', color: '#0f7a3a', bg: 'var(--soft-green)' },
 }
 
 export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen = [], offerteId, showBijlagen = false, onChange }: Props) {
@@ -97,14 +97,14 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
         {/* Kolomheader */}
         {items.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 36px', gap: 6, marginBottom: 6 }}>
-            <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.06em' }}>Omschrijving</span>
-            <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.06em' }}>Uitgevoerd door</span>
+            <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Omschrijving</span>
+            <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Uitgevoerd door</span>
             <span />
           </div>
         )}
 
         {items.map((item, i) => (
-          <div key={i} style={{ marginBottom: 8, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px' }}>
+          <div key={i} style={{ marginBottom: 8, background: 'var(--surface-mute)', border: '1px solid var(--line)', borderRadius: 8, padding: '10px 12px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 36px', gap: 6, alignItems: 'flex-start' }}>
               <div>
                 <input
@@ -119,7 +119,7 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
                   placeholder="Toelichting (optioneel)"
                   value={item.toelichting}
                   onChange={e => updateItem(i, 'toelichting', e.target.value)}
-                  style={{ padding: '5px 10px', fontSize: '.8rem', color: '#64748b', borderStyle: 'dashed' }}
+                  style={{ padding: '5px 10px', fontSize: '.8rem', color: 'var(--text-mute)', borderStyle: 'dashed' }}
                 />
               </div>
               <select
@@ -150,18 +150,18 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
       </div>
 
       {/* Bijlagen */}
-      {showBijlagen && <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14, marginTop: 6 }}>
-        <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#8ba8c4', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
+      {showBijlagen && <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginTop: 6 }}>
+        <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
           Bijlagen (KLIC, goedkeuringen, etc.)
         </div>
 
         {bijlagen.map((b, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, marginBottom: 6 }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: 'var(--surface-mute)', border: '1px solid var(--line)', borderRadius: 6, marginBottom: 6 }}>
             <Icon name="pdf" size={18} style={{ color: '#dc2626' }} />
-            <a href={b.url} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: '.82rem', fontWeight: 600, color: '#1b2d4a', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <a href={b.url} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: '.82rem', fontWeight: 600, color: 'var(--text)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {b.naam}
             </a>
-            <span style={{ fontSize: '.72rem', color: '#8ba8c4', whiteSpace: 'nowrap' }}>{formatBytes(b.grootte)}</span>
+            <span style={{ fontSize: '.72rem', color: 'var(--text-soft)', whiteSpace: 'nowrap' }}>{formatBytes(b.grootte)}</span>
             <button type="button" onClick={() => verwijderBijlage(b.url)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 0 }}>
               <Icon name="x" size={16} />
             </button>

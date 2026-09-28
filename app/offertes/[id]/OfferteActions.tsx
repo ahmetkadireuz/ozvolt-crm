@@ -60,18 +60,21 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
 
   const [betaallinkLoading, setBetaallinkLoading] = useState(false)
 
-  async function maakBetaallinks() {
-    if (!confirm('Online betaallink(s) (via Moneybird) aanmaken voor dit werkvoorstel?')) return
+  async function maakBetaallinks(split: boolean) {
+    const vraag = split
+      ? 'Voorschotfactuur (50%) aanmaken en in Moneybird zetten? De eindfactuur (restant) blijft als concept klaarstaan voor na oplevering.'
+      : 'Factuur (100%) aanmaken en in Moneybird zetten met een online betaallink?'
+    if (!confirm(vraag)) return
     setBetaallinkLoading(true)
     try {
       const res = await fetch(`/api/offertes/${offerteId}/betaallinks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ betaling_50_50: offerte.betaling_50_50 }),
+        body: JSON.stringify({ betaling_50_50: split }),
       })
       const text = await res.text()
       const data = text ? JSON.parse(text) : {}
-      if (data.ok) { alert('Betaallinks aangemaakt!'); router.refresh() }
+      if (data.ok) { alert('Betaallink aangemaakt!'); router.refresh() }
       else alert('Fout: ' + (data.error || `Server error ${res.status}`))
     } catch (err: any) {
       alert('Fout: ' + (err?.message ?? 'Onbekend'))
@@ -106,12 +109,12 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
       {/* Totaal */}
       <div className="card">
         <div className="section-label">Bedrag</div>
-        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0d1b3e', marginBottom: 4 }}>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text)', marginBottom: 4 }}>
           {formatEuro(totalen.inclBtw)}
         </div>
-        <div style={{ fontSize: '.78rem', color: '#8ba8c4' }}>incl. {Number(offerte.btw_pct)}% BTW</div>
+        <div style={{ fontSize: '.78rem', color: 'var(--text-soft)' }}>incl. {Number(offerte.btw_pct)}% BTW</div>
         {Number(offerte.korting_pct) > 0 && (
-          <div style={{ fontSize: '.78rem', color: '#dc2626', marginTop: 2 }}>{offerte.korting_pct}% korting toegepast</div>
+          <div style={{ fontSize: '.78rem', color: '#dc2626', marginTop: 2 }}>{formatEuro(Number(offerte.korting_pct))} korting toegepast</div>
         )}
       </div>
 
@@ -120,7 +123,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         <div className="section-label">Werkafspraken</div>
         {afspraken.length === 0 ? (
           <div>
-            <p style={{ fontSize: '.82rem', color: '#8ba8c4', margin: '0 0 10px' }}>
+            <p style={{ fontSize: '.82rem', color: 'var(--text-soft)', margin: '0 0 10px' }}>
               Geen werkafspraken gekoppeld aan deze offerte.
             </p>
             <button
@@ -137,12 +140,12 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {afspraken.map((a: any) => (
-              <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#f8fafc', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'var(--surface-mute)', borderRadius: 6, border: '1px solid var(--line)' }}>
                 <div>
-                  <div style={{ fontSize: '.84rem', fontWeight: 700, color: '#0d1b3e' }}>
+                  <div style={{ fontSize: '.84rem', fontWeight: 700, color: 'var(--text)' }}>
                     OZWA-{String(a.afspraaknummer).padStart(4,'0')}
                   </div>
-                  <div style={{ fontSize: '.72rem', color: '#8ba8c4' }}>
+                  <div style={{ fontSize: '.72rem', color: 'var(--text-soft)' }}>
                     {a.sent_at ? `Verstuurd ${new Date(a.sent_at).toLocaleDateString('nl-NL')}` : 'Nog niet verstuurd'}
                   </div>
                 </div>
@@ -172,7 +175,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           <div className="alert alert-err" style={{ fontSize: '.78rem', padding: '8px 12px' }}>Klant heeft geen e-mailadres.</div>
         )}
         {afspraken.length > 0 && (
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.82rem', color: '#374151', marginBottom: 10, cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.82rem', color: 'var(--text-2)', marginBottom: 10, cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={inclAfspraak}
@@ -194,7 +197,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         </button>
         {acceptUrl && (
           <div>
-            <div style={{ fontSize: '.72rem', color: '#8ba8c4', marginBottom: 4 }}>Akkoord-link:</div>
+            <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginBottom: 4 }}>Akkoord-link:</div>
             <div style={{ display: 'flex', gap: 6 }}>
               <input className="form-ctrl" value={acceptUrl} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(acceptUrl)}>
@@ -204,7 +207,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           </div>
         )}
         {offerte.sent_at && (
-          <div style={{ fontSize: '.75rem', color: '#8ba8c4', marginTop: 8 }}>
+          <div style={{ fontSize: '.75rem', color: 'var(--text-soft)', marginTop: 8 }}>
             Verzonden: {new Date(offerte.sent_at).toLocaleString('nl-NL')}
           </div>
         )}
@@ -255,18 +258,23 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
             )}
           </div>
         ) : null}
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          style={{ width: '100%', justifyContent: 'center' }}
-          onClick={maakBetaallinks}
-          disabled={betaallinkLoading}
-        >
-          <Icon name="payments" size={16} />
-          {betaallinkLoading ? 'Bezig...' : offerte.betaal_url ? 'Betaallinks vernieuwen' : 'Betaallinks aanmaken'}
-        </button>
-        <div style={{ fontSize: '.72rem', color: '#8ba8c4', marginTop: 6 }}>
-          Klant betaalt via iDEAL of bankoverschrijving (Moneybird)
+        {!offerte.betaal_url && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => maakBetaallinks(false)} disabled={betaallinkLoading}>
+              <Icon name="payments" size={16} />
+              {betaallinkLoading ? 'Bezig...' : 'Betaallink — volledig bedrag'}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => maakBetaallinks(true)} disabled={betaallinkLoading}>
+              <Icon name="payments" size={16} />
+              {betaallinkLoading ? 'Bezig...' : 'Betaallink — 50% voorschot'}
+            </button>
+          </div>
+        )}
+        <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginTop: 6 }}>
+          Maakt de factuur aan en zet hem in Moneybird; de klant betaalt via iDEAL of overschrijving.
+          {offerte.betaal_url && ' De link hoort bij de factuur hieronder — een nieuwe link is niet nodig.'}
         </div>
       </div>
 
@@ -282,6 +290,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
               className={`btn btn-sm ${offerte.status === s ? 'btn-primary' : 'btn-ghost'}`}
               style={{ justifyContent: 'space-between' }}
               disabled={offerte.status === s}
+              aria-pressed={offerte.status === s}
             >
               {STATUS_LABELS[s]}
               {offerte.status === s && <Icon name="check" size={14} />}
@@ -306,7 +315,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         </button>
       </div>
 
-      <button type="button" className="btn btn-danger btn-sm" onClick={deleteOfferte} style={{ width: '100%', justifyContent: 'center' }}>
+      <button type="button" className="btn btn-danger-outline btn-sm" onClick={deleteOfferte} style={{ width: '100%', justifyContent: 'center' }}>
         <Icon name="trash" size={16} />
         Verwijderen
       </button>

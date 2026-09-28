@@ -113,7 +113,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
       {/* Klantportaal link */}
       <div className="card">
         <div className="section-label">Klantportaal</div>
-        <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 10px' }}>
+        <p style={{ fontSize: 12, color: 'var(--text-mute)', margin: '0 0 10px' }}>
           Stuur de klant een beveiligde link zodat hij zijn dossier kan bekijken (geldig 30 dagen).
         </p>
         <button type="button" className="btn btn-primary btn-sm" onClick={maakPortaalLink} disabled={linkBezig} style={{ width: '100%', justifyContent: 'center' }}>
@@ -125,13 +125,13 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
               readOnly
               value={portaalLink}
               onClick={e => (e.target as HTMLInputElement).select()}
-              style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 11, fontFamily: 'monospace', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid var(--line-strong)', fontSize: 11, fontFamily: 'monospace', boxSizing: 'border-box' }}
             />
             <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
               <button
                 type="button"
                 onClick={() => { navigator.clipboard.writeText(portaalLink); alert('Link gekopieerd!') }}
-                style={{ flex: 1, padding: '7px', borderRadius: 6, background: '#f1f5f9', border: '1px solid #cbd5e1', fontSize: 12, cursor: 'pointer' }}
+                style={{ flex: 1, padding: '7px', borderRadius: 6, background: 'var(--surface-mute)', border: '1px solid var(--line-strong)', fontSize: 12, cursor: 'pointer' }}
               >
                 📋 Kopiëren
               </button>
@@ -144,7 +144,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
                     href={`https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ flex: 1, padding: '7px', borderRadius: 6, background: '#dcfce7', border: '1px solid #86efac', fontSize: 12, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', color: '#15803d', fontWeight: 600 }}
+                    style={{ flex: 1, padding: '7px', borderRadius: 6, background: 'var(--tint-green-bg)', border: '1px solid #86efac', fontSize: 12, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', color: 'var(--tint-green)', fontWeight: 600 }}
                   >
                     💬 WhatsApp
                   </a>
@@ -153,7 +153,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
               {klant.email && (
                 <a
                   href={`mailto:${klant.email}?subject=${encodeURIComponent('Uw dossier bij Ozvolt Elektrotechniek')}&body=${encodeURIComponent(`Goedendag ${klant.naam.split(' ')[0]},\n\nVia onderstaande link kunt u uw dossier bekijken:\n${portaalLink}\n\nMet vriendelijke groet,\nOzvolt Elektrotechniek`)}`}
-                  style={{ flex: 1, padding: '7px', borderRadius: 6, background: '#dbeafe', border: '1px solid #93c5fd', fontSize: 12, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', color: '#1d4ed8', fontWeight: 600 }}
+                  style={{ flex: 1, padding: '7px', borderRadius: 6, background: 'var(--tint-blue-bg)', border: '1px solid #93c5fd', fontSize: 12, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', color: 'var(--tint-blue)', fontWeight: 600 }}
                 >
                   ✉️ E-mail
                 </a>
@@ -166,7 +166,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
       {/* Groenverklaring / dossier */}
       <div className="card">
         <div className="section-label">Groenverklaring / dossier</div>
-        <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 10px' }}>
+        <p style={{ fontSize: 12, color: 'var(--text-mute)', margin: '0 0 10px' }}>
           Upload een PDF of document dat de klant kan downloaden in zijn portaal.
         </p>
         <div className="form-group">
@@ -199,7 +199,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
         {gvFout && <p style={{ color: '#dc2626', fontSize: 12, margin: '6px 0 0' }}>{gvFout}</p>}
       </div>
 
-      <button type="button" className="btn btn-danger btn-sm" onClick={deleteKlant} style={{ width: '100%', justifyContent: 'center' }}>
+      <button type="button" className="btn btn-danger-outline btn-sm" onClick={deleteKlant} style={{ width: '100%', justifyContent: 'center' }}>
         <Icon name="trash" size={16} />
         Klant verwijderen
       </button>

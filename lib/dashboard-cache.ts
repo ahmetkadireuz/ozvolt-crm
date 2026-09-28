@@ -19,9 +19,9 @@ export const getDashboardData = unstable_cache(
         SELECT
           COALESCE((
             SELECT SUM(
-              (SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
+              GREATEST((SELECT COALESCE(SUM((r->>'aantal')::numeric * (r->>'prijs')::numeric), 0)
                FROM jsonb_array_elements(regels) r)
-              * (1 - korting_pct / 100.0)
+              - COALESCE(korting_pct, 0), 0)
               * (1 + btw_pct / 100.0)
             )
             FROM offertes WHERE status IN ('concept','gestuurd')

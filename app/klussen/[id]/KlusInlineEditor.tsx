@@ -71,10 +71,10 @@ export default function KlusInlineEditor({ klusId, initial }: Props) {
       <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>Aanvraagdetails</span>
         {dirty && !saving && (
-          <span style={{ fontSize: 11, color: '#b45309', fontWeight: 700 }}>● Niet opgeslagen</span>
+          <span style={{ fontSize: 11, color: 'var(--tint-amber)', fontWeight: 700 }}>● Niet opgeslagen</span>
         )}
         {justSaved && !dirty && (
-          <span style={{ fontSize: 11, color: '#15803d', fontWeight: 700 }}>✓ Opgeslagen — zichtbaar in klantportaal</span>
+          <span style={{ fontSize: 11, color: 'var(--tint-green)', fontWeight: 700 }}>✓ Opgeslagen — zichtbaar in klantportaal</span>
         )}
       </div>
 
@@ -99,7 +99,7 @@ export default function KlusInlineEditor({ klusId, initial }: Props) {
         </div>
       </div>
       <div className="form-group" style={{ marginTop: 10, marginBottom: 0 }}>
-        <label className="form-label">Omschrijving <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: 11 }}>— zichtbaar voor klant in portaal</span></label>
+        <label className="form-label">Omschrijving <span style={{ color: 'var(--text-soft)', fontWeight: 400, fontSize: 11 }}>— zichtbaar voor klant in portaal</span></label>
         <textarea
           className="form-ctrl"
           rows={4}
@@ -111,7 +111,7 @@ export default function KlusInlineEditor({ klusId, initial }: Props) {
       </div>
 
       {error && (
-        <div style={{ marginTop: 10, padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: 8, fontSize: 13 }}>
+        <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--soft-red)', border: '1px solid var(--tint-red-bg)', color: '#b91c1c', borderRadius: 8, fontSize: 13 }}>
           {error}
         </div>
       )}

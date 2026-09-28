@@ -58,7 +58,7 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
                 ['Klant sinds', new Date(klant.aangemaakt_op).toLocaleDateString('nl-NL')],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <span style={{ color: '#8ba8c4', display: 'block', fontSize: '.72rem' }}>{label}</span>
+                  <span style={{ color: 'var(--text-soft)', display: 'block', fontSize: '.72rem' }}>{label}</span>
                   <span>{value || '—'}</span>
                 </div>
               ))}
@@ -69,7 +69,7 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
           {klant.status_notitie && (
             <div className="card" style={{ borderLeft: '3px solid #4c7191' }}>
               <div className="section-label" style={{ marginBottom: 6 }}>Situatie</div>
-              <p style={{ fontSize: '.84rem', color: '#374151', lineHeight: 1.75, whiteSpace: 'pre-wrap', margin: 0 }}>{klant.status_notitie}</p>
+              <p style={{ fontSize: '.84rem', color: 'var(--text-2)', lineHeight: 1.75, whiteSpace: 'pre-wrap', margin: 0 }}>{klant.status_notitie}</p>
             </div>
           )}
 
@@ -80,12 +80,12 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
               <Link href={`/klussen/nieuw`} className="btn btn-ghost btn-sm">+ Nieuw</Link>
             </div>
             {klussen.length === 0
-              ? <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: 0 }}>Geen klussen.</p>
+              ? <p style={{ color: 'var(--text-soft)', fontSize: '.82rem', margin: 0 }}>Geen klussen.</p>
               : klussen.map((k: any) => (
-                  <Link key={k.id} href={`/klussen/${k.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <Link key={k.id} href={`/klussen/${k.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid var(--line-soft)' }}>
                     <div>
-                      <div style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>{k.type_werk || `Klus #${k.id}`}</div>
-                      <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{new Date(k.aangemaakt_op).toLocaleDateString('nl-NL')}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '.84rem' }}>{k.type_werk || `Klus #${k.id}`}</div>
+                      <div style={{ fontSize: '.75rem', color: 'var(--text-soft)' }}>{new Date(k.aangemaakt_op).toLocaleDateString('nl-NL')}</div>
                     </div>
                     <StatusBadge status={k.status} />
                   </Link>
@@ -102,12 +102,12 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
               </Link>
             </div>
             {offertes.length === 0
-              ? <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: 0 }}>Geen offertes.</p>
+              ? <p style={{ color: 'var(--text-soft)', fontSize: '.82rem', margin: 0 }}>Geen offertes.</p>
               : offertes.map((o: any) => (
-                <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid var(--line-soft)' }}>
                   <div>
-                    <div style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>OZVT-{String(o.offertenummer).padStart(4,'0')}</div>
-                    <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '.84rem' }}>OZVT-{String(o.offertenummer).padStart(4,'0')}</div>
+                    <div style={{ fontSize: '.75rem', color: 'var(--text-soft)' }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</div>
                   </div>
                   <StatusBadge status={o.status} />
                 </Link>
@@ -124,12 +124,12 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
               </Link>
             </div>
             {facturen.length === 0
-              ? <p style={{ color: '#8ba8c4', fontSize: '.82rem', margin: 0 }}>Geen facturen.</p>
+              ? <p style={{ color: 'var(--text-soft)', fontSize: '.82rem', margin: 0 }}>Geen facturen.</p>
               : facturen.map((f: any) => (
-                <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <Link key={f.id} href={`/facturen/${f.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', padding: '8px 0', borderBottom: '1px solid var(--line-soft)' }}>
                   <div>
-                    <div style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.84rem' }}>{f.factuurnummer}</div>
-                    <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '.84rem' }}>{f.factuurnummer}</div>
+                    <div style={{ fontSize: '.75rem', color: 'var(--text-soft)' }}>{new Date(f.factuurdatum).toLocaleDateString('nl-NL')}</div>
                   </div>
                   <StatusBadge status={f.status} />
                 </Link>

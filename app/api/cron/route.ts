@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
+import { haalAnalyses, haalRecenteDocumenten } from '@/lib/bonnen/data'
 
 // Vercel Cron Job — dagelijks uitvoeren
 // Voeg in vercel.json toe: { "crons": [{ "path": "/api/cron", "schedule": "0 8 * * *" }] }
 
 export async function GET(req: NextRequest) {
-  const token = req.nextUrl.searchParams.get('token')
-  if (token !== process.env.CRON_SECRET) {
+  // Vercel Cron stuurt 'Authorization: Bearer <CRON_SECRET>'; ?token= blijft werken voor handmatig aanroepen
+  const secret = process.env.CRON_SECRET
+  const bearer = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  const token = bearer || req.nextUrl.searchParams.get('token')
+  if (!secret || token !== secret) {
     return NextResponse.json({ error: 'Niet geautoriseerd' }, { status: 401 })
   }
 
@@ -104,6 +108,30 @@ export async function GET(req: NextRequest) {
         '/agenda')
     `
     resultaten.push(`afspraak_morgen: ${a.titel}`)
+  }
+
+  // 5. Nieuwe bonnen/facturen in Moneybird die nog niet door de AI zijn gecontroleerd
+  if (process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID) {
+    try {
+      const [docs, analyses] = await Promise.all([haalRecenteDocumenten(1), haalAnalyses()])
+      const nieuw = docs.filter((d: any) => !analyses.has(String(d.id))).length
+      if (nieuw > 0) {
+        const recent = await sql`
+          SELECT 1 FROM admin_notifications
+          WHERE type = 'bonnen_nieuw' AND aangemaakt_op > NOW() - INTERVAL '1 day'
+        `
+        if (!recent[0]) {
+          await sql`
+            INSERT INTO admin_notifications (type, titel, bericht, link)
+            VALUES ('bonnen_nieuw', ${`${nieuw} ${nieuw === 1 ? 'nieuwe bon' : 'nieuwe bonnen'} te controleren`},
+              'Laat de AI de boeking en categorie controleren voordat je ze in Moneybird afrondt.', '/bonnen')
+          `
+          resultaten.push(`bonnen_nieuw: ${nieuw}`)
+        }
+      }
+    } catch (err) {
+      console.error('[cron bonnen]', err)
+    }
   }
 
   return NextResponse.json({ ok: true, resultaten })

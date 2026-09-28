@@ -3,7 +3,8 @@ import { sql, berekenTotalen, formatEuro } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 import { sendMail, factuurMailHtml } from '@/lib/mail'
 import { genereerFactuurPDF } from '@/lib/pdf-factuur'
-import { mbHaalOfMaakContact, mbMaakFactuur, mbVerstuurFactuur } from '@/lib/moneybird'
+import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
+import { idealAan } from '@/lib/betalen'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -26,7 +27,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const vervalDatum = new Date(factuur.factuurdatum)
   vervalDatum.setDate(vervalDatum.getDate() + (factuur.betalingstermijn ?? 14))
 
-  const betaalUrl: string | null = factuur.betaal_url ?? null
+  // iDEAL-link alleen meesturen als iDEAL aanstaat; standaard betaalt de klant direct via overschrijving
+  const betaalUrl: string | null = idealAan() ? (factuur.betaal_url ?? null) : null
 
   await sql`UPDATE facturen SET status = 'verstuurd', bijgewerkt_op = NOW() WHERE id = ${factuurId}`
 
@@ -72,39 +74,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // Stap 2: automatisch syncen naar Moneybird zodat Knab-betalingen straks
   // gematcht kunnen worden. Niet-blokkerend: factuur in CRM staat al op verstuurd.
-  let moneybirdResultaat: { synced: boolean; error?: string; moneybird_id?: string; moneybird_url?: string } = { synced: false }
-  if (process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID && !factuur.moneybird_id) {
+  let moneybirdResultaat: { synced: boolean; error?: string; moneybird_id?: string } = { synced: false }
+  if (process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID) {
     try {
-      const contact = await mbHaalOfMaakContact({
-        id: factuur.klant_id,
-        naam: factuur.klant_naam,
-        email: factuur.klant_email,
-        telefoon: factuur.klant_telefoon,
-        type: factuur.klant_type,
-      })
-      const mbFactuur = await mbMaakFactuur({
-        contactId: contact.id,
-        factuurNummer: factuur.factuurnummer,
-        factuurdatum: factuur.factuurdatum,
-        betalingstermijn: factuur.betalingstermijn ?? 14,
-        regels: regels.map((r: any) => ({
-          omschrijving: r.omschrijving,
-          aantal: Number(r.aantal),
-          prijs: Number(r.prijs),
-          btw: Number(r.btw ?? factuur.btw_pct ?? 21),
-        })),
-        notities: factuur.notities,
-      })
-      // 'Manual' verzending: niet door Moneybird mailen, maar wel als 'open' markeren
-      // zodat Moneybird inkomende Knab-transacties eraan kan matchen.
-      try { await mbVerstuurFactuur(mbFactuur.id) } catch { /* niet kritiek */ }
-
-      await sql`
-        UPDATE facturen
-        SET moneybird_id = ${mbFactuur.id}, moneybird_url = ${mbFactuur.url ?? null}
-        WHERE id = ${factuurId}
-      `
-      moneybirdResultaat = { synced: true, moneybird_id: mbFactuur.id, moneybird_url: mbFactuur.url ?? undefined }
+      const mb = await zorgVoorMoneybirdFactuur(factuurId)
+      moneybirdResultaat = { synced: true, moneybird_id: mb.moneybirdId }
     } catch (err) {
       console.error('[moneybird auto-sync na versturen]', err)
       moneybirdResultaat = { synced: false, error: err instanceof Error ? err.message : String(err) }

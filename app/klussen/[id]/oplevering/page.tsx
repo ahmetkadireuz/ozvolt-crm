@@ -59,7 +59,7 @@ export default async function OpleveringPagina({
           </Link>
           <div>
             <h1 className="page-title" style={{ marginBottom: 2 }}>Opleveringsrapport</h1>
-            <span className="mono" style={{ color: '#8ba8c4' }}>{klus.klant_naam} · Project #{klusId}</span>
+            <span className="mono" style={{ color: 'var(--text-soft)' }}>{klus.klant_naam} · Project #{klusId}</span>
           </div>
         </div>
       </div>

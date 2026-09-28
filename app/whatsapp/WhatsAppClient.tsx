@@ -53,7 +53,7 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 className="page-title">WhatsApp</h1>
         {!apiActief && (
-          <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 12px', borderRadius: 20, fontSize: '.78rem', fontWeight: 700 }}>
+          <span style={{ background: 'var(--tint-amber-bg)', color: 'var(--tint-amber)', padding: '4px 12px', borderRadius: 20, fontSize: '.78rem', fontWeight: 700 }}>
             ⚠ API niet ingesteld — link-modus actief
           </span>
         )}
@@ -62,7 +62,7 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' }}>
         {/* Bericht versturen */}
         <div className="card">
-          <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
+          <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
             Bericht versturen
           </div>
 
@@ -82,7 +82,7 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
             </div>
 
             {sendMsg && (
-              <div style={{ padding: '10px 14px', borderRadius: 8, background: sendMsg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', fontSize: '.85rem', color: sendMsg.startsWith('✅') ? '#16a34a' : '#dc2626' }}>
+              <div style={{ padding: '10px 14px', borderRadius: 8, background: sendMsg.startsWith('✅') ? 'var(--soft-green)' : '#fef2f2', fontSize: '.85rem', color: sendMsg.startsWith('✅') ? '#16a34a' : '#dc2626' }}>
                 {sendMsg}
               </div>
             )}
@@ -114,15 +114,15 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
 
         {/* Snelle klant-links */}
         <div className="card">
-          <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
+          <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
             Klanten — direct WhatsApp
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {klanten.slice(0, 15).map(k => (
-              <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderRadius: 8 }}>
+              <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--surface-mute)', borderRadius: 8 }}>
                 <div>
-                  <div style={{ fontWeight: 600, color: '#0d1b3e', fontSize: '.9rem' }}>{k.naam}</div>
-                  <div style={{ fontSize: '.78rem', color: '#8ba8c4' }}>{k.telefoon}</div>
+                  <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '.9rem' }}>{k.naam}</div>
+                  <div style={{ fontSize: '.78rem', color: 'var(--text-soft)' }}>{k.telefoon}</div>
                 </div>
                 <a
                   href={`https://wa.me/${formatTel(k.telefoon)}`}
@@ -142,23 +142,23 @@ export default function WhatsAppClient({ berichten, klanten, apiActief }: {
       {/* Berichtgeschiedenis */}
       {berichten.length > 0 && (
         <div className="card" style={{ marginTop: 20 }}>
-          <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
+          <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
             Berichtgeschiedenis
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {berichten.map(b => (
               <div key={b.id} style={{
                 display: 'flex', gap: 12, alignItems: 'flex-start', padding: '10px 14px',
-                background: b.direction === 'inbound' ? '#f0fdf4' : '#f8fafc',
+                background: b.direction === 'inbound' ? 'var(--soft-green)' : 'var(--surface-mute)',
                 borderRadius: 8, borderLeft: `3px solid ${b.direction === 'inbound' ? '#16a34a' : '#25d366'}`
               }}>
                 <Icon name={b.direction === 'inbound' ? 'arrow-left' : 'arrow-right'} size={18} style={{ color: b.direction === 'inbound' ? '#16a34a' : '#25d366', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontWeight: 700, fontSize: '.85rem', color: '#0d1b3e' }}>{b.klant_naam ?? 'Onbekend'}</span>
-                    <span style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{timeAgo(b.aangemaakt_op)}</span>
+                    <span style={{ fontWeight: 700, fontSize: '.85rem', color: 'var(--text)' }}>{b.klant_naam ?? 'Onbekend'}</span>
+                    <span style={{ fontSize: '.75rem', color: 'var(--text-soft)' }}>{timeAgo(b.aangemaakt_op)}</span>
                   </div>
-                  <div style={{ fontSize: '.85rem', color: '#4a5568' }}>{b.body ?? '—'}</div>
+                  <div style={{ fontSize: '.85rem', color: 'var(--text-2)' }}>{b.body ?? '—'}</div>
                 </div>
               </div>
             ))}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql, berekenTotalen } from '@/lib/db'
+import { sql } from '@/lib/db'
 import { requireSession } from '@/lib/session'
-import { mbHaalOfMaakContact, mbMaakFactuur, mbVerstuurFactuur } from '@/lib/moneybird'
+import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
 
 export async function POST(req: NextRequest) {
   const session = await requireSession()
@@ -30,42 +30,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Stap 1: Haal of maak contact aan
-    const contact = await mbHaalOfMaakContact({
-      id: factuur.klant_id,
-      naam: factuur.klant_naam,
-      email: factuur.klant_email,
-      telefoon: factuur.klant_tel,
-      type: factuur.klant_type,
-    })
-
-    // Stap 2: Maak factuur aan in Moneybird
-    const regels = Array.isArray(factuur.regels) ? factuur.regels : []
-    const mbFactuur = await mbMaakFactuur({
-      contactId: contact.id,
-      factuurNummer: factuur.factuurnummer,
-      factuurdatum: factuur.factuurdatum,
-      betalingstermijn: factuur.betalingstermijn ?? 14,
-      regels: regels.map((r: any) => ({
-        omschrijving: r.omschrijving,
-        aantal: Number(r.aantal),
-        prijs: Number(r.prijs),
-        btw: Number(r.btw ?? factuur.btw_pct ?? 21),
-      })),
-      notities: factuur.notities,
-    })
-
-    // Stap 3: Sla Moneybird ID op in database
-    await sql`
-      UPDATE facturen
-      SET moneybird_id = ${mbFactuur.id}, moneybird_url = ${mbFactuur.url ?? null}
-      WHERE id = ${Number(factuurId)}
-    `
-
+    const mb = await zorgVoorMoneybirdFactuur(Number(factuurId))
+    const opgeslagen = await sql`SELECT moneybird_url FROM facturen WHERE id = ${Number(factuurId)}`
     return NextResponse.json({
       ok: true,
-      moneybird_id: mbFactuur.id,
-      moneybird_url: mbFactuur.url,
+      moneybird_id: mb.moneybirdId,
+      moneybird_url: opgeslagen[0]?.moneybird_url ?? null,
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)

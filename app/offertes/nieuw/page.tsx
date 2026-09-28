@@ -95,12 +95,12 @@ export default async function NieuweOffertePage({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-            <span style={{ fontSize: '.72rem', color: '#8ba8c4', fontWeight: 700, whiteSpace: 'nowrap' }}>OF NIEUWE KLANT</span>
-            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+            <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+            <span style={{ fontSize: '.72rem', color: 'var(--text-soft)', fontWeight: 700, whiteSpace: 'nowrap' }}>OF NIEUWE KLANT</span>
+            <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
           </div>
 
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ background: 'var(--surface-mute)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>
               <label className="form-label">Naam nieuwe klant</label>
               <input className="form-ctrl" name="nieuwe_naam" placeholder="Voor- en achternaam of bedrijfsnaam" />

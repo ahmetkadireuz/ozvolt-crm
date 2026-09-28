@@ -14,6 +14,11 @@ function BetaalLinks({ betaalUrl, betaalUrl2, is50_50, totaal, eersteTermijn }: 
           <a href={betaalUrl} style={{ flex: 1, minWidth: 160, display: 'block', background: '#1d2f4c', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
             Eerste termijn betalen<br /><strong>{eersteTermijn}</strong>
           </a>
+          {!betaalUrl2 && (
+            <div style={{ flex: 1, minWidth: 160, fontSize: 12, color: '#64748b', alignSelf: 'center', lineHeight: 1.5 }}>
+              Tweede termijn: u ontvangt de eindfactuur na oplevering.
+            </div>
+          )}
           {betaalUrl2 && (
             <a href={betaalUrl2} style={{ flex: 1, minWidth: 160, display: 'block', background: '#4c7191', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
               Tweede termijn betalen<br /><strong>{eersteTermijn}</strong>

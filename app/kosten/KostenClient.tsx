@@ -105,13 +105,13 @@ export default function KostenClient({ kosten, klanten, klussen }: {
       {/* Totaal kaarten */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
         <div className="card" style={{ margin: 0 }}>
-          <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Totaal zichtbaar</div>
+          <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Totaal zichtbaar</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#dc2626' }}>{euro(totaal)}</div>
         </div>
         {perCategorie.map(c => (
           <div key={c.cat} className="card" style={{ margin: 0, borderLeft: `3px solid ${CAT_COLORS[c.cat]}` }}>
-            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{c.label}</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0d1b3e' }}>{euro(c.totaal)}</div>
+            <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{c.label}</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)' }}>{euro(c.totaal)}</div>
           </div>
         ))}
       </div>
@@ -123,7 +123,7 @@ export default function KostenClient({ kosten, klanten, klussen }: {
             {f === 'alles' ? 'Alles' : f === 'klus' ? 'Per klus' : 'Vaste kosten'}
           </button>
         ))}
-        <div style={{ width: 1, background: '#e2e8f0', margin: '0 4px' }} />
+        <div style={{ width: 1, background: 'var(--line)', margin: '0 4px' }} />
         {['alles', ...CATEGORIEEN].map(c => (
           <button key={c} className={`btn btn-sm ${catFilter === c ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setCatFilter(c)}>
             {c === 'alles' ? 'Alle categorieën' : CAT_LABELS[c]}
@@ -134,28 +134,28 @@ export default function KostenClient({ kosten, klanten, klussen }: {
       {/* Tabel */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {visible.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 24px', color: '#8ba8c4' }}>Geen kosten gevonden.</div>
+          <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-soft)' }}>Geen kosten gevonden.</div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <tr style={{ background: 'var(--surface-mute)', borderBottom: '1px solid var(--line)' }}>
                 {['Datum', 'Omschrijving', 'Categorie', 'Leverancier', 'Klus', 'Bedrag', ''].map(h => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
+                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {visible.map((k, i) => (
-                <tr key={k.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                  <td style={{ padding: '10px 16px', fontSize: '.85rem', color: '#5b7fa6', whiteSpace: 'nowrap' }}>{new Date(k.datum).toLocaleDateString('nl-NL')}</td>
-                  <td style={{ padding: '10px 16px', fontWeight: 600, color: '#0d1b3e' }}>{k.omschrijving}</td>
+                <tr key={k.id} style={{ borderBottom: '1px solid var(--line-soft)', background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface-mute)' }}>
+                  <td style={{ padding: '10px 16px', fontSize: '.85rem', color: 'var(--text-mute)', whiteSpace: 'nowrap' }}>{new Date(k.datum).toLocaleDateString('nl-NL')}</td>
+                  <td style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--text)' }}>{k.omschrijving}</td>
                   <td style={{ padding: '10px 16px' }}>
                     <span style={{ background: CAT_COLORS[k.categorie] + '20', color: CAT_COLORS[k.categorie], padding: '2px 8px', borderRadius: 20, fontSize: '.75rem', fontWeight: 700 }}>
                       {CAT_LABELS[k.categorie] ?? k.categorie}
                     </span>
                   </td>
-                  <td style={{ padding: '10px 16px', fontSize: '.85rem', color: '#5b7fa6' }}>{k.leverancier ?? '—'}</td>
-                  <td style={{ padding: '10px 16px', fontSize: '.85rem', color: '#5b7fa6' }}>{k.klus_naam ?? (k.klus_id ? `#${k.klus_id}` : '—')}</td>
+                  <td style={{ padding: '10px 16px', fontSize: '.85rem', color: 'var(--text-mute)' }}>{k.leverancier ?? '—'}</td>
+                  <td style={{ padding: '10px 16px', fontSize: '.85rem', color: 'var(--text-mute)' }}>{k.klus_naam ?? (k.klus_id ? `#${k.klus_id}` : '—')}</td>
                   <td style={{ padding: '10px 16px', fontWeight: 800, color: '#dc2626', whiteSpace: 'nowrap' }}>{euro(Number(k.bedrag))}</td>
                   <td style={{ padding: '10px 16px' }}>
                     <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(k.id)}>
@@ -175,7 +175,7 @@ export default function KostenClient({ kosten, klanten, klussen }: {
           onClick={() => setShowForm(false)}>
           <div className="card" style={{ width: 480, margin: 0, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-              <h3 style={{ margin: 0, color: '#0d1b3e' }}>Kost toevoegen</h3>
+              <h3 style={{ margin: 0, color: 'var(--text)' }}>Kost toevoegen</h3>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>✕</button>
             </div>
 

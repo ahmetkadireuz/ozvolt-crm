@@ -68,7 +68,7 @@ export default function MailClient({ klanten, klussen, aiActief }: {
         {/* Invoer */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="card">
-            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Instellen</div>
+            <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Instellen</div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -113,7 +113,7 @@ export default function MailClient({ klanten, klussen, aiActief }: {
 
           {/* Sjablonen */}
           <div className="card">
-            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Snelle sjablonen</div>
+            <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Snelle sjablonen</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {SJABLONEN.map(s => (
                 <button key={s.label} className="btn btn-ghost btn-sm" style={{ textAlign: 'left', justifyContent: 'flex-start' }}
@@ -134,7 +134,7 @@ export default function MailClient({ klanten, klussen, aiActief }: {
         {/* Output */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5b7fa6', textTransform: 'uppercase', letterSpacing: 1 }}>Gegenereerde mail</div>
+            <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--text-mute)', textTransform: 'uppercase', letterSpacing: 1 }}>Gegenereerde mail</div>
             {gegenereerd && !gegenereerd.startsWith('❌') && (
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(gegenereerd)}>
@@ -152,13 +152,13 @@ export default function MailClient({ klanten, klussen, aiActief }: {
           </div>
 
           {sendMsg && (
-            <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 8, background: sendMsg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', fontSize: '.85rem', color: sendMsg.startsWith('✅') ? '#16a34a' : '#dc2626' }}>
+            <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 8, background: sendMsg.startsWith('✅') ? 'var(--soft-green)' : '#fef2f2', fontSize: '.85rem', color: sendMsg.startsWith('✅') ? '#16a34a' : '#dc2626' }}>
               {sendMsg}
             </div>
           )}
 
           {!gegenereerd ? (
-            <div style={{ textAlign: 'center', padding: '48px 24px', color: '#8ba8c4' }}>
+            <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-soft)' }}>
               <Icon name="mail" size={48} style={{ display: 'block', margin: '0 auto 12px' }} />
               <p style={{ margin: 0, fontSize: '.9rem' }}>Vul links in en klik op Mail genereren.</p>
             </div>

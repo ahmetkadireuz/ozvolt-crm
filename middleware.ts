@@ -31,13 +31,23 @@ function isKlantBetaalLink(pathname: string) {
   return /^\/api\/facturen\/\d+\/betaal-link$/.test(pathname)
 }
 
+// PDF-routes: toegankelijk met admin-sessie óf klant-sessie (eigendom wordt in de route gecontroleerd)
+function isPdfRoute(pathname: string) {
+  return /^\/api\/(offertes|facturen)\/\d+\/pdf$/.test(pathname)
+}
+
+// Exacte match of een sub-pad — '/offerte' mag niet '/offertes' openzetten
+function matchPad(pathname: string, p: string) {
+  return pathname === p || pathname.startsWith(p.endsWith('/') ? p : p + '/')
+}
+
 const SESSION_COOKIE = 'ozvolt_crm_session'
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   const isStaticFile = /\.(png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf)$/i.test(pathname)
-  const isPublic = isStaticFile || PUBLIC_PATHS.some(p => pathname.startsWith(p))
+  const isPublic = isStaticFile || PUBLIC_PATHS.some(p => matchPad(pathname, p))
 
   const res = NextResponse.next()
   res.headers.set('x-pathname', pathname)
@@ -47,8 +57,9 @@ export async function middleware(req: NextRequest) {
   // Klantportaal routes — alleen ozvolt_klant cookie vereist
   const isKlantRoute =
     pathname === '/klant' ||
-    KLANT_PATHS.some(p => pathname.startsWith(p)) ||
-    isKlantBetaalLink(pathname)
+    KLANT_PATHS.some(p => matchPad(pathname, p)) ||
+    isKlantBetaalLink(pathname) ||
+    (isPdfRoute(pathname) && !req.cookies.get(SESSION_COOKIE) && !!req.cookies.get('ozvolt_klant'))
 
   if (isKlantRoute) {
     const klantToken = req.cookies.get('ozvolt_klant')?.value
@@ -69,7 +80,10 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-    const secret = new TextEncoder().encode(process.env.SESSION_SECRET || 'dev-secret-change-in-production')
+    // Zelfde sleutel als lib/session.ts; in productie zonder SESSION_SECRET nooit een bekende fallback accepteren
+    const s = process.env.SESSION_SECRET
+    if (!s && process.env.NODE_ENV === 'production') throw new Error('SESSION_SECRET ontbreekt')
+    const secret = new TextEncoder().encode(s || 'dev-secret-change-in-production-min-32-chars!!')
     await jwtVerify(token, secret)
     return res
   } catch {

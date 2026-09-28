@@ -11,7 +11,8 @@ type Regel = { aantal: number; prijs: number }
 
 function totaalOfferte(o: { regels: Regel[]; korting_pct: number; btw_pct: number }) {
   const sub = o.regels.reduce((s, r) => s + Number(r.aantal) * Number(r.prijs), 0)
-  return sub * (1 - o.korting_pct / 100) * (1 + o.btw_pct / 100)
+  // korting_pct bevat een bedrag in euro's (zie RegelEditor), geen percentage
+  return Math.max(0, sub - Number(o.korting_pct ?? 0)) * (1 + o.btw_pct / 100)
 }
 function totaalFactuur(f: { regels: Regel[]; btw_pct: number }) {
   const sub = f.regels.reduce((s, r) => s + Number(r.aantal) * Number(r.prijs), 0)
@@ -58,8 +59,8 @@ export default async function KlantDashboard() {
   const [klantRows, klussen, offertes, facturen, werkafspraken, rapporten, documenten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
-    sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} ORDER BY datum DESC`,
-    sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct FROM facturen WHERE klant_id = ${klantId} ORDER BY factuurdatum DESC`,
+    sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} AND status <> 'concept' ORDER BY datum DESC`,
+    sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct FROM facturen WHERE klant_id = ${klantId} AND status <> 'concept' ORDER BY factuurdatum DESC`,
     sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klant_id = ${klantId} AND jsonb_array_length(afspraken) > 0 ORDER BY datum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op, getekend_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
@@ -88,27 +89,54 @@ export default async function KlantDashboard() {
 
   const voornaam = (klant.naam ?? '').split(' ')[0] || 'klant'
 
+  // Openstaande acties voor de klant, bovenaan het portaal
+  type Taak = { href: string; soort: 'pay' | 'sign'; titel: string; meta: string; cta: string }
+  const teDoen: Taak[] = [
+    ...facturen.filter((f: any) => f.status !== 'betaald' && totaalFactuur(f) > 0).map((f: any): Taak => ({
+      href: `/klant/factuur/${f.id}`, soort: 'pay', titel: `Factuur ${f.factuurnummer} betalen`,
+      meta: `${formatEuro(totaalFactuur(f))}${f.status === 'te_laat' ? ' · vervaldatum verstreken' : ''}`, cta: 'Betalen',
+    })),
+    ...offertes.filter((o: any) => o.status === 'gestuurd').map((o: any): Taak => ({
+      href: `/klant/offerte/${o.id}`, soort: 'sign', titel: `Offerte OZVT-${String(o.offertenummer).padStart(4, '0')} bekijken`,
+      meta: `${formatEuro(totaalOfferte(o))} · wacht op uw akkoord`, cta: 'Bekijken',
+    })),
+    ...rapporten.filter((r: any) => !r.getekend_op).map((r: any): Taak => ({
+      href: `/klant/rapport/${r.id}`, soort: 'sign', titel: `${r.titel} ondertekenen`,
+      meta: 'Opleveringsrapport', cta: 'Tekenen',
+    })),
+  ]
+
   return (
     <div>
       <section className="kp-hero">
         <h1>Goedendag, {voornaam}</h1>
-        <p>Hier vindt u een actueel overzicht van uw projecten, offertes en facturen.</p>
+        <p>Hier vindt u alles over uw projecten, offertes en facturen bij Ozvolt.</p>
+        <div className="kp-hero-chips">
+          {klussen.length > 0 && <span className="kp-chip"><strong>{klussen.length}</strong> {klussen.length === 1 ? 'project' : 'projecten'}</span>}
+          {totaalOpen > 0
+            ? <a href="#facturen" className="kp-chip">Openstaand <strong>{formatEuro(totaalOpen)}</strong></a>
+            : facturen.length > 0 && <span className="kp-chip">Alles betaald ✓</span>}
+          {totaalBetaald > 0 && <span className="kp-chip">Voldaan <strong>{formatEuro(totaalBetaald)}</strong></span>}
+        </div>
       </section>
 
-      {/* ── Stat-duo ── */}
-      {facturen.length > 0 && (
-        <div className="kp-stats">
-          <div className="kp-stat">
-            <div className="kp-stat-label">Openstaand</div>
-            <div className={`kp-stat-value ${totaalOpen > 0 ? 'red' : 'green'}`}>
-              {totaalOpen > 0 ? formatEuro(totaalOpen) : '€ 0,00'}
-            </div>
+      {/* ── Wat u nu kunt doen ── */}
+      {teDoen.length > 0 && (
+        <section className="kp-section">
+          <div className="kp-section-head"><h2 className="kp-section-title">Voor u klaargezet</h2></div>
+          <div className="kp-todo">
+            {teDoen.map(t => (
+              <Link key={t.href} href={t.href} className="kp-todo-item">
+                <span className={`kp-todo-icon ${t.soort}`}>{t.soort === 'pay' ? '💶' : '✍️'}</span>
+                <span className="kp-todo-body">
+                  <span className="kp-todo-title" style={{ display: 'block' }}>{t.titel}</span>
+                  <span className="kp-todo-meta" style={{ display: 'block' }}>{t.meta}</span>
+                </span>
+                <span className="kp-todo-cta">{t.cta}</span>
+              </Link>
+            ))}
           </div>
-          <div className="kp-stat">
-            <div className="kp-stat-label">Reeds voldaan</div>
-            <div className="kp-stat-value green">{formatEuro(totaalBetaald)}</div>
-          </div>
-        </div>
+        </section>
       )}
 
       {/* ── Projecten ── */}
@@ -221,7 +249,7 @@ export default async function KlantDashboard() {
       )}
 
       {/* ── Facturen ── */}
-      <section className="kp-section">
+      <section className="kp-section" id="facturen">
         <div className="kp-section-head">
           <h2 className="kp-section-title">Facturen</h2>
         </div>
@@ -231,35 +259,23 @@ export default async function KlantDashboard() {
           const isBetaald = f.status === 'betaald'
           const bedrag = totaalFactuur(f)
           return (
-            <div key={f.id} className="kp-card">
-              <div className="kp-card-row">
-                <div>
-                  <div className="kp-card-title">Factuur {f.factuurnummer}</div>
-                  <div className="kp-card-meta">{new Date(f.factuurdatum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                </div>
-                <div className="kp-card-side">
-                  <div className="kp-card-amount">{formatEuro(bedrag)}</div>
-                  <span className={`kp-badge ${isBetaald ? 'kp-badge-green' : (f.status === 'te_laat' ? 'kp-badge-red' : 'kp-badge-amber')}`}>
-                    {isBetaald ? 'Betaald' : (f.status === 'te_laat' ? 'Te laat' : 'Openstaand')}
-                  </span>
+            <Link key={f.id} href={`/klant/factuur/${f.id}`} className="kp-card-link">
+              <div className="kp-card">
+                <div className="kp-card-row">
+                  <div>
+                    <div className="kp-card-title">Factuur {f.factuurnummer}</div>
+                    <div className="kp-card-meta">{new Date(f.factuurdatum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                    <span className="kp-btn-link" style={{ marginTop: 6 }}>{isBetaald ? 'Bekijken / downloaden →' : 'Bekijken en betalen →'}</span>
+                  </div>
+                  <div className="kp-card-side">
+                    <div className="kp-card-amount">{formatEuro(bedrag)}</div>
+                    <span className={`kp-badge ${isBetaald ? 'kp-badge-green' : (f.status === 'te_laat' ? 'kp-badge-red' : 'kp-badge-amber')}`}>
+                      {isBetaald ? 'Betaald' : (f.status === 'te_laat' ? 'Te laat' : 'Openstaand')}
+                    </span>
+                  </div>
                 </div>
               </div>
-              {!isBetaald && bedrag > 0 && (
-                <>
-                  <div className="kp-iban">
-                    <div className="kp-iban-head">Betalen via bankoverschrijving</div>
-                    <div className="kp-iban-row"><span>IBAN</span><span>NL69 KNAB 0780 9871 79</span></div>
-                    <div className="kp-iban-row"><span>T.n.v.</span><span>Ozvolt Elektrotechniek</span></div>
-                    <div className="kp-iban-row"><span>Bedrag</span><span>{formatEuro(bedrag)}</span></div>
-                    <div className="kp-iban-row"><span>Kenmerk</span><span>{f.factuurnummer}</span></div>
-                  </div>
-                  <Link href={`/klant/factuur/${f.id}`} className="kp-btn-link">Factuur bekijken / downloaden →</Link>
-                </>
-              )}
-              {isBetaald && (
-                <Link href={`/klant/factuur/${f.id}`} className="kp-btn-link">Factuur bekijken / downloaden →</Link>
-              )}
-            </div>
+            </Link>
           )
         })}
       </section>

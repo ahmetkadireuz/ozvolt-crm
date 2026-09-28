@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   const rows = await sql`
     SELECT o.id, o.status, o.accepted_at, o.klant_id, o.offertenummer, o.regels, o.korting_pct, o.btw_pct, o.accept_token,
-           o.betaling_50_50, o.datum,
+           o.betaling_50_50, o.betaal_url, o.betaal_url_2, o.datum,
            k.naam AS klant_naam, k.email AS klant_email, k.telefoon AS klant_telefoon, k.type AS klant_type
     FROM offertes o JOIN klanten k ON k.id = o.klant_id
     WHERE o.accept_token = ${token}
@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
   const offerte = rows[0]
   if (!offerte) return NextResponse.json({ error: 'Offerte niet gevonden' }, { status: 404 })
   if (offerte.accepted_at) return NextResponse.json({ error: 'Al geaccepteerd' }, { status: 409 })
+  if (offerte.status !== 'gestuurd') {
+    return NextResponse.json({ error: 'Deze offerte kan niet (meer) worden geaccepteerd — neem contact op met Ozvolt' }, { status: 409 })
+  }
 
   const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? ''
 

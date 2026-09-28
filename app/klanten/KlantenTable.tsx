@@ -42,21 +42,21 @@ export default function KlantenTable({ klanten }: { klanten: any[] }) {
             </thead>
             <tbody>
               {items.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', color: '#8ba8c4', padding: '32px' }}>Geen klanten gevonden.</td></tr>
+                <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-soft)', padding: '32px' }}>Geen klanten gevonden.</td></tr>
               ) : items.map((k: any) => (
                 <tr key={k.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/klanten/${k.id}`)}>
                   <td>
                     <div style={{ fontWeight: 600 }}>{k.naam}</div>
-                    <div style={{ fontSize: '.75rem', color: '#8ba8c4' }}>{k.email}</div>
+                    <div style={{ fontSize: '.75rem', color: 'var(--text-soft)' }}>{k.email}</div>
                   </td>
-                  <td><span style={{ fontSize: '.78rem', color: '#64748b' }}>{k.type}</span></td>
+                  <td><span style={{ fontSize: '.78rem', color: 'var(--text-mute)' }}>{k.type}</span></td>
                   <td style={{ fontSize: '.84rem' }}>{k.telefoon || '—'}</td>
                   <td style={{ fontSize: '.84rem' }}>{k.locatie || '—'}</td>
                   <td>
                     <span style={{ fontWeight: 700 }}>{k.klus_count}</span>
                     {k.nieuw_count > 0 && <span className="n-badge" style={{ marginLeft: 6 }}>{k.nieuw_count}</span>}
                   </td>
-                  <td style={{ color: '#8ba8c4', fontSize: '.78rem' }}>{new Date(k.aangemaakt_op).toLocaleDateString('nl-NL')}</td>
+                  <td style={{ color: 'var(--text-soft)', fontSize: '.78rem' }}>{new Date(k.aangemaakt_op).toLocaleDateString('nl-NL')}</td>
                 </tr>
               ))}
             </tbody>
@@ -67,7 +67,7 @@ export default function KlantenTable({ klanten }: { klanten: any[] }) {
       {/* Mobiele lijst met swipe */}
       <div className="card mobile-list" style={{ padding: 0, overflow: 'hidden' }}>
         {items.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#8ba8c4', padding: '32px' }}>Geen klanten gevonden.</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-soft)', padding: '32px' }}>Geen klanten gevonden.</div>
         ) : items.map((k: any) => {
           const wa = waLink(k.telefoon)
           const leftActions: SwipeAction[] = []

@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen } from '@/lib/db'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { mbHaalOfMaakContact, mbMaakBetaalLink } from '@/lib/moneybird'
+import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
+import { idealAan } from '@/lib/betalen'
+import { ensureFactuurKolommen } from '@/lib/facturen'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const klantId = await getKlantSessie()
   if (!klantId) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
+  if (!idealAan()) return NextResponse.json({ error: 'Online betalen via iDEAL is uitgeschakeld — betaal via overschrijving' }, { status: 403 })
 
   const { id } = await params
   const factuurId = parseInt(id)
@@ -14,17 +18,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const termijn = (url.searchParams.get('termijn') === '2' ? 2 : 1) as 1 | 2
 
   // Defensief: oudere productie-db kan kolommen missen
-  try {
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT`
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`
-  } catch {}
+  try { await ensureFactuurKolommen() } catch {}
 
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
            k.telefoon AS klant_tel, k.type AS klant_type
     FROM facturen f JOIN klanten k ON k.id = f.klant_id
-    WHERE f.id = ${factuurId} AND f.klant_id = ${klantId}
+    WHERE f.id = ${factuurId} AND f.klant_id = ${klantId} AND f.status <> 'concept'
   `
   const factuur = rows[0]
   if (!factuur) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
@@ -44,6 +44,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   if (termijn === 2 && !is50_50) {
     return NextResponse.json({ error: 'Geen 50/50 betaalplan actief' }, { status: 400 })
+  }
+
+  // Enkele betaling: betaallink van dezelfde Moneybird-factuur die in de boekhouding staat
+  // (voorheen werd hier een tweede factuur aangemaakt → dubbele omzet).
+  if (!is50_50) {
+    try {
+      const { betaalUrl } = await zorgVoorMoneybirdFactuur(factuurId)
+      if (!betaalUrl) return NextResponse.json({ error: 'Online betalen is nog niet beschikbaar — neem contact op met Ozvolt' }, { status: 502 })
+      try {
+        await sql`UPDATE facturen SET betaal_url = ${betaalUrl}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+      } catch (cacheErr) {
+        console.error('[klant betaal-link] cache url mislukt (genegeerd):', cacheErr)
+      }
+      return NextResponse.json({ url: betaalUrl })
+    } catch (err: unknown) {
+      console.error('[klant betaal-link]', err)
+      return NextResponse.json({ error: err instanceof Error ? err.message : 'Moneybird fout' }, { status: 500 })
+    }
   }
 
   const regels = Array.isArray(factuur.regels) ? factuur.regels : []

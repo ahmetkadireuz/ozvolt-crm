@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@/lib/db'
 import { requireSession } from '@/lib/session'
+import { splitsInVoorschot, maakSplitsingOngedaan } from '@/lib/facturen'
 
+// 50/50 = voorschotfactuur (50%) + eindfactuur (rest). Twee echte facturen, elk één keer in Moneybird.
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
 
@@ -12,25 +13,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const body = await req.json().catch(() => ({}))
   const enabled = !!body?.enabled
 
-  // Defensief: kolommen kunnen missen in oudere productie-db
-  try {
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT`
-    await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`
-  } catch (err) {
-    console.error('[facturen 50-50] ALTER TABLE:', err)
-  }
-
   try {
     if (enabled) {
-      await sql`UPDATE facturen SET betaling_50_50 = TRUE, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
-    } else {
-      // Reset: termijn-2 link weg, terug naar enkele betaling
-      await sql`UPDATE facturen SET betaling_50_50 = FALSE, betaal_url_2 = NULL, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+      const r = await splitsInVoorschot(factuurId)
+      return NextResponse.json({ ok: true, ...r })
     }
-    return NextResponse.json({ ok: true, betaling_50_50: enabled })
+    await maakSplitsingOngedaan(factuurId)
+    return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error('[facturen 50-50] UPDATE:', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'DB-fout' }, { status: 500 })
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Fout bij splitsen' }, { status: 400 })
   }
 }

@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 
 export const KLANT_COOKIE = 'ozvolt_klant'
-const SESSIE_DAGEN = 30
+export const SESSIE_DAGEN = 30
 
 function hashToken(token: string) {
   return createHash('sha256').update(token).digest('hex')
@@ -14,11 +14,11 @@ function hashToken(token: string) {
 // Sessie-cookie blijft 30 dagen geldig na inloggen
 const LINK_UREN = 24
 
-export async function maakKlantSessie(klantId: number): Promise<string> {
+export async function maakKlantSessie(klantId: number, geldigUren = LINK_UREN): Promise<string> {
   const token = randomBytes(16).toString('base64url')
   const hash = hashToken(token)
-  // Link verloopt na 24 uur — de sessie cookie na 30 dagen
-  const verlopen = new Date(Date.now() + LINK_UREN * 3600_000)
+  // Login-link verloopt na 24 uur; de sessie (nieuw token bij inloggen) na 30 dagen
+  const verlopen = new Date(Date.now() + geldigUren * 3600_000)
 
   await sql`
     INSERT INTO klant_sessies (klant_id, token_hash, verlopen_op)
