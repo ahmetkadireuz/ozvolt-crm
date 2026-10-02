@@ -301,6 +301,25 @@ export async function verwerkTikkieBetaling(token: string): Promise<{ factuurId:
   return { factuurId: f.id, betaald: false, betaaldCenten }
 }
 
+/**
+ * Voor portaal en PDF: geeft een geldige Tikkie-link voor een openstaande factuur,
+ * en maakt er een aan als die er nog niet is (bv. factuur via WhatsApp/portaallink
+ * gestuurd in plaats van per mail). Faalt stil: dan alleen IBAN/QR.
+ */
+export async function tikkieLinkMetAanmaken(f: any): Promise<string | null> {
+  const bestaand = tikkieLinkVoorKlant(f)
+  if (bestaand) return bestaand
+  if (!tikkieAan() || f?.status === 'betaald' || f?.status === 'concept') return null
+  if (f?.betaling_50_50 && (f?.soort ?? 'normaal') === 'normaal') return null
+  if (factuurBedragCenten(f) <= 0) return null
+  try {
+    return (await zorgVoorTikkie(Number(f.id))).url
+  } catch (err) {
+    console.error('[tikkie automatisch]', f?.factuurnummer, err instanceof Error ? err.message : err)
+    return null
+  }
+}
+
 /** Vangnet (cron/refresh): alle openstaande facturen met een Tikkie nalopen */
 export async function controleerOpenstaandeTikkies(max = 50): Promise<string[]> {
   if (!tikkieAan()) return []
