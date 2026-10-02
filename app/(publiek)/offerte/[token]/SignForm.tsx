@@ -135,7 +135,7 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
 
   if (done) {
     return (
-      <div style={{ background: '#f0fdf4', border: '2px solid #16a34a', borderRadius: 12, padding: '28px 32px', textAlign: 'center' }}>
+      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 14, padding: '28px 20px', textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 8 }}>✅</div>
         <div style={{ fontSize: 20, fontWeight: 800, color: '#15803d', marginBottom: 8 }}>Offerte geaccepteerd!</div>
         <div style={{ fontSize: 14, color: '#4a5568', marginBottom: 4 }}>
@@ -158,21 +158,22 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
   }
 
   return (
-    <div style={{ border: '2px solid #1d2f4c', borderRadius: 12, padding: '24px 28px' }}>
-      <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.75, marginBottom: 20 }}>
+    <div style={{ border: '1px solid #e3e9f1', background: '#f9fafc', borderRadius: 14, padding: '22px 20px' }}>
+      <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.7, marginBottom: 20 }}>
         Door te ondertekenen gaat u akkoord met de uitvoering van bovenstaande werkzaamheden door
         Ozvolt Elektrotechniek tegen de vermelde bedragen (incl. {btwPct}% BTW).<br />
         Op al onze werkzaamheden zijn onze algemene voorwaarden van toepassing.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+      <div className="sign-grid">
         <div>
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 }}>Uw naam *</label>
           <input
             value={naam}
             onChange={e => setNaam(e.target.value)}
             placeholder="Voor- en achternaam"
-            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #d0dce8', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
+            autoComplete="name"
+            style={{ width: '100%', padding: '12px 14px', border: '1.5px solid #d0dce8', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', outline: 'none', background: '#fff' }}
           />
         </div>
         <div>
@@ -181,7 +182,10 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="uw@email.nl"
-            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #d0dce8', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            style={{ width: '100%', padding: '12px 14px', border: '1.5px solid #d0dce8', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', outline: 'none', background: '#fff' }}
           />
         </div>
       </div>
@@ -192,6 +196,7 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
           <button onClick={clearSign} type="button" style={{ fontSize: 11, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>Wissen</button>
         </div>
         <canvas
+          aria-label="Handtekeningvak"
           ref={canvasRef}
           width={620}
           height={130}
@@ -202,9 +207,9 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
           onTouchStart={startDraw}
           onTouchMove={draw}
           onTouchEnd={stopDraw}
-          style={{ width: '100%', height: 130, border: '1.5px solid #d0dce8', borderRadius: 8, cursor: 'crosshair', background: hasSigned ? '#fff' : '#f8fafc', touchAction: 'none' }}
+          style={{ width: '100%', height: 130, border: '1.5px solid #d0dce8', borderRadius: 10, cursor: 'crosshair', background: '#fff', touchAction: 'none' }}
         />
-        <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>Teken hierboven met muis of vinger</div>
+        <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Teken hierboven met uw vinger of muis</div>
       </div>
 
       {error && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: 16 }}>{error}</div>}
@@ -213,7 +218,7 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
         onClick={submit}
         disabled={loading}
         type="button"
-        style={{ width: '100%', background: '#1d2f4c', color: '#fff', border: 'none', borderRadius: 10, padding: '14px 24px', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? .7 : 1, fontFamily: 'inherit' }}
+        style={{ width: '100%', background: '#1a7a3c', color: '#fff', border: 'none', borderRadius: 12, padding: '16px 24px', fontSize: 16, fontWeight: 700, boxShadow: '0 4px 14px rgba(26,122,60,.28)', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? .7 : 1, fontFamily: 'inherit' }}
       >
         {loading ? 'Bezig met verwerken...' : `✓ Akkoord gaan — ${totaal}`}
       </button>

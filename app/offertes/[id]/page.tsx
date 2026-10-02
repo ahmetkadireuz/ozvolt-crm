@@ -10,6 +10,8 @@ import StatusBadge from '@/components/StatusBadge'
 import Icon from '@/components/Icon'
 import OfferteActions from './OfferteActions'
 import OfferteForm from './OfferteForm'
+import WhatsAppKnop from './WhatsAppKnop'
+import crypto from 'crypto'
 
 export const metadata: Metadata = { title: 'Offerte' }
 
@@ -26,7 +28,7 @@ export default async function OfferteDetailPage({
   if (isNaN(offerteId)) notFound()
 
   const [offerteRows, klanten, factuurRows, afspraakRows] = await Promise.all([
-    sql`SELECT o.*, kt.naam AS klant_naam, kt.email AS klant_email FROM offertes o JOIN klanten kt ON kt.id = o.klant_id WHERE o.id = ${offerteId}`,
+    sql`SELECT o.*, kt.naam AS klant_naam, kt.email AS klant_email, kt.telefoon AS klant_tel FROM offertes o JOIN klanten kt ON kt.id = o.klant_id WHERE o.id = ${offerteId}`,
     sql`SELECT id, naam, email FROM klanten ORDER BY naam`,
     sql`SELECT id, factuurnummer, status FROM facturen WHERE offerte_id = ${offerteId}`,
     sql`SELECT id, afspraaknummer, status, accept_token, sent_at FROM werkafspraken WHERE offerte_id = ${offerteId} ORDER BY aangemaakt_op DESC`.catch(() => []),
@@ -42,12 +44,18 @@ export default async function OfferteDetailPage({
                 ORDER BY k.datum DESC`
     : []
 
+  if (!offerteRows[0]) notFound()
+  // Portaal-link moet altijd deelbaar zijn (WhatsApp/kopiëren): token zo nodig aanmaken
+  if (!offerteRows[0].accept_token) {
+    const upd = await sql`UPDATE offertes SET accept_token = COALESCE(accept_token, ${crypto.randomBytes(32).toString('hex')}) WHERE id = ${offerteId} RETURNING accept_token`
+    offerteRows[0].accept_token = upd[0]?.accept_token ?? null
+  }
   const offerte = JSON.parse(JSON.stringify(offerteRows[0]))
-  if (!offerte) notFound()
 
   const totalen = berekenTotalen(offerte.regels ?? [], offerte.korting_pct, offerte.btw_pct)
   const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
-  const acceptUrl = offerte.accept_token ? `${siteUrl}/api/offertes/${offerteId}/accepteren?token=${offerte.accept_token}` : null
+  const acceptUrl = offerte.accept_token ? `${siteUrl}/offerte/${offerte.accept_token}` : null
+  const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4,'0')}`
   const klanten2 = JSON.parse(JSON.stringify(klanten))
   const facturen2 = JSON.parse(JSON.stringify(factuurRows))
   const kosten = JSON.parse(JSON.stringify(kostenRows))
@@ -70,14 +78,19 @@ export default async function OfferteDetailPage({
             <Icon name="arrow-left" size={16} />
           </Link>
           <div>
-            <h1 className="page-title">Offerte OZVT-{String(offerte.offertenummer).padStart(4,'0')}</h1>
+            <h1 className="page-title">Offerte {offerteNr}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <StatusBadge status={offerte.status} />
               <span style={{ color: 'var(--text-soft)', fontSize: '.78rem' }}>{offerte.klant_naam}</span>
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}></div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {acceptUrl && (
+            <WhatsAppKnop telefoon={offerte.klant_tel} klantNaam={offerte.klant_naam} offerteNr={offerteNr}
+              totaal={formatEuro(totalen.inclBtw)} url={acceptUrl} label="WhatsApp" className="btn btn-success btn-sm" />
+          )}
+        </div>
       </div>
 
       {msg && <div className="alert alert-ok">{decodeURIComponent(msg)}</div>}

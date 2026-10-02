@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
+import WhatsAppKnop from './WhatsAppKnop'
+import { waNummer } from '@/lib/whatsapp'
 
 export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl, facturen, afspraken }: {
   offerte: any; offerteId: number; totalen: any; acceptUrl: string | null; facturen: any[]; afspraken: any[]
@@ -36,6 +38,27 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
     const data = await res.json()
     if (data.ok) router.refresh()
     else alert('Versturen mislukt: ' + (data.error ?? 'Onbekende fout'))
+  }
+
+  const [linkGekopieerd, setLinkGekopieerd] = useState(false)
+
+  async function kopieerLink() {
+    if (!acceptUrl) return
+    try {
+      await navigator.clipboard.writeText(acceptUrl)
+      setLinkGekopieerd(true)
+      setTimeout(() => setLinkGekopieerd(false), 2000)
+    } catch {
+      alert('Kopiëren mislukt — houd de link ingedrukt en kies Kopieer.')
+    }
+  }
+
+  async function markeerVerstuurd() {
+    if (!confirm('Offerte markeren als verstuurd? De status wordt "Gestuurd" en de verzenddatum wordt vandaag.')) return
+    const res = await fetch(`/api/offertes/${offerteId}/markeer-verstuurd`, { method: 'POST' })
+    const data = await res.json().catch(() => ({}))
+    if (data.ok) router.refresh()
+    else alert('Markeren mislukt: ' + (data.error ?? 'Onbekende fout'))
   }
 
   async function maakAfspraak() {
@@ -196,14 +219,33 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           {inclAfspraak ? 'Offerte + afspraken versturen' : 'E-mail versturen'}
         </button>
         {acceptUrl && (
-          <div>
-            <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginBottom: 4 }}>Akkoord-link:</div>
+          <div style={{ borderTop: '1px solid var(--line)', paddingTop: 10, marginTop: 2 }}>
+            <WhatsAppKnop
+              telefoon={offerte.klant_tel}
+              klantNaam={offerte.klant_naam}
+              offerteNr={`OZVT-${String(offerte.offertenummer).padStart(4,'0')}`}
+              totaal={formatEuro(totalen.inclBtw)}
+              url={acceptUrl}
+              style={{ width: '100%', justifyContent: 'center', marginBottom: 6 }}
+            />
+            {!waNummer(offerte.klant_tel) && (
+              <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginBottom: 6 }}>
+                Geen (geldig) mobiel nummer bij de klant — je kiest het contact zelf in WhatsApp.
+              </div>
+            )}
+            <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', margin: '6px 0 4px' }}>Link naar klantportaal:</div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <input className="form-ctrl" value={acceptUrl} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(acceptUrl)}>
-                <Icon name="copy" size={16} />
+              <input className="form-ctrl" value={acceptUrl} readOnly onFocus={e => e.target.select()} style={{ fontSize: '.72rem', padding: '6px 8px' }} />
+              <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren" aria-label="Link kopiëren" onClick={kopieerLink}>
+                <Icon name={linkGekopieerd ? 'check' : 'copy'} size={16} />
               </button>
             </div>
+            {offerte.status === 'concept' && (
+              <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }} onClick={markeerVerstuurd}>
+                <Icon name="check" size={14} />
+                Markeer als verstuurd
+              </button>
+            )}
           </div>
         )}
         {offerte.sent_at && (
