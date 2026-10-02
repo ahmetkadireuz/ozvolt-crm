@@ -113,7 +113,7 @@ export async function maakFactuurVanOfferte(offerteId: number) {
 }
 
 /**
- * Splitst een concept-factuur in een voorschotfactuur (50%, deze factuur)
+ * Splitst een factuur (nog niet in Moneybird, niet betaald) in een voorschotfactuur (50%, deze factuur)
  * en een nieuwe eindfactuur (alle regels minus het voorschot).
  * Elke factuur gaat apart naar Moneybird, dus de omzet telt precies één keer.
  */
@@ -123,7 +123,8 @@ export async function splitsInVoorschot(factuurId: number) {
   const f = rows[0]
   if (!f) throw new Error('Factuur niet gevonden')
   if (f.soort === 'voorschot' || f.soort === 'eind') return { voorschotId: f.soort === 'voorschot' ? f.id : f.gekoppelde_factuur_id }
-  if (f.status !== 'concept' || f.moneybird_id) throw new Error('Alleen een conceptfactuur die nog niet in Moneybird staat kan worden gesplitst')
+  if (f.moneybird_id) throw new Error('Splitsen kan niet meer: deze factuur staat al in Moneybird')
+  if (f.status === 'betaald' || f.tikkie_betaald_op) throw new Error('Splitsen kan niet meer: deze factuur is al betaald')
 
   const regels: Regel[] = Array.isArray(f.regels) ? f.regels : []
   const netto = subtotaal(regels)
@@ -161,7 +162,7 @@ export async function splitsInVoorschot(factuurId: number) {
   return { voorschotId: factuurId, eindId: eind.id, eindNummer: eind.factuurnummer }
 }
 
-/** Draait een splitsing terug zolang beide facturen nog concept zijn en niet in Moneybird staan. */
+/** Draait een splitsing terug zolang beide facturen niet in Moneybird staan en niet betaald zijn. */
 export async function maakSplitsingOngedaan(factuurId: number) {
   await ensureFactuurKolommen()
   const rows = await sql`SELECT * FROM facturen WHERE id = ${factuurId}`
@@ -171,8 +172,8 @@ export async function maakSplitsingOngedaan(factuurId: number) {
   const eindId = f.soort === 'eind' ? f.id : f.gekoppelde_factuur_id
 
   const paar = await sql`SELECT * FROM facturen WHERE id IN (${voorschotId}, ${eindId})`
-  if (paar.some((x: any) => x.status !== 'concept' || x.moneybird_id)) {
-    throw new Error('Terugdraaien kan niet meer: een van beide facturen is al verstuurd of staat in Moneybird')
+  if (paar.some((x: any) => x.moneybird_id || x.status === 'betaald' || x.tikkie_betaald_op)) {
+    throw new Error('Terugdraaien kan niet meer: een van beide facturen staat al in Moneybird of is betaald')
   }
   const eind = paar.find((x: any) => x.id === eindId)
   const regels: Regel[] = (Array.isArray(eind?.regels) ? eind.regels : [])

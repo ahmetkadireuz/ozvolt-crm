@@ -8,7 +8,6 @@ import PortaalOpenKnop from '@/components/PortaalOpenKnop'
 
 export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false, tikkie = { aan: false, geldig: false } }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean; tikkie?: { aan: boolean; geldig: boolean } }) {
   const router = useRouter()
-  const [betaallinkLoading, setBetaallinkLoading] = useState(false)
 
   async function updateStatus(status: string) {
     await fetch(`/api/facturen/${factuurId}`, {
@@ -17,21 +16,6 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
       body: JSON.stringify({ status }),
     })
     router.refresh()
-  }
-
-  async function maakBetaallink() {
-    if (!confirm('Online betaallink (via Moneybird) aanmaken voor deze factuur?')) return
-    setBetaallinkLoading(true)
-    try {
-      const res = await fetch(`/api/facturen/${factuurId}/betaallink`, { method: 'POST' })
-      const data = await res.json()
-      if (data.ok) { router.refresh() }
-      else alert('Fout: ' + (data.error ?? 'Moneybird fout'))
-    } catch (err: any) {
-      alert('Fout: ' + (err?.message ?? 'Onbekend'))
-    } finally {
-      setBetaallinkLoading(false)
-    }
   }
 
   async function versturen() {
@@ -122,44 +106,6 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
             <Icon name="send" size={16} />
             Factuur versturen
           </button>
-          <button
-            type="button"
-            className="btn btn-success btn-sm"
-            style={{ width: '100%', justifyContent: 'center' }}
-            onClick={() => updateStatus('betaald')}
-            disabled={factuur.status === 'betaald'}
-          >
-            <Icon name="check" size={16} />
-            Markeer als betaald
-          </button>
-
-          {/* Online betaallink (Moneybird) */}
-          <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2 }}>
-            {factuur.betaal_url ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700 }}>✓ Online betaallink actief</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input className="form-ctrl" value={factuur.betaal_url} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} />
-                  <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren"
-                    onClick={() => navigator.clipboard.writeText(factuur.betaal_url)}>
-                    <Icon name="copy" size={14} />
-                  </button>
-                </div>
-                <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
-                  onClick={maakBetaallink} disabled={betaallinkLoading}>
-                  <Icon name="refresh" size={14} />
-                  {betaallinkLoading ? 'Bezig…' : 'Nieuwe link aanmaken'}
-                </button>
-              </div>
-            ) : (
-              <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
-                onClick={maakBetaallink} disabled={betaallinkLoading}>
-                <Icon name="payments" size={14} />
-                {betaallinkLoading ? 'Bezig…' : 'Online betaallink aanmaken'}
-              </button>
-            )}
-          </div>
-
           <TikkieBlok factuur={factuur} factuurId={factuurId} tikkie={tikkie} />
 
           {/* Moneybird boekhouden */}
@@ -238,6 +184,8 @@ function Betaalplan5050({ factuurId, factuur }: { factuurId: number; factuur: an
   const gesplitst = soort === 'voorschot' || soort === 'eind'
   const gekoppeld = factuur.gekoppelde_factuur as { id: number; factuurnummer: string; status: string } | null
   const oudeStijl = !gesplitst && !!factuur.betaling_50_50
+  // Splitsen/terugdraaien kan zolang de factuur niet in Moneybird staat en niet betaald is
+  const blokkade = factuur.moneybird_id ? 'staat al in Moneybird' : (factuur.status === 'betaald' || factuur.tikkie_betaald_op) ? 'is al betaald' : null
 
   async function wissel() {
     const vraag = gesplitst
@@ -263,8 +211,9 @@ function Betaalplan5050({ factuurId, factuur }: { factuurId: number; factuur: an
       <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: 13 }}>50/50 betaalplan</div>
       <div style={{ fontSize: 11, color: 'var(--text-mute)', marginTop: 2, lineHeight: 1.5 }}>
         {soort === 'voorschot' && <>Dit is de <strong>voorschotfactuur</strong> (50%). Het restant staat op de eindfactuur.</>}
-        {soort === 'eind' && <>Dit is de <strong>eindfactuur</strong>. Het betaalde voorschot staat als aftrekregel op de factuur.</>}
-        {soort === 'normaal' && !oudeStijl && 'Klant betaalt in 1x. Splitsen maakt een voorschotfactuur (50% bij start) en een eindfactuur (na oplevering).'}
+        {soort === 'eind' && <>Dit is de <strong>eindfactuur</strong>. Het betaalde voorschot staat als aftrekregel op de factuur.{factuur.status === 'concept' && ' Nog niet zichtbaar voor de klant: sla hem op (of verstuur hem) na oplevering.'}</>}
+        {soort === 'normaal' && !oudeStijl && !blokkade && 'Klant betaalt in 1x. Splitsen maakt een voorschotfactuur (50% bij start) en een eindfactuur (na oplevering).'}
+        {soort === 'normaal' && !oudeStijl && blokkade && `Klant betaalt in 1x. Splitsen kan niet meer: deze factuur ${blokkade}.`}
         {oudeStijl && 'Oude 50/50-werkwijze (twee betaallinks op één factuur). Laat deze factuur zo afhandelen.'}
       </div>
       {gekoppeld && (
@@ -272,7 +221,7 @@ function Betaalplan5050({ factuurId, factuur }: { factuurId: number; factuur: an
           {soort === 'voorschot' ? 'Eindfactuur' : 'Voorschotfactuur'} {gekoppeld.factuurnummer} →
         </a>
       )}
-      {!oudeStijl && factuur.status === 'concept' && !factuur.moneybird_id && (
+      {!oudeStijl && !blokkade && (
         <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center', marginTop: 10 }} onClick={wissel} disabled={bezig}>
           {bezig ? 'Bezig…' : gesplitst ? 'Splitsing terugdraaien' : 'Splits in voorschot + eindfactuur'}
         </button>
@@ -330,7 +279,7 @@ function PortaalLink({ factuur, factuurId, bedrag }: { factuur: any; factuurId: 
           />
           <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginTop: 6, lineHeight: 1.5 }}>
             {isConcept
-              ? 'Let op: deze factuur is nog concept en daarom niet zichtbaar in het portaal. De link opent het overzicht.'
+              ? 'Let op: sla de factuur eerst op (met een bedrag), dan staat hij in het portaal. De link opent nu het overzicht.'
               : 'De klant komt direct op deze factuur uit, zonder in te loggen. Link blijft een jaar geldig.'}
           </div>
         </>

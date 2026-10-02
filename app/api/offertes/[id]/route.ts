@@ -105,6 +105,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const uoItems = parseUoItems(Array.isArray(body.uo_items) ? body.uo_items : [])
     await sql`UPDATE offertes SET uo_items = ${JSON.stringify(uoItems)}::jsonb WHERE id = ${offerteId}`
   }
+
+  // Opgeslagen offerte met regels = direct zichtbaar (en te tekenen) in het klantportaal
+  if (regels.length > 0) {
+    await sql`
+      UPDATE offertes SET status = 'gestuurd', sent_at = COALESCE(sent_at, NOW())
+      WHERE id = ${offerteId} AND status = 'concept' AND accepted_at IS NULL
+    `
+  }
   return NextResponse.json({ ok: true })
 }
 

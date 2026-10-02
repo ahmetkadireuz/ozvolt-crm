@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@/lib/db'
+import { sql, berekenTotalen } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 
 const VALID_STATUSES = ['concept','verstuurd','betaald','te_laat']
@@ -29,6 +29,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       bijgewerkt_op = NOW()
     WHERE id = ${factuurId}
   `
+  // Opgeslagen factuur met een bedrag = open en direct zichtbaar in het klantportaal
+  // (geen handmatige stap 'verstuurd' meer nodig)
+  if (berekenTotalen(regels, 0, btw).inclBtw > 0) {
+    await sql`UPDATE facturen SET status = 'verstuurd' WHERE id = ${factuurId} AND status = 'concept'`
+  }
   return NextResponse.json({ ok: true })
 }
 
