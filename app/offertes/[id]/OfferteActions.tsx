@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/utils'
@@ -36,6 +36,80 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
     const data = await res.json()
     if (data.ok) router.refresh()
     else alert('Versturen mislukt: ' + (data.error ?? 'Onbekende fout'))
+  }
+
+  // ── Mail voor Outlook / Apple Mail (kopiëren & plakken) ──────────────────────
+  const [mailOpen, setMailOpen] = useState(false)
+  const [mailLaden, setMailLaden] = useState(false)
+  const [mailData, setMailData] = useState<{ html: string; onderwerp: string; aan: string | null } | null>(null)
+  const [gekopieerd, setGekopieerd] = useState<string | null>(null)
+  const previewRef = useRef<HTMLIFrameElement>(null)
+
+  async function openMailVenster() {
+    setMailOpen(true)
+    setMailLaden(true)
+    setMailData(null)
+    try {
+      const res = await fetch(`/api/offertes/${offerteId}/mail-html`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? `Server error ${res.status}`)
+      setMailData(data)
+    } catch (err: any) {
+      alert('Mail laden mislukt: ' + (err?.message ?? 'Onbekend'))
+      setMailOpen(false)
+    } finally {
+      setMailLaden(false)
+    }
+  }
+
+  function meldGekopieerd(wat: string) {
+    setGekopieerd(wat)
+    setTimeout(() => setGekopieerd(g => (g === wat ? null : g)), 2500)
+  }
+
+  async function kopieerTekst(tekst: string, wat: string) {
+    try { await navigator.clipboard.writeText(tekst); meldGekopieerd(wat) }
+    catch { alert('Kopiëren mislukt — selecteer en kopieer handmatig.') }
+  }
+
+  async function kopieerMail() {
+    if (!mailData) return
+    const doc = previewRef.current?.contentDocument
+    const bodyHtml = doc?.body?.innerHTML ?? mailData.html
+    const platteTekst = doc?.body?.innerText ?? ''
+    try {
+      if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) throw new Error('geen ClipboardItem')
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([bodyHtml], { type: 'text/html' }),
+        'text/plain': new Blob([platteTekst], { type: 'text/plain' }),
+      })])
+      meldGekopieerd('mail')
+    } catch {
+      // Fallback: preview selecteren en kopiëren
+      try {
+        const win = previewRef.current?.contentWindow
+        if (!doc || !win) throw new Error('geen preview')
+        const range = doc.createRange()
+        range.selectNodeContents(doc.body)
+        const sel = win.getSelection()
+        sel?.removeAllRanges()
+        sel?.addRange(range)
+        const ok = doc.execCommand('copy')
+        sel?.removeAllRanges()
+        if (!ok) throw new Error('execCommand mislukt')
+        meldGekopieerd('mail')
+      } catch {
+        alert('Kopiëren mislukt — klik in de preview, kies Alles selecteren (⌘A / Ctrl+A) en kopieer (⌘C / Ctrl+C).')
+      }
+    }
+  }
+
+  async function markeerVerstuurd() {
+    if (!confirm('Offerte markeren als verstuurd? De status wordt "Gestuurd" en de verzenddatum wordt vandaag.')) return
+    const res = await fetch(`/api/offertes/${offerteId}/markeer-verstuurd`, { method: 'POST' })
+    const data = await res.json().catch(() => ({}))
+    if (data.ok) { setMailOpen(false); router.refresh() }
+    else alert('Markeren mislukt: ' + (data.error ?? 'Onbekende fout'))
   }
 
   async function maakAfspraak() {
@@ -195,6 +269,15 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           <Icon name="send" size={16} />
           {inclAfspraak ? 'Offerte + afspraken versturen' : 'E-mail versturen'}
         </button>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }}
+          onClick={openMailVenster}
+        >
+          <Icon name="copy" size={16} />
+          Mail voor Outlook / Apple Mail
+        </button>
         {acceptUrl && (
           <div>
             <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginBottom: 4 }}>Akkoord-link:</div>
@@ -319,6 +402,68 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         <Icon name="trash" size={16} />
         Verwijderen
       </button>
+      {/* Venster: mail kopiëren voor Outlook / Apple Mail */}
+      {mailOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => setMailOpen(false)}>
+          <div className="card" role="dialog" aria-modal="true" aria-label="Mail voor Outlook / Apple Mail"
+            style={{ width: 720, maxWidth: '100%', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', margin: 0 }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0, color: 'var(--text)' }}>Mail voor Outlook / Apple Mail</h3>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setMailOpen(false)} aria-label="Sluiten">✕</button>
+            </div>
+
+            {mailLaden || !mailData ? (
+              <p style={{ fontSize: '.85rem', color: 'var(--text-soft)' }}>Mail wordt gemaakt…</p>
+            ) : (
+              <>
+                <p style={{ fontSize: '.8rem', color: 'var(--text-2)', margin: '0 0 12px' }}>
+                  Nieuwe mail → plakken (⌘V / Ctrl+V) → versturen. Verstuur vanaf Mac/pc, niet vanaf iPhone.
+                </p>
+
+                <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginBottom: 4 }}>Aan</div>
+                {mailData.aan ? (
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                    <input className="form-ctrl" value={mailData.aan} readOnly style={{ fontSize: '.8rem', padding: '6px 8px' }} />
+                    <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren" onClick={() => kopieerTekst(mailData.aan!, 'aan')}>
+                      <Icon name={gekopieerd === 'aan' ? 'check' : 'copy'} size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="alert alert-err" style={{ fontSize: '.78rem', padding: '8px 12px', marginBottom: 10 }}>Klant heeft geen e-mailadres</div>
+                )}
+
+                <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginBottom: 4 }}>Onderwerp</div>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                  <input className="form-ctrl" value={mailData.onderwerp} readOnly style={{ fontSize: '.8rem', padding: '6px 8px' }} />
+                  <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren" onClick={() => kopieerTekst(mailData.onderwerp, 'onderwerp')}>
+                    <Icon name={gekopieerd === 'onderwerp' ? 'check' : 'copy'} size={16} />
+                  </button>
+                </div>
+
+                <iframe
+                  ref={previewRef}
+                  title="Voorbeeld van de mail"
+                  srcDoc={mailData.html}
+                  style={{ width: '100%', height: 460, border: '1px solid var(--line)', borderRadius: 6, background: '#fff', marginBottom: 12 }}
+                />
+
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={kopieerMail}>
+                    <Icon name={gekopieerd === 'mail' ? 'check' : 'copy'} size={16} />
+                    {gekopieerd === 'mail' ? 'Mail gekopieerd' : 'Kopieer mail'}
+                  </button>
+                  <button type="button" className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={markeerVerstuurd}>
+                    <Icon name="check" size={16} />
+                    Markeer als verstuurd
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
