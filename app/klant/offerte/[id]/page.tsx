@@ -53,7 +53,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
           />
         }
         onderaan={
-          <a href={`/api/offertes/${o.id}/pdf`} target="_blank" rel="noopener noreferrer" className="kp-pdf-knop">
+          <a href={`/api/offertes/${o.id}/pdf?klant=1`} target="_blank" rel="noopener noreferrer" className="kp-pdf-knop">
             <Icon name="download" size={16} />
             PDF downloaden
           </a>
