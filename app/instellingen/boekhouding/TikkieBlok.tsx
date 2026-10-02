@@ -36,7 +36,7 @@ export default function TikkieBlok({ env, omgeving, aan, webhookUrl }: Props) {
   const kleur = (ok: boolean) => (ok ? 'var(--tint-green)' : '#dc2626')
 
   return (
-    <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #4b3fbf' }}>
+    <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #413f80' }}>
       <div className="section-label">Tikkie</div>
       <p style={{ fontSize: '.86rem', color: 'var(--text-2)', lineHeight: 1.7, margin: '0 0 12px' }}>
         Bij het versturen van een (deel)factuur maakt het CRM automatisch een Tikkie voor dat bedrag.

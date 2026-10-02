@@ -39,7 +39,7 @@ export async function sendMail(opts: {
 const LOGO_URL = 'https://portaal.ozvoltelektro.nl/logo-wit.png'
 const BRAND = '#1b2d4a'
 const GREEN = '#1a7a3c'
-const TIKKIE = '#4b3fbf'
+const TIKKIE = '#413f80'
 const F = `'Helvetica Neue',Helvetica,Arial,sans-serif`
 
 // ── Gedeelde wrapper ──────────────────────────────────────────────────────────
@@ -286,7 +286,7 @@ export function factuurMailHtml(params: {
       vóór <strong style="color:#c0392b;">${vervaldatum}</strong> te voldoen.
     </p>
 
-    ${tikkieUrl ? primaryBtn(tikkieUrl, `Betaal met Tikkie — ${bedrag}`, TIKKIE, '📱') : ''}
+    ${tikkieUrl ? primaryBtn(tikkieUrl, `Betaal met Tikkie — ${bedrag}`, TIKKIE, '<img src="https://portaal.ozvoltelektro.nl/tikkie-logo.png" width="22" height="22" alt="" style="vertical-align:middle;border:0;margin-top:-3px;">') : ''}
     ${betaalUrl ? primaryBtn(betaalUrl, tikkieUrl ? 'Betalen met iDEAL' : 'Nu online betalen', GREEN, '💳') : ''}
 
     ${infoBox([

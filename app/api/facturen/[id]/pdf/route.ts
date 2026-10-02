@@ -130,9 +130,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .betaal-left .iban { font-size: 14px; font-weight: 700; color: var(--navy); }
   .betaal-left .iban-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .betaal-right .bl { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 4px; text-align: right; }
-  .tikkiebox { border-left-color: #4b3fbf; background: #f3f1ff; }
-  .tikkiebox .bl { color: #4b3fbf; }
-  .tikkie-btn { display: inline-block; background: #4b3fbf; color: #fff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 9px 18px; border-radius: 8px; margin: 2px 0 6px; }
+  .tikkiebox { border-left-color: #413f80; background: #f1f0f8; }
+  .tikkiebox .bl { color: #413f80; }
+  .tikkie-btn { display: inline-block; background: #413f80; color: #fff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 9px 18px; border-radius: 8px; margin: 2px 0 6px; }
   .betaal-amount { font-size: 24px; font-weight: 800; color: var(--navy); }
 
   .notities { margin-top: 24px; padding: 16px 20px; background: var(--light); border-left: 3px solid var(--blue); border-radius: 8px; }
@@ -250,7 +250,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ${tikkieUrl ? `
     <div class="betaalbox tikkiebox">
       <div class="betaal-left">
-        <div class="bl">Betaal met Tikkie</div>
+        <div class="bl" style="display:flex;align-items:center;gap:8px;"><img src="https://portaal.ozvoltelektro.nl/tikkie-logo.png" alt="Tikkie" style="width:26px;height:26px;"> Betaal met Tikkie</div>
         <a class="tikkie-btn" href="${tikkieUrl}" target="_blank" rel="noopener noreferrer">Betaal met Tikkie — ${formatEuro(totalen.inclBtw)}</a>
         <div class="iban-sub" style="word-break:break-all;">${tikkieUrl}</div>
       </div>
