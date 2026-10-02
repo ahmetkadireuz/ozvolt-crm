@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { haalAnalyses, haalRecenteDocumenten } from '@/lib/bonnen/data'
+import { controleerOpenstaandeTikkies } from '@/lib/tikkie'
 
 // Vercel Cron Job — dagelijks uitvoeren
 // Voeg in vercel.json toe: { "crons": [{ "path": "/api/cron", "schedule": "0 8 * * *" }] }
@@ -15,6 +16,13 @@ export async function GET(req: NextRequest) {
   }
 
   const resultaten: string[] = []
+
+  // 0. Vangnet voor de Tikkie-webhook: openstaande Tikkies nalopen (vóór de te-laat-check)
+  try {
+    resultaten.push(...await controleerOpenstaandeTikkies())
+  } catch (err) {
+    console.error('[cron tikkie]', err instanceof Error ? err.message : err)
+  }
 
   // 1. Facturen te laat
   const teLaat = await sql`

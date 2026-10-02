@@ -4,6 +4,8 @@ export const revalidate = 0
 import type { Metadata } from 'next'
 import { sql, formatEuro } from '@/lib/db'
 import CopyKnop from './CopyKnop'
+import TikkieBlok from './TikkieBlok'
+import { tikkieAan, tikkieOmgeving } from '@/lib/tikkie'
 import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Boekhouding' }
@@ -16,6 +18,10 @@ export default async function BoekhoudingPage() {
   const gekoppeld = heeftToken && heeftAdmin
   const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
   const webhookUrl = siteUrl.replace(/\/$/, '') + WEBHOOK_PATH
+  const tikkieWebhookUrl = siteUrl.replace(/\/$/, '') + '/api/webhooks/tikkie'
+  // Alleen of de variabele bestaat — nooit de waarde naar de browser
+  const tikkieEnv = ['TIKKIE_API_KEY', 'TIKKIE_APP_TOKEN', 'TIKKIE_OMGEVING', 'BEDRIJF_IBAN', 'BEDRIJF_BIC']
+    .map(naam => ({ naam, aanwezig: !!process.env[naam] }))
 
   // Live status van Moneybird-koppeling testen
   let liveCheck: { ok: boolean; foutmelding?: string; aantal_open?: number } = { ok: false }
@@ -63,7 +69,7 @@ export default async function BoekhoudingPage() {
         <div>
           <h1 className="page-title">Boekhouding</h1>
           <p style={{ margin: 0, fontSize: '.78rem', color: 'var(--text-soft)' }}>
-            Koppeling met Moneybird en je bankrekening.
+            Koppeling met Moneybird, je ABN AMRO-rekening en Tikkie.
           </p>
         </div>
       </div>
@@ -112,7 +118,7 @@ export default async function BoekhoudingPage() {
           <div className="stat-value" style={{ fontSize: '1.4rem', color: '#7c3aed' }}>
             {liveCheck.ok ? (liveCheck.aantal_open ?? 0) : '—'}
           </div>
-          <div className="stat-sub">Wachten op betaling via Knab</div>
+          <div className="stat-sub">Wachten op betaling</div>
         </div>
       </div>
 
@@ -121,7 +127,7 @@ export default async function BoekhoudingPage() {
         <div className="section-label">Hoe het werkt</div>
         <p style={{ fontSize: '.86rem', color: 'var(--text-2)', lineHeight: 1.7, margin: '0 0 14px' }}>
           Elke betaalnota die je vanuit het CRM verstuurt komt automatisch in Moneybird terecht.
-          Moneybird haalt jouw Knab-rekeningmutaties binnen via de PSD2-koppeling en matcht
+          Moneybird haalt jouw ABN AMRO-rekeningmutaties binnen via de PSD2-koppeling en matcht
           inkomende betalingen aan de factuur. Zodra de factuur in Moneybird op &quot;betaald&quot; springt,
           krijgt de factuur in dit CRM automatisch dezelfde status via een webhook.
         </p>
@@ -131,8 +137,8 @@ export default async function BoekhoudingPage() {
             {gekoppeld ? <span style={{ color: '#16a34a', fontWeight: 700 }}>✓ Klaar</span> : <span style={{ color: '#ea580c', fontWeight: 700 }}>Nog instellen</span>}
           </li>
           <li>
-            <strong>Knab koppelen in Moneybird</strong>: Moneybird → Administratie → Banken → Toevoegen → Knab.
-            Volg de PSD2-stappen (inloggen bij Knab + machtiging). Vanaf dat moment komen je Knab-transacties
+            <strong>ABN AMRO koppelen in Moneybird</strong>: Moneybird → Administratie → Banken → Toevoegen → ABN AMRO.
+            Volg de PSD2-stappen (inloggen bij ABN AMRO + machtiging). Vanaf dat moment komen je bank-transacties (ook Tikkie-betalingen)
             automatisch binnen in Moneybird.
           </li>
           <li>
@@ -149,9 +155,11 @@ export default async function BoekhoudingPage() {
         </ol>
       </div>
 
+      <TikkieBlok env={tikkieEnv} omgeving={tikkieOmgeving()} aan={tikkieAan()} webhookUrl={tikkieWebhookUrl} />
+
       {/* ── Recent betaald ── */}
       <div className="card">
-        <div className="section-label">Recent betaald (via Knab/Moneybird)</div>
+        <div className="section-label">Recent betaald</div>
         {betaaldRecent.length === 0 ? (
           <p style={{ fontSize: '.84rem', color: 'var(--text-soft)', margin: 0 }}>Nog geen betaalde facturen.</p>
         ) : (

@@ -5,6 +5,7 @@ import { sendMail, factuurMailHtml } from '@/lib/mail'
 import { genereerFactuurPDF } from '@/lib/pdf-factuur'
 import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
 import { idealAan } from '@/lib/betalen'
+import { tikkieAan, zorgVoorTikkie } from '@/lib/tikkie'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -32,6 +33,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   await sql`UPDATE facturen SET status = 'verstuurd', bijgewerkt_op = NOW() WHERE id = ${factuurId}`
 
+  // Tikkie voor het bedrag van déze (deel)factuur. Mislukt het, dan versturen we zonder Tikkie.
+  let tikkieUrl: string | null = null
+  let tikkieFout: string | null = null
+  const oudeStijl5050 = !!factuur.betaling_50_50 && (factuur.soort ?? 'normaal') === 'normaal'
+  if (tikkieAan() && !oudeStijl5050 && totalen.inclBtw > 0) {
+    try {
+      tikkieUrl = (await zorgVoorTikkie(factuurId)).url
+    } catch (err) {
+      tikkieFout = err instanceof Error ? err.message : String(err)
+      console.error('[tikkie bij versturen]', tikkieFout)
+      await sql`
+        INSERT INTO admin_notifications (type, titel, bericht, link)
+        VALUES ('tikkie_fout', ${`Tikkie niet aangemaakt: ${factuur.factuurnummer}`},
+          ${`De factuur is verstuurd zonder Tikkie-link (${tikkieFout}). Maak hem eventueel opnieuw aan op het factuurscherm.`},
+          ${`/facturen/${factuurId}`})
+      `.catch(() => {})
+    }
+  }
+
   // Genereer PDF bijlage
   let pdfBuffer: Buffer | null = null
   try {
@@ -48,6 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       notities: factuur.notities,
       status: 'verstuurd',
       betaalUrl,
+      tikkieUrl,
     })
   } catch (e) {
     console.error('[pdf genereren]', e)
@@ -63,6 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         bedrag: formatEuro(totalen.inclBtw),
         vervaldatum: vervalDatum.toLocaleDateString('nl-NL'),
         betaalUrl: betaalUrl ?? undefined,
+        tikkieUrl: tikkieUrl ?? undefined,
       }),
       attachments: pdfBuffer
         ? [{ filename: `${factuur.factuurnummer}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }]
@@ -72,7 +94,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 
-  // Stap 2: automatisch syncen naar Moneybird zodat Knab-betalingen straks
+  // Stap 2: automatisch syncen naar Moneybird zodat bankbetalingen (ABN AMRO) straks
   // gematcht kunnen worden. Niet-blokkerend: factuur in CRM staat al op verstuurd.
   let moneybirdResultaat: { synced: boolean; error?: string; moneybird_id?: string } = { synced: false }
   if (process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID) {
@@ -85,5 +107,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
   }
 
-  return NextResponse.json({ ok: true, moneybird: moneybirdResultaat })
+  return NextResponse.json({ ok: true, moneybird: moneybirdResultaat, tikkie: { url: tikkieUrl, fout: tikkieFout } })
 }

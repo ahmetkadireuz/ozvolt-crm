@@ -1,10 +1,13 @@
 import PDFDocument from 'pdfkit'
+import QRCode from 'qrcode'
+import { BEDRIJF, ibanAanwezig, ibanLeesbaar } from '@/lib/betalen'
 
 const NAVY = '#1d2f4c'
 const BLUE = '#4c7191'
 const GREEN = '#15803d'
 const MUTED = '#64748b'
 const LIGHT = '#f0f4f8'
+const TIKKIE = '#4b3fbf'
 
 function euro(n: number) {
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n)
@@ -30,7 +33,14 @@ export async function genereerFactuurPDF(params: {
   notities?: string | null
   status: string
   betaalUrl?: string | null
+  tikkieUrl?: string | null
 }): Promise<Buffer> {
+  const tikkieUrl = params.status !== 'betaald' ? params.tikkieUrl ?? null : null
+  const tikkieQr = tikkieUrl
+    ? await QRCode.toBuffer(tikkieUrl, { type: 'png', errorCorrectionLevel: 'M', margin: 1, width: 240 }).catch(() => null)
+    : null
+  const metIban = ibanAanwezig()
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 0, size: 'A4' })
     const chunks: Buffer[] = []
@@ -188,13 +198,32 @@ export async function genereerFactuurPDF(params: {
 
     y += 42
 
-    // ── Betaalgegevens ────────────────────────────────────────────────────
-    doc.rect(margin, y, W - 2 * margin, 52).fill(LIGHT)
-    doc.rect(margin, y, 4, 52).fill(NAVY)
-    doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5).text('BETAALGEGEVENS', margin + 14, y + 10)
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text('NL69 KNAB 0780 9871 79', margin + 14, y + 24)
-    doc.fillColor(MUTED).font('Helvetica').fontSize(9)
-       .text(`t.n.v. Ozvolt Elektrotechniek  ·  o.v.v. ${params.factuurnummer}`, margin + 14, y + 40)
+    // ── Betalen met Tikkie (primair) ──────────────────────────────────────
+    if (tikkieUrl) {
+      const h = 84
+      doc.rect(margin, y, W - 2 * margin, h).fill('#f3f1ff')
+      doc.rect(margin, y, 4, h).fill(TIKKIE)
+      doc.fillColor(TIKKIE).font('Helvetica-Bold').fontSize(7.5).text('BETAAL MET TIKKIE', margin + 14, y + 10)
+      doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text('Scan de QR-code of open de link', margin + 14, y + 24)
+      doc.fillColor(TIKKIE).font('Helvetica').fontSize(8.5)
+         .text(tikkieUrl, margin + 14, y + 44, { width: W - 2 * margin - 110, link: tikkieUrl, underline: true })
+      doc.fillColor(MUTED).font('Helvetica').fontSize(8)
+         .text('Betalen met uw eigen bank-app, direct verwerkt.', margin + 14, y + 66)
+      if (tikkieQr) doc.image(tikkieQr, W - margin - 84, y + 6, { width: 72, height: 72 })
+      y += h + 10
+    }
+
+    // ── Betaalgegevens (overschrijving) ───────────────────────────────────
+    if (metIban) {
+      doc.rect(margin, y, W - 2 * margin, 52).fill(LIGHT)
+      doc.rect(margin, y, 4, 52).fill(NAVY)
+      doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5).text(tikkieUrl ? 'OF VIA BANKOVERSCHRIJVING' : 'BETAALGEGEVENS', margin + 14, y + 10)
+      doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text(ibanLeesbaar(), margin + 14, y + 24)
+      doc.fillColor(MUTED).font('Helvetica').fontSize(9)
+         .text(`t.n.v. ${BEDRIJF.naam}  ·  o.v.v. ${params.factuurnummer}`, margin + 14, y + 40)
+    } else {
+      y -= 62 // geen IBAN-blok: iDEAL-blok schuift omhoog
+    }
 
     if (params.betaalUrl) {
       y += 62

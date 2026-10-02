@@ -4,7 +4,8 @@ export const revalidate = 0
 import { redirect, notFound } from 'next/navigation'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
-import { BEDRIJF, betaalQrSvg, ibanLeesbaar, idealAan } from '@/lib/betalen'
+import { BEDRIJF, betaalQrSvg, ibanAanwezig, ibanLeesbaar, idealAan } from '@/lib/betalen'
+import { tikkieLinkVoorKlant } from '@/lib/tikkie'
 import Overschrijving from '../../_components/Overschrijving'
 import BetaalKnop from './BetaalKnop'
 import Icon from '@/components/Icon'
@@ -36,6 +37,9 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
   const termijnen = f.betaling_50_50 ? [totaal / 2, totaal / 2] : [totaal]
   const qrs = isBetaald ? [] : await Promise.all(termijnen.map(b => betaalQrSvg(Math.round(b * 100) / 100, f.factuurnummer)))
   const metIdeal = idealAan()
+  const metIban = ibanAanwezig()
+  // Query hierboven filtert al op de klant van deze sessie: alleen díe klant ziet de Tikkie-link
+  const tikkieUrl = isBetaald || termijnen.length > 1 ? null : tikkieLinkVoorKlant(f)
 
   return (
     <div>
@@ -95,14 +99,22 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
 
           {!isBetaald && totaal > 0 && termijnen.map((bedrag, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Overschrijving
+              {tikkieUrl && (
+                <>
+                  <a href={tikkieUrl} target="_blank" rel="noopener noreferrer" className="kp-btn kp-btn-tikkie" style={{ width: '100%' }}>
+                    Betaal met Tikkie — {formatEuro(bedrag)}
+                  </a>
+                  {metIban && <div className="kp-alt">Of maak het bedrag zelf over:</div>}
+                </>
+              )}
+              {metIban && <Overschrijving
                 titel={termijnen.length > 1 ? `${i === 0 ? '1e' : '2e'} termijn (50%) — ${i === 0 ? 'bij start' : 'na oplevering'}` : undefined}
                 bedrag={formatEuro(bedrag)}
                 kenmerk={f.factuurnummer}
                 iban={ibanLeesbaar()}
                 tenaamstelling={BEDRIJF.naam}
                 qrSvg={qrs[i] ?? null}
-              />
+              />}
               {metIdeal && (
                 <>
                   <div className="kp-alt">Liever met iDEAL betalen?</div>

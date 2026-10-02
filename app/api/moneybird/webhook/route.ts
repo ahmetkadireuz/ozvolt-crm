@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
+import { ensureTikkieKolommen } from '@/lib/tikkie'
 
 // Moneybird stuurt webhooks bij betalingen
 // Stel in via Moneybird → Instellingen → Webhooks
@@ -17,11 +18,14 @@ export async function POST(req: NextRequest) {
   if (entity_type === 'SalesInvoice' && entity_id) {
     try {
       // Zoek factuur op via moneybird_id
+      await ensureTikkieKolommen()
       const rows = await sql`
-        SELECT id, status FROM facturen WHERE moneybird_id = ${String(entity_id)}
+        SELECT id, status, tikkie_betaald_op FROM facturen WHERE moneybird_id = ${String(entity_id)}
       `
       const factuur = rows[0]
       if (!factuur) return NextResponse.json({ ok: true, skip: 'niet gevonden' })
+      // Al betaald via Tikkie: Moneybird loopt achter tot de bankkoppeling de betaling matcht
+      if (factuur.tikkie_betaald_op) return NextResponse.json({ ok: true, skip: 'betaald via tikkie' })
 
       // Haal actuele status op uit Moneybird
       const mbRes = await fetch(

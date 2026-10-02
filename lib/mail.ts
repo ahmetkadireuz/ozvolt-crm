@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { BEDRIJF, ibanAanwezig, ibanLeesbaar } from '@/lib/betalen'
 
 let transporter: nodemailer.Transporter | null = null
 
@@ -38,6 +39,7 @@ export async function sendMail(opts: {
 const LOGO_URL = 'https://portaal.ozvoltelektro.nl/logo-wit.png'
 const BRAND = '#1b2d4a'
 const GREEN = '#1a7a3c'
+const TIKKIE = '#4b3fbf'
 const F = `'Helvetica Neue',Helvetica,Arial,sans-serif`
 
 // ── Gedeelde wrapper ──────────────────────────────────────────────────────────
@@ -260,8 +262,10 @@ export function factuurMailHtml(params: {
   bedrag: string
   vervaldatum: string
   betaalUrl?: string
+  tikkieUrl?: string
 }) {
-  const { klantNaam, factuurNr, bedrag, vervaldatum, betaalUrl } = params
+  const { klantNaam, factuurNr, bedrag, vervaldatum, betaalUrl, tikkieUrl } = params
+  const metIban = ibanAanwezig()
   const voornaam = klantNaam.split(' ')[0]
 
   const body = `
@@ -282,7 +286,8 @@ export function factuurMailHtml(params: {
       vóór <strong style="color:#c0392b;">${vervaldatum}</strong> te voldoen.
     </p>
 
-    ${betaalUrl ? primaryBtn(betaalUrl, 'Nu online betalen', GREEN, '💳') : ''}
+    ${tikkieUrl ? primaryBtn(tikkieUrl, `Betaal met Tikkie — ${bedrag}`, TIKKIE, '📱') : ''}
+    ${betaalUrl ? primaryBtn(betaalUrl, tikkieUrl ? 'Betalen met iDEAL' : 'Nu online betalen', GREEN, '💳') : ''}
 
     ${infoBox([
       { label: 'Betaalnota', value: factuurNr, borderRight: true },
@@ -290,18 +295,18 @@ export function factuurMailHtml(params: {
       { label: 'Uiterlijk', value: vervaldatum, valueColor: '#c0392b' },
     ])}
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+    ${metIban ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border:1px solid #dde9f5;border-radius:8px;overflow:hidden;margin-bottom:28px;background:#f5f8fc;">
     <tr><td style="padding:18px 22px;">
       <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#7b92b2;text-transform:uppercase;
-         letter-spacing:0.14em;font-family:${F};">Bankoverschrijving</p>
+         letter-spacing:0.14em;font-family:${F};">${tikkieUrl ? 'Of via bankoverschrijving' : 'Bankoverschrijving'}</p>
       <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#1b2d4a;
-         letter-spacing:0.05em;font-family:${F};">NL69 KNAB 0780 9871 79</p>
+         letter-spacing:0.05em;font-family:${F};">${ibanLeesbaar()}</p>
       <p style="margin:0;font-size:12px;color:#64748b;font-family:${F};">
-        T.n.v. Ozvolt Elektrotechniek &nbsp;&middot;&nbsp; Kenmerk: <strong>${factuurNr}</strong>
+        T.n.v. ${BEDRIJF.naam} &nbsp;&middot;&nbsp; Kenmerk: <strong>${factuurNr}</strong>
       </p>
     </td></tr>
-    </table>
+    </table>` : ''}
 
     <p style="margin:0;font-size:13.5px;color:#4a5568;line-height:1.8;font-family:${F};">
       Met vriendelijke groet,<br>
