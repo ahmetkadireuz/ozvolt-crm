@@ -315,7 +315,22 @@ export async function tikkieLinkMetAanmaken(f: any): Promise<string | null> {
   try {
     return (await zorgVoorTikkie(Number(f.id))).url
   } catch (err) {
-    console.error('[tikkie automatisch]', f?.factuurnummer, err instanceof Error ? err.message : err)
+    const reden = err instanceof Error ? err.message : String(err)
+    console.error('[tikkie automatisch]', f?.factuurnummer, reden)
+    // Zichtbaar maken in het CRM (max. één melding per factuur per dag)
+    try {
+      const al = await sql`
+        SELECT 1 FROM admin_notifications
+        WHERE type = 'tikkie_fout' AND link = ${`/facturen/${f.id}`} AND aangemaakt_op > NOW() - INTERVAL '1 day'
+      `
+      if (!al[0]) {
+        await sql`
+          INSERT INTO admin_notifications (type, titel, bericht, link)
+          VALUES ('tikkie_fout', ${`Tikkie niet aangemaakt: ${f.factuurnummer}`},
+            ${`De klant ziet alleen IBAN/QR. Reden: ${reden}`}, ${`/facturen/${f.id}`})
+        `
+      }
+    } catch { /* melding is bijzaak */ }
     return null
   }
 }

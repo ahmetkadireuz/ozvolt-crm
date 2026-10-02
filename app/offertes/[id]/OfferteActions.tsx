@@ -54,14 +54,6 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
     }
   }
 
-  async function markeerVerstuurd() {
-    if (!confirm('Offerte markeren als verstuurd? De status wordt "Gestuurd" en de verzenddatum wordt vandaag.')) return
-    const res = await fetch(`/api/offertes/${offerteId}/markeer-verstuurd`, { method: 'POST' })
-    const data = await res.json().catch(() => ({}))
-    if (data.ok) router.refresh()
-    else alert('Markeren mislukt: ' + (data.error ?? 'Onbekende fout'))
-  }
-
   async function maakAfspraak() {
     setMaakAfspraakLoading(true)
     const res = await fetch('/api/afspraken', {
@@ -241,12 +233,6 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
                 <Icon name={linkGekopieerd ? 'check' : 'copy'} size={16} />
               </button>
             </div>
-            {offerte.status === 'concept' && (
-              <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }} onClick={markeerVerstuurd}>
-                <Icon name="check" size={14} />
-                Markeer als verstuurd
-              </button>
-            )}
           </div>
         )}
         <PortaalOpenKnop
@@ -256,7 +242,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         />
         {offerte.status === 'concept' && (
           <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginTop: 4 }}>
-            Concept-offertes staan nog niet in het klantportaal; je komt op het overzicht van de klant.
+            Sla de offerte eerst op (met regels), dan staat hij in het klantportaal. Nu kom je op het overzicht van de klant.
           </div>
         )}
         {offerte.sent_at && (
