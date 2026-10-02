@@ -76,7 +76,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (Array.isArray(o.regels)) regels = o.regels
   else if (typeof o.regels === 'string') { try { regels = JSON.parse(o.regels) } catch {} }
 
-  const uoItems = parseUoItems(o.uo_items)
+  // Klant-PDF bevat alleen waar de klant voor betaalt: geen opties/uitgangspunten.
+  // ?klant=1 (knop in het klantportaal) geeft de klantversie, ook als de beheerder meekijkt.
+  const klantVersie = !isAdmin || req.nextUrl.searchParams.get('klant') === '1'
+  const uoItems = klantVersie ? [] : parseUoItems(o.uo_items)
 
   const korting = Number(o.korting_pct ?? 0)
   const btwPct = Number(o.btw_pct ?? 21)
