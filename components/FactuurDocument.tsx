@@ -45,16 +45,22 @@ const CSS = `
   /* Bankoverschrijving */
   .od-bank { border: 1px solid #e3e9f1; border-radius: 16px; padding: 20px 22px; display: flex; gap: 24px; align-items: flex-start; background: #fff; }
   .od-bank-main { flex: 1; min-width: 0; }
+  .od-bank-kop { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .od-bank-icoon { width: 34px; height: 34px; border-radius: 10px; background: #eef3fb; color: ${NAVY}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .od-bank-titel { font-size: 15px; font-weight: 800; color: ${NAVY}; }
-  .od-bank-sub { font-size: 13px; color: #64748b; margin-top: 2px; margin-bottom: 12px; }
-  .od-bank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .od-bank-veld { background: #f8fafc; border: 1px solid #eef2f7; border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-  .od-bank-label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; }
-  .od-bank-waarde { font-size: 14.5px; font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; word-break: break-word; margin-top: 1px; }
-  .od-bank-veld.breed { grid-column: 1 / -1; }
-  .od-kopieer { flex-shrink: 0; background: #fff; border: 1px solid #d6dee9; color: ${NAVY}; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .od-bank-sub { font-size: 12.5px; color: #64748b; margin-top: 1px; }
+  /* Gegevens als nette tabel: label | waarde | kopieer */
+  .od-bank-lijst { border: 1px solid #eef2f7; border-radius: 12px; overflow: hidden; }
+  .od-bank-rij { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: 12px; padding: 11px 14px; }
+  .od-bank-rij + .od-bank-rij { border-top: 1px solid #eef2f7; }
+  .od-bank-rij:nth-child(odd) { background: #fafbfd; }
+  .od-bank-label { font-size: 13px; color: #64748b; }
+  .od-bank-waarde { font-size: 15px; font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .od-bank-waarde.mono { letter-spacing: .03em; white-space: nowrap; }
+  .od-kopieer { flex-shrink: 0; background: #fff; border: 1px solid #d6dee9; color: ${NAVY}; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; min-width: 84px; }
   .od-kopieer:hover { background: #eef3fb; }
-  .od-bank-noot { font-size: 12px; color: #64748b; margin-top: 12px; }
+  .od-bank-noot { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: #64748b; margin-top: 12px; line-height: 1.5; }
+  .od-bank-noot svg { flex-shrink: 0; margin-top: 1px; color: #94a3b8; }
 
   .od-termijn { font-size: 13px; font-weight: 700; color: ${NAVY}; margin: 0 0 10px; }
   .od-termijn + .od-termijn, .od-termijn-blok + .od-termijn-blok { margin-top: 22px; }
@@ -66,7 +72,11 @@ const CSS = `
     .od-tikkie .od-btn { max-width: none; }
     .od-qr { display: none; } /* op de telefoon tik je gewoon op de knop */
     .od-bank { padding: 18px; }
-    .od-bank-grid { grid-template-columns: 1fr; }
+    .od-bank-rij { grid-template-columns: 1fr auto; row-gap: 2px; padding: 10px 12px; }
+    .od-bank-label { grid-column: 1 / -1; font-size: 12px; }
+    .od-bank-waarde { font-size: 14px; }
+    .od-bank-waarde.mono { letter-spacing: 0; }
+    .od-kopieer { min-width: 0; }
     .od-hero-kaart .od-status-open { align-self: flex-start; }
   }
 `
@@ -249,17 +259,23 @@ export default function FactuurDocument({ f, regels, totalen, iban, tenaamstelli
                   {iban && (
                     <div className="od-bank">
                       <div className="od-bank-main">
-                        <div className="od-bank-titel">{t.tikkieUrl ? 'Bankoverschrijving' : 'Betalen via uw bank-app'}</div>
-                        <div className="od-bank-sub">Het bedrag is binnen enkele seconden bij ons binnen.</div>
-                        <div className="od-bank-grid">
-                          <BankVeld label="IBAN" waarde={iban} kopie={iban.replace(/\s+/g, '')} breed />
-                          <BankVeld label="Ten name van" waarde={tenaamstelling} kopie={tenaamstelling} />
-                          <BankVeld label="Bedrag" waarde={formatEuro(t.bedrag)} kopie={t.bedrag.toFixed(2).replace('.', ',')} />
-                          <BankVeld label="Omschrijving" waarde={f.factuurnummer} kopie={f.factuurnummer} />
+                        <div className="od-bank-kop">
+                          <div className="od-bank-icoon"><IcoonBank /></div>
+                          <div>
+                            <div className="od-bank-titel">{t.tikkieUrl ? 'Zelf overmaken' : 'Betalen via uw bank-app'}</div>
+                            <div className="od-bank-sub">Binnen enkele seconden bij ons binnen.</div>
+                          </div>
                         </div>
-                        <p className="od-bank-noot">Vermeld de omschrijving, dan verwerken we uw betaling automatisch.</p>
+                        <div className="od-bank-lijst">
+                          <BankRij label="IBAN" waarde={iban} kopie={iban.replace(/\s+/g, '')} mono />
+                          <BankRij label="Ten name van" waarde={tenaamstelling} kopie={tenaamstelling} />
+                          <BankRij label="Bedrag" waarde={formatEuro(t.bedrag)} kopie={t.bedrag.toFixed(2).replace('.', ',')} />
+                          <BankRij label="Omschrijving" waarde={f.factuurnummer} kopie={f.factuurnummer} />
+                        </div>
+                        <p className="od-bank-noot"><IcoonInfo /> Vermeld de omschrijving, dan verwerken we uw betaling automatisch.</p>
                       </div>
-                      {t.epcQr && (
+                      {/* Eén QR-code per factuur: met Tikkie alleen die van Tikkie, anders de bank-QR */}
+                      {t.epcQr && !t.tikkieUrl && (
                         <div className="od-qr">
                           <div className="od-qr-img" dangerouslySetInnerHTML={{ __html: t.epcQr }} />
                           <div className="od-qr-tekst">Scan met de app van uw bank</div>
@@ -305,16 +321,21 @@ export default function FactuurDocument({ f, regels, totalen, iban, tenaamstelli
   )
 }
 
-function BankVeld({ label, waarde, kopie, breed }: { label: string; waarde: string; kopie: string; breed?: boolean }) {
+function BankRij({ label, waarde, kopie, mono }: { label: string; waarde: string; kopie: string; mono?: boolean }) {
   return (
-    <div className={`od-bank-veld${breed ? ' breed' : ''}`}>
-      <div style={{ minWidth: 0 }}>
-        <div className="od-bank-label">{label}</div>
-        <div className="od-bank-waarde">{waarde}</div>
-      </div>
+    <div className="od-bank-rij">
+      <span className="od-bank-label">{label}</span>
+      <span className={`od-bank-waarde${mono ? ' mono' : ''}`}>{waarde}</span>
       <KopieerKnop waarde={kopie} label={label} className="od-kopieer" />
     </div>
   )
+}
+
+function IcoonBank() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 10h18M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18M12 3l9 5H3l9-5z" /></svg>
+}
+function IcoonInfo() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
 }
 
 function IcoonPijlRechts() {
