@@ -9,13 +9,15 @@ import { OD_CSS, IcoonCheck, IcoonPijl, IcoonTelefoon, IcoonWhatsApp } from '@/c
 
 const SITE = 'https://portaal.ozvoltelektro.nl'
 const NAVY = '#1b2d4a'
-const TIKKIE = '#4b3fbf'
+const TIKKIE = '#413f80'
+const TIKKIE_LOGO = '/tikkie-logo.png'
 const OZVOLT_TEL = '+31644998789'
 const OZVOLT_WA = '31644998789'
 
 const CSS = `
-  .od-btn-tikkie { background: ${TIKKIE}; color: #fff; box-shadow: 0 4px 14px rgba(75,63,191,.30); }
-  .od-btn-tikkie:hover { background: #3f34a6; }
+  .od-btn-tikkie { background: ${TIKKIE}; color: #fff; box-shadow: 0 4px 14px rgba(65,63,128,.30); }
+  .od-btn-tikkie:hover { background: #36346b; }
+  .od-btn-logo { width: 26px; height: 26px; flex-shrink: 0; display: block; }
   .od-status-open { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700; }
   .od-status-open.amber { background: #fff7e6; color: #b45309; border: 1px solid #fde4b0; }
   .od-status-open.red { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
@@ -23,10 +25,10 @@ const CSS = `
 
   /* Tikkie-kaart */
   .od-tikkie { position: relative; overflow: hidden; border-radius: 16px; padding: 24px; display: flex; gap: 24px; align-items: center;
-    background: linear-gradient(135deg, #f4f2ff 0%, #ffffff 70%); border: 1px solid #ddd8fb; }
+    background: linear-gradient(135deg, #f1f0f8 0%, #ffffff 70%); border: 1px solid #d9d8ea; }
   .od-tikkie-main { flex: 1; min-width: 0; }
   .od-tikkie-kop { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-  .od-tikkie-logo { width: 34px; height: 34px; border-radius: 10px; background: ${TIKKIE}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 17px; flex-shrink: 0; }
+  .od-tikkie-logo { width: 40px; height: 40px; flex-shrink: 0; display: block; }
   .od-tikkie-titel { font-size: 17px; font-weight: 800; color: ${NAVY}; letter-spacing: -.2px; }
   .od-tikkie-tekst { font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 16px; max-width: 420px; }
   .od-tikkie .od-btn { width: 100%; max-width: 360px; }
@@ -145,7 +147,7 @@ export default function FactuurDocument({ f, regels, totalen, iban, tenaamstelli
               {isBetaald ? (
                 <span className="od-status-ok"><IcoonCheck /> Betaald</span>
               ) : eersteTikkie ? (
-                <a href={eersteTikkie} target="_blank" rel="noopener noreferrer" className="od-btn od-btn-tikkie">Betaal met Tikkie <IcoonPijlRechts /></a>
+                <a href={eersteTikkie} target="_blank" rel="noopener noreferrer" className="od-btn od-btn-tikkie"><img src={TIKKIE_LOGO} alt="" className="od-btn-logo" /> Betaal met Tikkie</a>
               ) : (
                 <a href="#betalen" className="od-btn od-btn-licht">Naar betalen <IcoonPijl /></a>
               )}
@@ -232,12 +234,12 @@ export default function FactuurDocument({ f, regels, totalen, iban, tenaamstelli
                     <div className="od-tikkie">
                       <div className="od-tikkie-main">
                         <div className="od-tikkie-kop">
-                          <div className="od-tikkie-logo">T</div>
+                          <img src={TIKKIE_LOGO} alt="Tikkie" className="od-tikkie-logo" />
                           <div className="od-tikkie-titel">Betaal met Tikkie</div>
                         </div>
                         <p className="od-tikkie-tekst">Eén tik en u betaalt veilig met de app van uw eigen bank. Uw betaling wordt direct verwerkt.</p>
                         <a href={t.tikkieUrl} target="_blank" rel="noopener noreferrer" className="od-btn od-btn-tikkie">
-                          Betaal {formatEuro(t.bedrag)} met Tikkie <IcoonPijlRechts />
+                          <img src={TIKKIE_LOGO} alt="" className="od-btn-logo" /> Betaal {formatEuro(t.bedrag)} met Tikkie
                         </a>
                         <div className="od-tikkie-voordelen">
                           <span><IcoonCheck /> Alle banken</span>
@@ -336,8 +338,4 @@ function IcoonBank() {
 }
 function IcoonInfo() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
-}
-
-function IcoonPijlRechts() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
 }

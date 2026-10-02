@@ -7,7 +7,7 @@ const BLUE = '#4c7191'
 const GREEN = '#15803d'
 const MUTED = '#64748b'
 const LIGHT = '#f0f4f8'
-const TIKKIE = '#4b3fbf'
+const TIKKIE = '#413f80'
 
 function euro(n: number) {
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n)
@@ -201,7 +201,7 @@ export async function genereerFactuurPDF(params: {
     // ── Betalen met Tikkie (primair) ──────────────────────────────────────
     if (tikkieUrl) {
       const h = 84
-      doc.rect(margin, y, W - 2 * margin, h).fill('#f3f1ff')
+      doc.rect(margin, y, W - 2 * margin, h).fill('#f1f0f8')
       doc.rect(margin, y, 4, h).fill(TIKKIE)
       doc.fillColor(TIKKIE).font('Helvetica-Bold').fontSize(7.5).text('BETAAL MET TIKKIE', margin + 14, y + 10)
       doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text('Scan de QR-code of open de link', margin + 14, y + 24)
