@@ -86,6 +86,7 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
                       <td onClick={e => e.stopPropagation()}>
                         <div className="row-actions">
                           <a href={`/klussen/${k.id}`} className="btn-open">Openen</a>
+                          <a href={`/offertes/nieuw?klus=${k.id}`} className="btn-row-primary" title="Offerte maken met de offertebot">+ Offerte</a>
                           <a href={`/facturen/nieuw?klus=${k.id}`} className="btn-row-primary">+ Factuur</a>
                           <button className="btn-row-del" title="Verwijderen" disabled={busy} onClick={() => verwijder(k)}>
                             <Icon name="trash" size={15} />
@@ -115,6 +116,10 @@ export default function KlussenTable({ klussen }: { klussen: any[] }) {
                 onAction: () => { window.open(wa, '_blank', 'noopener') },
               })
               const right: SwipeAction[] = [{
+                label: 'Offerte', color: '#1d4fa3',
+                icon: <Icon name="sparkles" size={20} />,
+                onAction: () => router.push(`/offertes/nieuw?klus=${k.id}`),
+              }, {
                 label: 'Verwijder', color: '#dc2626',
                 icon: <Icon name="trash" size={20} />,
                 onAction: () => verwijder(k),
