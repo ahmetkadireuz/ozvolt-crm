@@ -9,27 +9,45 @@ function esc(v: unknown): string {
   return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
 }
 
-/** Sectie "Uitgangspunten & opties" — informatief, telt niet mee in het totaal. Leeg = ''. */
+function uoTekstHtml(tekst: string): string {
+  const blokken = tekstBlokken(tekst)
+  if (blokken.length === 0) return ''
+  return `<div class="uo-tekst">${blokken.map(b => b.type === 'lijst'
+    ? `<ul>${b.items.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`
+    : `<p>${b.regels.map(esc).join('<br>')}</p>`).join('')}</div>`
+}
+
+/** Secties "Opties" en "Uitgangspunten" — informatief, tellen niet mee in het totaal. Leeg = ''. */
 function uoSectieHtml(items: UoItem[], btwPct: number): string {
-  if (items.length === 0) return ''
-  return `
+  const opties = items.filter(i => i.soort === 'optie')
+  const uitgangspunten = items.filter(i => i.soort !== 'optie')
+  const titel = (item: UoItem) => item.titel ? `<div class="td-omschrijving">${esc(item.titel)}</div>` : ''
+  const optiesHtml = opties.length === 0 ? '' : `
     <div class="uo">
-      <div class="sec-title">Uitgangspunten &amp; opties</div>
-      ${items.map(item => {
-        const optie = item.soort === 'optie'
-        const tekst = tekstBlokken(item.tekst).map(b => b.type === 'lijst'
-          ? `<ul>${b.items.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`
-          : `<p>${b.regels.map(esc).join('<br>')}</p>`).join('')
-        const prijs = optie && item.meerprijs !== null
-          ? `<div class="uo-prijs"><strong>Meerprijs ${formatEuro(item.meerprijs)} excl. btw / ${formatEuro(meerprijsInclBtw(item.meerprijs, btwPct))} incl. btw</strong> <span>— alleen bij keuze, niet in het totaal inbegrepen</span></div>`
-          : ''
-        return `
-      <div class="uo-item${optie ? ' optie' : ''}">
-        <div class="uo-kop"><span class="uo-badge">${optie ? 'Optie' : 'Uitgangspunt'}</span>${item.titel ? `<span class="uo-titel">${esc(item.titel)}</span>` : ''}</div>
-        ${tekst}${prijs}
-      </div>`
-      }).join('')}
+      <div class="sec-title">Opties</div>
+      <table class="items uo-opties">
+        <thead><tr><th>Optie</th><th style="width:26%">Meerprijs</th></tr></thead>
+        <tbody>
+          ${opties.map(item => `
+          <tr>
+            <td>${titel(item)}${uoTekstHtml(item.tekst)}</td>
+            <td>${item.meerprijs === null
+              ? '<div class="uo-klein">Op aanvraag</div>'
+              : `<div class="uo-excl">${formatEuro(item.meerprijs)} excl. btw</div>
+                 <div class="uo-klein">${formatEuro(meerprijsInclBtw(item.meerprijs, btwPct))} incl. btw</div>
+                 <div class="uo-klein">Niet in totaal</div>`}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
     </div>`
+  const uitgangspuntenHtml = uitgangspunten.length === 0 ? '' : `
+    <div class="uo">
+      <div class="sec-title">Uitgangspunten</div>
+      <div class="uo-lijst">
+        ${uitgangspunten.map(item => `<div class="uo-rij">${titel(item)}${uoTekstHtml(item.tekst)}</div>`).join('')}
+      </div>
+    </div>`
+  return optiesHtml + uitgangspuntenHtml
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -191,16 +209,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   /* UITGANGSPUNTEN & OPTIES */
   .uo { margin-top: 32px; }
-  .uo-item { padding: 14px 18px; background: var(--light); border-left: 3px solid var(--navy); border-radius: 8px; margin-bottom: 10px; page-break-inside: avoid; break-inside: avoid; }
-  .uo-item.optie { background: #fffbeb; border-left-color: #d97706; }
-  .uo-kop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
-  .uo-badge { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; background: #e3eaf3; color: var(--navy); }
-  .uo-item.optie .uo-badge { background: #fef3c7; color: #b45309; }
-  .uo-titel { font-weight: 700; font-size: 13px; color: var(--navy); }
-  .uo-item p { font-size: 12px; color: #374151; line-height: 1.7; margin: 4px 0; }
-  .uo-item ul { font-size: 12px; color: #374151; line-height: 1.7; margin: 4px 0; padding-left: 18px; }
-  .uo-prijs { font-size: 12px; color: var(--navy); margin-top: 6px; }
-  .uo-prijs span { color: var(--muted); }
+  table.uo-opties tbody tr { page-break-inside: avoid; break-inside: avoid; }
+  table.uo-opties tbody td:not(:first-child) { white-space: nowrap; }
+  .uo-excl { font-weight: 600; color: var(--navy); font-size: 12.5px; }
+  .uo-klein { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .uo-lijst { border: 1px solid var(--border); border-radius: 4px; background: #fff; }
+  .uo-rij { padding: 11px 14px; border-bottom: 1px solid var(--border); page-break-inside: avoid; break-inside: avoid; }
+  .uo-rij:last-child { border-bottom: none; }
+  .uo-tekst { font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 2px; }
+  .uo-tekst p + p, .uo-tekst p + ul, .uo-tekst ul + p, .uo-tekst ul + ul { margin-top: 5px; }
+  .uo-tekst ul { list-style: none; }
+  .uo-tekst li { position: relative; padding-left: 13px; line-height: 1.5; margin: 2px 0; }
+  .uo-tekst li::before { content: ''; position: absolute; left: 2px; top: .6em; width: 4.5px; height: 4.5px; border-radius: 50%; background: var(--navy); }
 
   /* AKKOORD */
   .akkoord { margin-top: 28px; border: 1.5px dashed var(--border); border-radius: 10px; padding: 20px 22px; }
