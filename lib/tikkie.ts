@@ -42,8 +42,9 @@ function vertaalFout(status: number, body: any): TikkieFout {
   const bericht: string = fouten.map(f => f?.message).filter(Boolean).join('; ') || body?.message || ''
   const tekst = `${code ?? ''} ${bericht}`.toLowerCase()
 
-  if (/app[\s_-]?token/.test(tekst)) return new TikkieFout('App-token klopt niet (of is uitgeschakeld in Tikkie Zakelijk)', status, code)
-  if (/api[\s_-]?key|apikey/.test(tekst)) return new TikkieFout('API-key klopt niet', status, code)
+  const detail = code || bericht ? ` [ABN: ${[code, bericht].filter(Boolean).join(' — ')}]` : ''
+  if (/app[\s_-]?token/.test(tekst)) return new TikkieFout('App-token klopt niet (of is uitgeschakeld in Tikkie Zakelijk)' + detail, status, code)
+  if (/api[\s_-]?key|apikey/.test(tekst)) return new TikkieFout('API-key klopt niet' + detail, status, code)
   if (status === 401) return new TikkieFout(`Inloggen bij Tikkie mislukt — controleer API-key en app-token${bericht ? ` (${bericht})` : ''}`, status, code)
   if (status === 403) return new TikkieFout(`Geen toegang tot Tikkie${bericht ? `: ${bericht}` : ''}`, status, code)
   if (status === 404) return new TikkieFout('Tikkie niet gevonden', status, code)
@@ -52,14 +53,15 @@ function vertaalFout(status: number, body: any): TikkieFout {
   return new TikkieFout(bericht || `Tikkie gaf een fout (HTTP ${status})`, status, code)
 }
 
-async function tikkieFetch(pad: string, init: { method?: string; body?: unknown } = {}): Promise<any> {
-  const apiKey = process.env.TIKKIE_API_KEY
-  const appToken = process.env.TIKKIE_APP_TOKEN
+async function tikkieFetch(pad: string, init: { method?: string; body?: unknown; omgeving?: 'sandbox' | 'productie' } = {}): Promise<any> {
+  // trim: een spatie of enter bij het plakken in Vercel maakt de sleutel ongeldig
+  const apiKey = process.env.TIKKIE_API_KEY?.trim()
+  const appToken = process.env.TIKKIE_APP_TOKEN?.trim()
   if (!apiKey || !appToken) throw new TikkieFout('Tikkie is niet ingesteld (TIKKIE_API_KEY / TIKKIE_APP_TOKEN ontbreken)', 0)
 
   let res: Response
   try {
-    res = await fetch(BASIS[tikkieOmgeving()] + pad, {
+    res = await fetch(BASIS[init.omgeving ?? tikkieOmgeving()] + pad, {
       method: init.method ?? 'GET',
       headers: {
         'API-Key': apiKey,
@@ -139,13 +141,35 @@ export function nettoBetaaldCenten(betalingen: TikkieBetaling[]) {
 
 /** Onschuldige test-aanroep voor de testknop */
 export async function testTikkieKoppeling(): Promise<{ ok: boolean; melding: string }> {
-  if (!process.env.TIKKIE_API_KEY) return { ok: false, melding: '✗ TIKKIE_API_KEY ontbreekt' }
-  if (!process.env.TIKKIE_APP_TOKEN) return { ok: false, melding: '✗ TIKKIE_APP_TOKEN ontbreekt' }
+  const ruweKey = process.env.TIKKIE_API_KEY ?? ''
+  const ruwToken = process.env.TIKKIE_APP_TOKEN ?? ''
+  if (!ruweKey.trim()) return { ok: false, melding: '✗ TIKKIE_API_KEY ontbreekt' }
+  if (!ruwToken.trim()) return { ok: false, melding: '✗ TIKKIE_APP_TOKEN ontbreekt' }
+  const spaties = ruweKey !== ruweKey.trim() || ruwToken !== ruwToken.trim()
+    ? ' (Let op: er stond een spatie/enter om de sleutel in Vercel; die wordt nu genegeerd.)' : ''
+  const omgeving = tikkieOmgeving()
   try {
     await tikkieFetch('/paymentrequests?pageNumber=0&pageSize=1')
-    return { ok: true, melding: '✓ Gekoppeld' }
+    return { ok: true, melding: '✓ Gekoppeld' + spaties }
   } catch (err) {
-    return { ok: false, melding: '✗ ' + (err instanceof Error ? err.message : String(err)) }
+    const fout = err instanceof TikkieFout ? err : null
+    let tip = ''
+    // Werkt de key wel in de andere omgeving? Dan staat TIKKIE_OMGEVING verkeerd (of het is een sandbox-key)
+    if (fout && (fout.status === 401 || fout.status === 403)) {
+      const ander = omgeving === 'productie' ? 'sandbox' : 'productie'
+      try {
+        await tikkieFetch('/paymentrequests?pageNumber=0&pageSize=1', { omgeving: ander })
+        tip = ander === 'sandbox'
+          ? ' Deze sleutels werken wél in de sandbox (testomgeving): het is een sandbox-key. Vraag op developer.abnamro.com productie-toegang voor Tikkie aan, of zet TIKKIE_OMGEVING=sandbox om te testen.'
+          : ' Deze sleutels werken wél in productie: zet TIKKIE_OMGEVING=productie.'
+      } catch (e2) {
+        const f2 = e2 instanceof TikkieFout ? e2 : null
+        if (f2 && /app-token/i.test(f2.message) && /api-key/i.test(fout.message)) {
+          tip = ` In de ${ander} wordt de API-key wél geaccepteerd (alleen het app-token niet): het is waarschijnlijk een ${ander}-key.`
+        }
+      }
+    }
+    return { ok: false, melding: '✗ ' + (err instanceof Error ? err.message : String(err)) + ` (omgeving: ${omgeving}).` + tip + spaties }
   }
 }
 
