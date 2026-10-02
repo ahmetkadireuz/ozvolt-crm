@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 import crypto from 'crypto'
+import { ensureUoKolom } from '@/lib/offerte-sjablonen'
+import { parseUoItems } from '@/lib/uitgangspunten'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -40,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const waItems = Array.isArray(body.wa_items) ? body.wa_items : []
 
-  // Getekende offerte = vastgelegde afspraak: prijzen, regels en klant liggen vast.
+  // Getekende offerte = vastgelegde afspraak: prijzen, regels, uitgangspunten/opties en klant liggen vast.
   // Alleen de werkafspraken mogen nog bijgewerkt worden.
   if (huidig.accepted_at) {
     if (Array.isArray(body.wa_items)) {
@@ -95,6 +97,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         bijgewerkt_op = NOW()
       WHERE id = ${offerteId}
     `
+  }
+
+  // Uitgangspunten & opties (alleen als meegestuurd; vóór acceptatie — zie lock hierboven)
+  if (body.uo_items !== undefined) {
+    await ensureUoKolom()
+    const uoItems = parseUoItems(Array.isArray(body.uo_items) ? body.uo_items : [])
+    await sql`UPDATE offertes SET uo_items = ${JSON.stringify(uoItems)}::jsonb WHERE id = ${offerteId}`
   }
   return NextResponse.json({ ok: true })
 }

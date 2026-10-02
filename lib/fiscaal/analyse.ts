@@ -76,6 +76,13 @@ function dagenTussen(a: Date, b: Date) {
   return Math.max(0, (b.getTime() - a.getTime()) / 86400000)
 }
 
+/** Urencriterium (grotendeelscriterium: > helft van totale arbeidstijd, ± 46 werkweken) */
+export function urenEis(p: FiscaalProfiel, t: FiscaleTarieven) {
+  const urenLoondienstJaar = Math.round(p.uren_loondienst_per_week * 46)
+  const urenNodig = Math.max(t.urencriterium, urenLoondienstJaar + 1)
+  return { urenLoondienstJaar, urenNodig }
+}
+
 export function maakAdvies(c: JaarCijfers, p: FiscaalProfiel, vandaag = new Date()): Advies {
   const jaar = c.jaar
   const t = tarievenVoor(jaar)
@@ -116,9 +123,8 @@ export function maakAdvies(c: JaarCijfers, p: FiscaalProfiel, vandaag = new Date
   const nogApartTeZetten = Math.max(0, progB.extra - p.reserve_apart)
   const perMaand = resterendeMaanden > 0 ? nogApartTeZetten / resterendeMaanden : nogApartTeZetten
 
-  // ── Uren ── (grotendeelscriterium: > helft van totale arbeidstijd, ± 46 werkweken)
-  const urenLoondienstJaar = Math.round(p.uren_loondienst_per_week * 46)
-  const urenNodig = Math.max(t.urencriterium, urenLoondienstJaar + 1)
+  // ── Uren ──
+  const { urenLoondienstJaar, urenNodig } = urenEis(p, t)
 
   // ── Signalen ──
   const s: Signaal[] = []

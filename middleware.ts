@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   '/api/klant/login',
   '/klant/geen-toegang',
   '/api/moneybird/webhook', // Moneybird betaal-status webhook (geen sessie)
+  '/api/bot',               // Alleen-lezen bot-API; de route controleert zelf de BOT_API_KEY
 ]
 
 // Routes die een klant-sessie vereisen (ozvolt_klant cookie)
