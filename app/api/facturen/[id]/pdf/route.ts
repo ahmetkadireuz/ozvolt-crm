@@ -39,10 +39,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   vervalDatum.setDate(vervalDatum.getDate() + (Number(f.betalingstermijn) || 14))
   const teLaat = f.status !== 'betaald' && vervalDatum < new Date()
   // QR voor directe overschrijving (EPC-QR, scanbaar met de meeste bank-apps)
-  const betaalQr = f.status !== 'betaald' ? await betaalQrSvg(Math.round(totalen.inclBtw * 100) / 100, f.factuurnummer) : null
   const metIban = ibanAanwezig()
   // Tikkie als eerste betaaloptie (alleen een geldige link voor een openstaande factuur)
   const tikkieUrl = await tikkieLinkMetAanmaken(f)
+  // Eén QR-code: met Tikkie alleen die van Tikkie, anders de bank-QR
+  const betaalQr = f.status !== 'betaald' && !tikkieUrl ? await betaalQrSvg(Math.round(totalen.inclBtw * 100) / 100, f.factuurnummer) : null
   const tikkieQr = tikkieUrl ? await linkQrSvg(tikkieUrl).catch(() => null) : null
 
   const html = `<!DOCTYPE html>
