@@ -59,15 +59,26 @@ _Bijgewerkt: 2026-06-05_
 
 > **Risico**: PDF-routes zijn momenteel beveiligd via admin-sessie. Klantportaal PDF-links verlopen via de klant-sessie. Token-beveiliging voor publieke PDF-links is aanbevolen als toekomstige verbetering.
 
-### Bot-API (alleen-lezen, `Authorization: Bearer <BOT_API_KEY>`)
+### Bot-API (alleen-lezen, `Authorization: Bearer <sleutel>`)
 
-| Route | Doel |
-|---|---|
-| `/api/bot/offertes` | Offertes zoeken/lijst (zoek, status, limit) |
-| `/api/bot/offertes/[id]` | Eén offerte compleet (regels, uitgangspunten, betaalplan, klant, project) |
-| `/api/bot/klanten` | Klanten zoeken incl. offerte-id's |
+| Route | Scope | Doel |
+|---|---|---|
+| `/api/bot/offertes` | crm | Offertes zoeken/lijst (zoek, status, limit) |
+| `/api/bot/offertes/[id]` | crm | Eén offerte compleet (regels, uitgangspunten, betaalplan, klant, project) |
+| `/api/bot/klanten` | crm | Klanten zoeken incl. offerte-id's |
+| `/api/bot/klussen` | crm | Projecten zoeken/lijst |
+| `/api/bot/klussen/[id]` | crm | Project met offertes, facturen, uren, kosten, inkoop, meerwerk (nacalculatie) |
+| `/api/bot/facturen` | crm | CRM-facturen (zoek, status, van/tot, klus_id) |
+| `/api/bot/facturen/[id]` | crm | Eén factuur compleet |
+| `/api/bot/kosten` | crm | Kosten (van/tot, klus_id, zoek) |
+| `/api/bot/inkoop` | crm | Inkooplijsten met items (van/tot, klus_id, zoek) |
+| `/api/bot/fiscaal` | crm | Urencriterium + btw per kwartaal uit het CRM |
+| `/api/bot/moneybird/facturen` | finance | Verkoopfacturen + open posten uit Moneybird |
+| `/api/bot/moneybird/inkoop` | finance | Inkoopfacturen en bonnen uit Moneybird |
+| `/api/bot/moneybird/btw` | finance | Btw-overzicht per kwartaal (samengesteld) |
+| `/api/bot/moneybird/sync-status` | finance | Verschillen CRM vs Moneybird |
 
-> Uitgezonderd van de admin-sessie in `middleware.ts`; sleutelcheck in `lib/bot-auth.ts`. Alleen GET (rest → 405), geen tokens/credentials in antwoorden. Zie `docs/BOT_API.md`.
+> Uitgezonderd van de admin-sessie in `middleware.ts`; sleutelcheck in `lib/bot-auth.ts` (`BOT_API_KEY` = crm, `BOT_API_KEY_FINANCE` = crm + Moneybird; crm-sleutel op Moneybird → 403). Alleen GET (rest → 405), geen tokens/credentials in antwoorden. Zie `docs/BOT_API.md`.
 
 ### Webhook routes
 

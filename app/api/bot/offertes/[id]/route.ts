@@ -1,13 +1,14 @@
 import { NextRequest } from 'next/server'
 import { sql, berekenTotalen } from '@/lib/db'
 import { parseUoItems } from '@/lib/uitgangspunten'
-import { botSleutelGeldig, botJson, botGeenToegang, botAlleenLezen, offerteNummer, parseRegels, rond, datumStr } from '@/lib/bot-auth'
+import { botAuth, botJson, botAlleenLezen, offerteNummer, parseRegels, rond, datumStr } from '@/lib/bot-auth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/bot/offertes/[id] — één offerte compleet, alleen-lezen
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!botSleutelGeldig(req)) return botGeenToegang()
+  const geweigerd = botAuth(req)
+  if (geweigerd) return geweigerd
 
   const { id } = await params
   if (!/^\d+$/.test(id)) return botJson({ fout: 'Ongeldig id' }, 400)

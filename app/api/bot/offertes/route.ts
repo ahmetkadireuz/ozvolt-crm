@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server'
 import { sql, berekenTotalen } from '@/lib/db'
-import { botSleutelGeldig, botJson, botGeenToegang, botAlleenLezen, offerteNummer, parseRegels, rond, datumStr } from '@/lib/bot-auth'
+import { botAuth, botJson, botAlleenLezen, offerteNummer, parseRegels, rond, datumStr } from '@/lib/bot-auth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/bot/offertes?zoek=<tekst>&status=<status>&limit=<n> — alleen-lezen lijst voor de Claude-bots
 export async function GET(req: NextRequest) {
-  if (!botSleutelGeldig(req)) return botGeenToegang()
+  const geweigerd = botAuth(req)
+  if (geweigerd) return geweigerd
 
   const sp = req.nextUrl.searchParams
   const zoek = (sp.get('zoek') ?? '').trim().slice(0, 100)

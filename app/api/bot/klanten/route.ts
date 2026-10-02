@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server'
 import { sql } from '@/lib/db'
-import { botSleutelGeldig, botJson, botGeenToegang, botAlleenLezen } from '@/lib/bot-auth'
+import { botAuth, botJson, botAlleenLezen } from '@/lib/bot-auth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/bot/klanten?zoek=<tekst> — klanten zoeken incl. id's van hun offertes
 export async function GET(req: NextRequest) {
-  if (!botSleutelGeldig(req)) return botGeenToegang()
+  const geweigerd = botAuth(req)
+  if (geweigerd) return geweigerd
 
   const sp = req.nextUrl.searchParams
   const zoek = (sp.get('zoek') ?? '').trim().slice(0, 100)
