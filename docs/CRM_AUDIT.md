@@ -59,6 +59,16 @@ _Bijgewerkt: 2026-06-05_
 
 > **Risico**: PDF-routes zijn momenteel beveiligd via admin-sessie. Klantportaal PDF-links verlopen via de klant-sessie. Token-beveiliging voor publieke PDF-links is aanbevolen als toekomstige verbetering.
 
+### Bot-API (alleen-lezen, `Authorization: Bearer <BOT_API_KEY>`)
+
+| Route | Doel |
+|---|---|
+| `/api/bot/offertes` | Offertes zoeken/lijst (zoek, status, limit) |
+| `/api/bot/offertes/[id]` | Eén offerte compleet (regels, uitgangspunten, betaalplan, klant, project) |
+| `/api/bot/klanten` | Klanten zoeken incl. offerte-id's |
+
+> Uitgezonderd van de admin-sessie in `middleware.ts`; sleutelcheck in `lib/bot-auth.ts`. Alleen GET (rest → 405), geen tokens/credentials in antwoorden. Zie `docs/BOT_API.md`.
+
 ### Webhook routes
 
 | Route | Service |
