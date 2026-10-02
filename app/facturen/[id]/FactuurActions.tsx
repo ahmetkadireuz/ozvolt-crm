@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
+import PortaalOpenKnop from '@/components/PortaalOpenKnop'
 
 export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean }) {
   const router = useRouter()
@@ -317,10 +318,15 @@ function PortaalLink({ factuur, factuurId, bedrag }: { factuur: any; factuurId: 
             <Icon name="external" size={14} />
             {bezig ? 'Bezig…' : 'Portaallink voor klant maken'}
           </button>
+          <PortaalOpenKnop
+            klantId={factuur.klant_id}
+            naar={isConcept ? undefined : `/klant/factuur/${factuurId}`}
+            style={{ width: '100%', justifyContent: 'center', marginTop: 6 }}
+          />
           <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginTop: 6, lineHeight: 1.5 }}>
             {isConcept
               ? 'Let op: deze factuur is nog concept en daarom niet zichtbaar in het portaal. De link opent het overzicht.'
-              : 'De klant komt direct op deze factuur uit. Link is 24 uur geldig.'}
+              : 'De klant komt direct op deze factuur uit, zonder in te loggen. Link blijft een jaar geldig.'}
           </div>
         </>
       ) : (

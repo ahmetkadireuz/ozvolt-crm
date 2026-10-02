@@ -71,7 +71,7 @@ export default function UitgangspuntenOptiesWeergave({ items, btwPct }: {
   if (opties.length === 0 && uitgangspunten.length === 0) return null
   return (
     <>
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       {opties.length > 0 && (
         <div className="uo-blok">

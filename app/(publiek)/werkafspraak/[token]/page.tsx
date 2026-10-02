@@ -1,35 +1,9 @@
 import { sql } from '@/lib/db'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import AfspraakSignForm from './AfspraakSignForm'
 
-export default async function WerkafspraakPage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params
-
-  const rows = await sql`
-    SELECT w.*, k.naam AS klant_naam, k.email AS klant_email,
-           k.telefoon AS klant_telefoon, k.locatie AS klant_adres
-    FROM werkafspraken w JOIN klanten k ON k.id = w.klant_id
-    WHERE w.accept_token = ${token}
-  `
-  const w = rows[0]
-  if (!w) notFound()
-
-  let afspraken: any[] = []
-  if (Array.isArray(w.afspraken)) afspraken = w.afspraken
-  else if (typeof w.afspraken === 'string') { try { afspraken = JSON.parse(w.afspraken) } catch {} }
-
-  const afspraakNr = `OZWA-${String(w.afspraaknummer).padStart(4, '0')}`
-  const datum = new Date(w.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
-  const isGeaccepteerd = !!w.accepted_at
-
-  return (
-    <html lang="nl">
-      <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Werkafspraken {afspraakNr} — Ozvolt Elektrotechniek</title>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-        <style>{`
+const CSS = `
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: 'Poppins', sans-serif; background: #f0f4f8; color: #1d2f4c; font-size: 14px; }
           .wrap { max-width: 740px; margin: 0 auto; padding: 24px 16px 60px; }
@@ -62,9 +36,39 @@ export default async function WerkafspraakPage({ params }: { params: Promise<{ t
           .ver-klant { background: #fef9c3; color: #92400e; }
           footer { margin-top: 24px; text-align: center; font-size: 11px; color: #94a3b8; }
           @media (max-width: 600px) { .info-row { grid-template-columns: 1fr; } .header { flex-direction: column; gap: 12px; } }
-        `}</style>
-      </head>
-      <body>
+        `
+
+export const metadata: Metadata = {
+  title: { absolute: 'Werkafspraken — Ozvolt Elektrotechniek' },
+  robots: { index: false, follow: false },
+  manifest: null,
+  appleWebApp: null,
+}
+
+export default async function WerkafspraakPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
+
+  const rows = await sql`
+    SELECT w.*, k.naam AS klant_naam, k.email AS klant_email,
+           k.telefoon AS klant_telefoon, k.locatie AS klant_adres
+    FROM werkafspraken w JOIN klanten k ON k.id = w.klant_id
+    WHERE w.accept_token = ${token}
+  `
+  const w = rows[0]
+  if (!w) notFound()
+
+  let afspraken: any[] = []
+  if (Array.isArray(w.afspraken)) afspraken = w.afspraken
+  else if (typeof w.afspraken === 'string') { try { afspraken = JSON.parse(w.afspraken) } catch {} }
+
+  const afspraakNr = `OZWA-${String(w.afspraaknummer).padStart(4, '0')}`
+  const datum = new Date(w.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+  const isGeaccepteerd = !!w.accepted_at
+
+  return (
+    <>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
         <div className="wrap">
           <div className="header">
             <div>
@@ -129,7 +133,6 @@ export default async function WerkafspraakPage({ params }: { params: Promise<{ t
           </div>
           <footer>Ozvolt Elektrotechniek · KVK 99837366 · financien@ozvoltelektro.nl</footer>
         </div>
-      </body>
-    </html>
+    </>
   )
 }

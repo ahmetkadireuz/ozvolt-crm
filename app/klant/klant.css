@@ -261,3 +261,16 @@ a.kp-chip:hover { background: rgba(255, 255, 255, .16); }
 }
 .kp-todo-icon.pay { color: var(--kp-amber); }
 .kp-todo-icon.sign { color: var(--kp-accent); }
+
+/* ── Offerte (gedeeld met de publieke offerte-link) ── */
+.kp-terug { display: inline-block; color: var(--kp-text-mute); font-size: 13px; text-decoration: none; margin-bottom: 14px; }
+.kp-main .od-page { padding: 0; }
+.kp-pdf-knop, .od .kp-pdf-knop {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 14px; padding: 13px; border-radius: 12px;
+  border: 1px solid var(--kp-line); background: #fff;
+  color: var(--kp-text-2); font-size: 14px; font-weight: 600; text-decoration: none;
+}
+@media (max-width: 600px) {
+  .kp-main .od-doc { border-radius: 14px; box-shadow: var(--kp-shadow); }
+}

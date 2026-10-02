@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/klant/geen-toegang', req.url))
   }
 
-  // Eigen sessietoken van 30 dagen — het link-token verloopt al na 24 uur
+  // Eigen sessietoken (SESSIE_DAGEN); elke klik op de portaallink verlengt de sessie
   const sessieToken = await maakKlantSessie(klantId, SESSIE_DAGEN * 24)
 
   const naar = veiligKlantPad(req.nextUrl.searchParams.get('naar')) ?? '/klant/dashboard'
