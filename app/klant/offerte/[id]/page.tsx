@@ -104,13 +104,9 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
           <TotaalRegel label="Totaal incl. BTW" waarde={formatEuro(totaal)} vet />
         </div>
 
-        {/* Uitgangspunten & opties (informatief, telt niet mee in het totaal) */}
+        {/* Opties en uitgangspunten (informatief, telt niet mee in het totaal) */}
         <div style={{ marginTop: 24 }}>
-          <UitgangspuntenOptiesWeergave
-            items={uoItems}
-            btwPct={Number(o.btw_pct ?? 21)}
-            titelStijl={{ fontSize: 14, fontWeight: 700, color: '#0d1b3e', margin: '0 0 12px' }}
-          />
+          <UitgangspuntenOptiesWeergave items={uoItems} btwPct={Number(o.btw_pct ?? 21)} />
         </div>
 
         {/* Werkzaamheden */}

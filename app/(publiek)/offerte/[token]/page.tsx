@@ -242,12 +242,8 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                 </div>
               </div>
 
-              {/* Uitgangspunten & opties (informatief, telt niet mee in het totaal) */}
-              <UitgangspuntenOptiesWeergave
-                items={uoItems}
-                btwPct={btwPct}
-                titelStijl={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 12 }}
-              />
+              {/* Opties en uitgangspunten (informatief, telt niet mee in het totaal) */}
+              <UitgangspuntenOptiesWeergave items={uoItems} btwPct={btwPct} />
 
               {/* Betaalknop (alleen als er een betaallink is en nog niet betaald) */}
               {(o.betaal_url || o.betaling_50_50) && isGeaccepteerd && (
