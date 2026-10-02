@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { ibanLeesbaar } from '@/lib/betalen'
 
 let transporter: nodemailer.Transporter | null = null
 
@@ -282,7 +283,7 @@ export function factuurMailHtml(params: {
       vóór <strong style="color:#c0392b;">${vervaldatum}</strong> te voldoen.
     </p>
 
-    ${betaalUrl ? primaryBtn(betaalUrl, 'Nu online betalen', GREEN, '💳') : ''}
+    ${betaalUrl ? primaryBtn(betaalUrl, 'Direct betalen met iDEAL', GREEN, '💳') : ''}
 
     ${infoBox([
       { label: 'Betaalnota', value: factuurNr, borderRight: true },
@@ -296,7 +297,7 @@ export function factuurMailHtml(params: {
       <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#7b92b2;text-transform:uppercase;
          letter-spacing:0.14em;font-family:${F};">Bankoverschrijving</p>
       <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#1b2d4a;
-         letter-spacing:0.05em;font-family:${F};">NL69 KNAB 0780 9871 79</p>
+         letter-spacing:0.05em;font-family:${F};">${ibanLeesbaar()}</p>
       <p style="margin:0;font-size:12px;color:#64748b;font-family:${F};">
         T.n.v. Ozvolt Elektrotechniek &nbsp;&middot;&nbsp; Kenmerk: <strong>${factuurNr}</strong>
       </p>
@@ -310,6 +311,65 @@ export function factuurMailHtml(params: {
     </p>`
 
   return mailWrapper({ accentColor: BRAND, headerBg: BRAND, tagline: 'Betaalnota', body })
+}
+
+// ── Betalingsherinnering (naar klant) ─────────────────────────────────────────
+
+export function herinneringMailHtml(params: {
+  klantNaam: string
+  factuurNr: string
+  bedrag: string
+  vervaldatum: string
+  betaalUrl?: string | null
+  tweede?: boolean
+}) {
+  const { klantNaam, factuurNr, bedrag, vervaldatum, betaalUrl, tweede } = params
+  const voornaam = klantNaam.split(' ')[0]
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#7b92b2;text-transform:uppercase;
+       letter-spacing:0.16em;font-family:${F};">${tweede ? 'Tweede herinnering' : 'Herinnering'}</p>
+    <p style="margin:0 0 28px;font-size:30px;font-weight:900;color:#1b2d4a;letter-spacing:-0.8px;
+       font-family:${F};line-height:1.1;">${factuurNr}</p>
+
+    <p style="margin:0 0 10px;font-size:16px;color:#1b2d4a;line-height:1.5;font-family:${F};">
+      Beste <strong>${voornaam}</strong>,
+    </p>
+    <p style="margin:0 0 32px;font-size:14.5px;color:#4a5568;line-height:1.9;font-family:${F};">
+      ${tweede
+        ? 'Wij hebben de betaling van onderstaande betaalnota nog niet ontvangen, ook niet na onze eerdere herinnering. Wij verzoeken u het bedrag zo spoedig mogelijk te voldoen.'
+        : 'Wellicht is het u ontschoten: de betaaltermijn van onderstaande betaalnota is verstreken. Wij verzoeken u vriendelijk het bedrag alsnog te voldoen.'}
+      Heeft u inmiddels betaald? Dan kunt u deze e-mail als niet verzonden beschouwen.
+    </p>
+
+    ${betaalUrl ? primaryBtn(betaalUrl, 'Direct betalen met iDEAL', GREEN, '') : ''}
+
+    ${infoBox([
+      { label: 'Betaalnota', value: factuurNr, borderRight: true },
+      { label: 'Te betalen', value: bedrag, borderRight: true, valueColor: GREEN },
+      { label: 'Vervallen op', value: vervaldatum, valueColor: '#c0392b' },
+    ])}
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="border:1px solid #dde9f5;border-radius:8px;overflow:hidden;margin-bottom:28px;background:#f5f8fc;">
+    <tr><td style="padding:18px 22px;">
+      <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#7b92b2;text-transform:uppercase;
+         letter-spacing:0.14em;font-family:${F};">Of via bankoverschrijving</p>
+      <p style="margin:0 0 4px;font-size:16px;font-weight:800;color:#1b2d4a;
+         letter-spacing:0.05em;font-family:${F};">${ibanLeesbaar()}</p>
+      <p style="margin:0;font-size:12px;color:#64748b;font-family:${F};">
+        T.n.v. Ozvolt Elektrotechniek &nbsp;&middot;&nbsp; Kenmerk: <strong>${factuurNr}</strong>
+      </p>
+    </td></tr>
+    </table>
+
+    <p style="margin:0;font-size:13.5px;color:#4a5568;line-height:1.8;font-family:${F};">
+      Met vriendelijke groet,<br>
+      <strong style="color:#1b2d4a;font-size:15px;">Ahmet Öz</strong><br>
+      <span style="color:#9daab8;font-size:12px;">Ozvolt Elektrotechniek &nbsp;·&nbsp; 06 449 98 789</span>
+    </p>`
+
+  return mailWrapper({ accentColor: BRAND, headerBg: BRAND, tagline: 'Betalingsherinnering', body })
 }
 
 // ── Betaald bevestiging (naar klant) — betaalnota PDF + werkafspraken ─────────

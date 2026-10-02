@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit'
+import { BEDRIJF, ibanLeesbaar } from '@/lib/betalen'
 
 const NAVY = '#1d2f4c'
 const BLUE = '#4c7191'
@@ -192,9 +193,9 @@ export async function genereerFactuurPDF(params: {
     doc.rect(margin, y, W - 2 * margin, 52).fill(LIGHT)
     doc.rect(margin, y, 4, 52).fill(NAVY)
     doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(7.5).text('BETAALGEGEVENS', margin + 14, y + 10)
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text('NL69 KNAB 0780 9871 79', margin + 14, y + 24)
+    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12).text(ibanLeesbaar(), margin + 14, y + 24)
     doc.fillColor(MUTED).font('Helvetica').fontSize(9)
-       .text(`t.n.v. Ozvolt Elektrotechniek  ·  o.v.v. ${params.factuurnummer}`, margin + 14, y + 40)
+       .text(`t.n.v. ${BEDRIJF.naam}  ·  o.v.v. ${params.factuurnummer}`, margin + 14, y + 40)
 
     if (params.betaalUrl) {
       y += 62

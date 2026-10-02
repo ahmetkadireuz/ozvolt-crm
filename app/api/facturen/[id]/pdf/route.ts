@@ -4,6 +4,7 @@ import { berekenTotalen, formatEuro } from '@/lib/utils'
 import { requireSession } from '@/lib/session'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { BEDRIJF, betaalQrSvg, ibanLeesbaar } from '@/lib/betalen'
+import { tikkieQrSvg, tikkieVoorFactuur } from '@/lib/tikkie'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -36,8 +37,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const vervalDatum = new Date(f.factuurdatum)
   vervalDatum.setDate(vervalDatum.getDate() + (Number(f.betalingstermijn) || 14))
   const teLaat = f.status !== 'betaald' && vervalDatum < new Date()
-  // QR voor directe overschrijving (scanbaar met o.a. ING, Knab, bunq, ASN/SNS/RegioBank)
-  const betaalQr = f.status !== 'betaald' ? await betaalQrSvg(Math.round(totalen.inclBtw * 100) / 100, f.factuurnummer) : null
+  // QR: bij voorkeur de Tikkie-link (te scannen met de gewone camera → iDEAL), anders een
+  // bank-QR voor overschrijving (alleen te scannen vanuit een bank-app)
+  let tikkieUrl: string | null = null
+  if (f.status !== 'betaald') {
+    try { tikkieUrl = await tikkieVoorFactuur(factuurId) } catch (err) { console.error('[tikkie pdf]', err) }
+  }
+  const betaalQr = f.status === 'betaald' ? null
+    : tikkieUrl ? await tikkieQrSvg(tikkieUrl)
+    : await betaalQrSvg(Math.round(totalen.inclBtw * 100) / 100, f.factuurnummer)
+  const qrTekst = tikkieUrl ? 'Scan met uw camera en betaal met iDEAL' : 'Scan met uw bank-app'
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
@@ -247,7 +256,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         <div class="bl">Te betalen</div>
         <div class="betaal-amount">${formatEuro(totalen.inclBtw)}</div>
       </div>
-      ${betaalQr ? `<div class="betaal-qr">${betaalQr}<div class="qr-t">Scan met uw bank-app</div></div>` : ''}
+      ${betaalQr ? `<div class="betaal-qr">${betaalQr}<div class="qr-t">${qrTekst}</div></div>` : ''}
     </div>
 
   </div>

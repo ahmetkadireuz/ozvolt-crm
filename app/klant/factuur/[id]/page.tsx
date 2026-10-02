@@ -8,6 +8,7 @@ import { BEDRIJF, betaalQrSvg, ibanLeesbaar, idealAan } from '@/lib/betalen'
 import Overschrijving from '../../_components/Overschrijving'
 import BetaalKnop from './BetaalKnop'
 import Icon from '@/components/Icon'
+import { controleerTikkieFactuur, tikkieQrSvg, tikkieVoorFactuur } from '@/lib/tikkie'
 
 export default async function KlantFactuurPagina({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -23,6 +24,8 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
   if (!rows[0]) notFound()
 
   const f = rows[0]
+  // Vangnet naast de webhook: is de Tikkie inmiddels betaald?
+  if (f.status !== 'betaald' && f.tikkie_token && await controleerTikkieFactuur(f.id)) f.status = 'betaald'
   const regels: { omschrijving: string; beschrijving?: string; aantal: number; prijs: number }[] = Array.isArray(f.regels) ? f.regels : []
   const sub = regels.reduce((s, r) => s + Number(r.aantal) * Number(r.prijs), 0)
   const btw = sub * (Number(f.btw_pct) / 100)
@@ -36,6 +39,13 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
   const termijnen = f.betaling_50_50 ? [totaal / 2, totaal / 2] : [totaal]
   const qrs = isBetaald ? [] : await Promise.all(termijnen.map(b => betaalQrSvg(Math.round(b * 100) / 100, f.factuurnummer)))
   const metIdeal = idealAan()
+
+  // Tikkie (ABN AMRO): iDEAL met het geld direct op de rekening. Lukt het niet, dan blijft de overschrijving staan.
+  let tikkieUrl: string | null = null
+  if (!isBetaald && !f.betaling_50_50) {
+    try { tikkieUrl = await tikkieVoorFactuur(f.id) } catch (err) { console.error('[tikkie portaal]', err) }
+  }
+  const tikkieQr = tikkieUrl ? await tikkieQrSvg(tikkieUrl) : null
 
   return (
     <div>
@@ -93,6 +103,30 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
         <div className="kp-actions">
           {isBetaald && <div className="kp-paid">✓ Deze factuur is betaald. Hartelijk dank!</div>}
 
+          {tikkieUrl && (
+            <div className="kp-pay">
+              <div className="kp-pay-head">
+                <div className="kp-pay-title">Direct betalen met iDEAL</div>
+                <div className="kp-pay-sub">Veilig via Tikkie van ABN AMRO; uw betaling is direct bij ons binnen.</div>
+              </div>
+              <div className="kp-pay-body">
+                <div className="kp-pay-rows">
+                  <a href={tikkieUrl} className="kp-btn kp-btn-primary" style={{ width: '100%' }}>
+                    <Icon name="payments" size={18} />
+                    Betaal {formatEuro(totaal)} met iDEAL
+                  </a>
+                </div>
+                {tikkieQr && (
+                  <div className="kp-qr kp-qr-desktop">
+                    <div className="kp-qr-img" dangerouslySetInnerHTML={{ __html: tikkieQr }} />
+                    <div className="kp-qr-text">Scan met de camera van uw telefoon</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {tikkieUrl && <div className="kp-alt">Liever zelf overmaken?</div>}
+
           {!isBetaald && totaal > 0 && termijnen.map((bedrag, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <Overschrijving
@@ -101,9 +135,9 @@ export default async function KlantFactuurPagina({ params }: { params: Promise<{
                 kenmerk={f.factuurnummer}
                 iban={ibanLeesbaar()}
                 tenaamstelling={BEDRIJF.naam}
-                qrSvg={qrs[i] ?? null}
+                qrSvg={tikkieUrl ? null : (qrs[i] ?? null)}
               />
-              {metIdeal && (
+              {metIdeal && !tikkieUrl && (
                 <>
                   <div className="kp-alt">Liever met iDEAL betalen?</div>
                   <BetaalKnop factuurId={f.id} totaal={formatEuro(bedrag)} termijn={termijnen.length > 1 ? ((i + 1) as 1 | 2) : undefined} />

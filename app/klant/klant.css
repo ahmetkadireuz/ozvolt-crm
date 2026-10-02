@@ -256,6 +256,7 @@ a.kp-chip:hover { background: rgba(255, 255, 255, .16); }
   .kp-pay-body { flex-direction: column-reverse; align-items: stretch; }
   .kp-qr { width: 100%; display: flex; gap: 12px; align-items: center; text-align: left; }
   .kp-qr-img { width: 132px; flex-shrink: 0; }
+  .kp-qr-desktop { display: none; } /* op de telefoon zelf valt er niets te scannen */
   .kp-todo-cta { display: none; }
   .kp-table .hide-sm { display: none; }
 }

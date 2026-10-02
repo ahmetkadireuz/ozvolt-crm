@@ -5,6 +5,9 @@ import type { Metadata } from 'next'
 import { sql, formatEuro } from '@/lib/db'
 import CopyKnop from './CopyKnop'
 import Icon from '@/components/Icon'
+import TikkieAbonneerKnop from './TikkieAbonneerKnop'
+import { tikkieAan } from '@/lib/tikkie'
+import { BEDRIJF, ibanLeesbaar } from '@/lib/betalen'
 
 export const metadata: Metadata = { title: 'Boekhouding' }
 
@@ -57,6 +60,11 @@ export default async function BoekhoudingPage() {
     return sub * (1 + Number(r.btw_pct ?? 21) / 100)
   }
 
+  const tikkie = tikkieAan()
+  const ibanAbn = /ABNA/i.test(BEDRIJF.iban)
+  const ok = <span style={{ color: '#16a34a', fontWeight: 700 }}>✓ Klaar</span>
+  const nogNiet = <span style={{ color: '#ea580c', fontWeight: 700 }}>Nog instellen</span>
+
   return (
     <div>
       <div className="topbar">
@@ -95,6 +103,35 @@ export default async function BoekhoudingPage() {
         </div>
       </div>
 
+      {/* ── Bank + Tikkie ── */}
+      <div className="card" style={{ marginBottom: 16, borderLeft: `4px solid ${tikkie && ibanAbn ? '#16a34a' : '#ea580c'}` }}>
+        <div className="section-label">ABN AMRO + Tikkie (direct betaald)</div>
+        <p style={{ fontSize: '.86rem', color: 'var(--text-2)', lineHeight: 1.7, margin: '0 0 12px' }}>
+          Elke verstuurde factuur krijgt automatisch een Tikkie-link (in de mail, het klantportaal, de PDF en de QR-code).
+          De klant betaalt met iDEAL, het geld staat direct op je ABN AMRO-rekening, en de factuur springt vanzelf op betaald,
+          ook in Moneybird. Het project gaat mee: voorschot betaald → Gepland, eindfactuur betaald → Afgerond.
+          Wie niet betaalt krijgt 3 en 10 dagen na de vervaldatum automatisch een herinnering.
+        </p>
+        <ol style={{ margin: 0, paddingLeft: 22, fontSize: '.86rem', color: 'var(--text)', lineHeight: 1.8 }}>
+          <li>
+            <strong>Rekeningnummer</strong>: zet in Vercel <code>BEDRIJF_IBAN</code> op je ABN AMRO-nummer en <code>BEDRIJF_BIC</code> op <code>ABNANL2A</code>.
+            Nu: <span className="mono">{ibanLeesbaar()}</span> {ibanAbn ? ok : nogNiet}
+          </li>
+          <li>
+            <strong>Tikkie-sleutels</strong>: zet <code>TIKKIE_API_KEY</code> (ABN AMRO developer portal) en <code>TIKKIE_APP_TOKEN</code> (Tikkie Zakelijk → API) in Vercel. {tikkie ? ok : nogNiet}
+          </li>
+          <li>
+            <strong>Betaalmeldingen</strong> (eenmalig, na stap 2 en een nieuwe deploy): laat Tikkie het CRM direct melden als er betaald is.
+            Zonder dit worden betalingen ook verwerkt, maar pas als de factuur geopend wordt of bij de dagelijkse controle.
+            {tikkie && <TikkieAbonneerKnop />}
+          </li>
+          <li>
+            <strong>ABN AMRO koppelen in Moneybird</strong>: Moneybird → Banken → Toevoegen → ABN AMRO, en pas de bankgegevens
+            op je Moneybird-factuursjabloon aan.
+          </li>
+        </ol>
+      </div>
+
       {/* ── Synchronisatie-overzicht ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         <div className="stat-card" style={{ borderLeft: '3px solid #1d4fa3' }}>
@@ -112,7 +149,7 @@ export default async function BoekhoudingPage() {
           <div className="stat-value" style={{ fontSize: '1.4rem', color: '#7c3aed' }}>
             {liveCheck.ok ? (liveCheck.aantal_open ?? 0) : '—'}
           </div>
-          <div className="stat-sub">Wachten op betaling via Knab</div>
+          <div className="stat-sub">Wachten op betaling</div>
         </div>
       </div>
 
@@ -121,7 +158,7 @@ export default async function BoekhoudingPage() {
         <div className="section-label">Hoe het werkt</div>
         <p style={{ fontSize: '.86rem', color: 'var(--text-2)', lineHeight: 1.7, margin: '0 0 14px' }}>
           Elke betaalnota die je vanuit het CRM verstuurt komt automatisch in Moneybird terecht.
-          Moneybird haalt jouw Knab-rekeningmutaties binnen via de PSD2-koppeling en matcht
+          Moneybird haalt je ABN AMRO-rekeningmutaties binnen via de bankkoppeling en matcht
           inkomende betalingen aan de factuur. Zodra de factuur in Moneybird op &quot;betaald&quot; springt,
           krijgt de factuur in dit CRM automatisch dezelfde status via een webhook.
         </p>
@@ -131,8 +168,8 @@ export default async function BoekhoudingPage() {
             {gekoppeld ? <span style={{ color: '#16a34a', fontWeight: 700 }}>✓ Klaar</span> : <span style={{ color: '#ea580c', fontWeight: 700 }}>Nog instellen</span>}
           </li>
           <li>
-            <strong>Knab koppelen in Moneybird</strong>: Moneybird → Administratie → Banken → Toevoegen → Knab.
-            Volg de PSD2-stappen (inloggen bij Knab + machtiging). Vanaf dat moment komen je Knab-transacties
+            <strong>ABN AMRO koppelen in Moneybird</strong>: Moneybird → Administratie → Banken → Toevoegen → ABN AMRO.
+            Volg de stappen (inloggen bij ABN AMRO + machtiging). Vanaf dat moment komen je transacties
             automatisch binnen in Moneybird.
           </li>
           <li>
@@ -151,7 +188,7 @@ export default async function BoekhoudingPage() {
 
       {/* ── Recent betaald ── */}
       <div className="card">
-        <div className="section-label">Recent betaald (via Knab/Moneybird)</div>
+        <div className="section-label">Recent betaald</div>
         {betaaldRecent.length === 0 ? (
           <p style={{ fontSize: '.84rem', color: 'var(--text-soft)', margin: 0 }}>Nog geen betaalde facturen.</p>
         ) : (

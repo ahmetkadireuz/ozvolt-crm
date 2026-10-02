@@ -24,7 +24,7 @@ const VERWACHTE_KOSTEN: { naam: string; woorden: string[]; uitleg: string }[] = 
   { naam: 'Website / domeinnaam / e-mail', woorden: ['domein', 'hosting', 'website', 'transip', 'strato', 'one.com', 'google workspace', 'microsoft 365', 'vimexx', 'hostnet', 'vercel'],
     uitleg: 'Kosten voor je domein (ozvoltelektro.nl), hosting, e-mail en je CRM zijn zakelijke kosten.' },
   { naam: 'Boekhoudsoftware & bankkosten', woorden: ['moneybird', 'knab', 'bankkosten', 'rabobank', 'ing ', 'bunq'],
-    uitleg: 'Je Moneybird-abonnement en de kosten van je zakelijke rekening (Knab) zijn aftrekbaar.' },
+    uitleg: 'Je Moneybird-abonnement en de kosten van je zakelijke rekening (ABN AMRO, incl. Tikkie) zijn aftrekbaar.' },
   { naam: 'Werkkleding & PBM', woorden: ['werkkleding', 'werkschoen', 'veiligheidsschoen', 's3', 'handschoen', 'helm', 'bril', 'pbm', 'havep', 'snickers', 'blaklader', 'mascot'],
     uitleg: 'Werkkleding met logo (≥ 70 cm²) of beschermende kleding (S3-schoenen, handschoenen, bril) is aftrekbaar.' },
   { naam: 'Opleiding & certificering', woorden: ['cursus', 'opleiding', 'training', 'nen 3140', 'nen3140', 'nen 1010', 'vca', 'examen', 'scios', 'certificaat'],

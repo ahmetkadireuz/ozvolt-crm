@@ -11,6 +11,7 @@ import Icon from '@/components/Icon'
 import FactuurForm from './FactuurForm'
 import FactuurActions from './FactuurActions'
 import { ensureFactuurKolommen } from '@/lib/facturen'
+import { controleerTikkieFactuur, tikkieAan } from '@/lib/tikkie'
 
 export const metadata: Metadata = { title: 'Factuur' }
 
@@ -25,8 +26,10 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
     sql`SELECT id, naam FROM klanten ORDER BY naam`,
   ])
 
-  const factuur = JSON.parse(JSON.stringify(factuurRows[0]))
+  const factuur = JSON.parse(JSON.stringify(factuurRows[0] ?? null))
   if (!factuur) notFound()
+  // Vangnet naast de webhook: is de Tikkie van deze factuur inmiddels betaald?
+  if (factuur.tikkie_token && factuur.status !== 'betaald' && await controleerTikkieFactuur(factuurId)) factuur.status = 'betaald'
   if (factuur.gekoppelde_factuur_id) {
     const g = await sql`SELECT id, factuurnummer, status FROM facturen WHERE id = ${factuur.gekoppelde_factuur_id}`
     factuur.gekoppelde_factuur = g[0] ? JSON.parse(JSON.stringify(g[0])) : null
@@ -59,7 +62,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
       <div className="detail-grid">
         <FactuurForm factuur={factuur} klanten={klanten2} factuurId={factuurId} />
-        <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} mbConfigured={mbConfigured} />
+        <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} mbConfigured={mbConfigured} tikkie={tikkieAan()} />
       </div>
     </div>
   )

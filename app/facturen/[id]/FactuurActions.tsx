@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
 
-export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean }) {
+export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false, tikkie = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean; tikkie?: boolean }) {
   const router = useRouter()
   const [betaallinkLoading, setBetaallinkLoading] = useState(false)
 
@@ -129,7 +129,8 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
             Markeer als betaald
           </button>
 
-          {/* Online betaallink (Moneybird) */}
+          {/* Betaallink: Tikkie (geld direct op ABN AMRO) of anders Moneybird */}
+          {tikkie ? <TikkieLink factuur={factuur} factuurId={factuurId} /> : (
           <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2 }}>
             {factuur.betaal_url ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -155,6 +156,7 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
               </button>
             )}
           </div>
+          )}
 
           {/* Moneybird boekhouden */}
           <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2 }}>
@@ -347,6 +349,65 @@ function PortaalLink({ factuur, factuurId, bedrag }: { factuur: any; factuurId: 
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function TikkieLink({ factuur, factuurId }: { factuur: any; factuurId: number }) {
+  const [url, setUrl] = useState<string | null>(factuur.tikkie_url ?? null)
+  const [bezig, setBezig] = useState(false)
+  const [fout, setFout] = useState<string | null>(null)
+  const [gekopieerd, setGekopieerd] = useState(false)
+  const kanBetalen = factuur.status !== 'betaald' && factuur.status !== 'concept' && !factuur.betaling_50_50
+
+  async function haal() {
+    setBezig(true)
+    setFout(null)
+    const res = await fetch(`/api/facturen/${factuurId}/tikkie`, { method: 'POST' })
+    const data = await res.json().catch(() => ({}))
+    setBezig(false)
+    if (data.url) setUrl(data.url)
+    else setFout(data.error ?? 'Tikkie-link maken mislukt')
+  }
+
+  async function kopieer() {
+    if (!url) return
+    await navigator.clipboard.writeText(url)
+    setGekopieerd(true)
+    setTimeout(() => setGekopieerd(false), 2000)
+  }
+
+  return (
+    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2 }}>
+      {factuur.status === 'betaald' ? (
+        <div style={{ fontSize: '.75rem', color: 'var(--text-soft)' }}>Betaald — geen betaallink meer nodig.</div>
+      ) : !kanBetalen ? (
+        <div style={{ fontSize: '.75rem', color: 'var(--text-soft)', lineHeight: 1.5 }}>
+          {factuur.status === 'concept'
+            ? 'Tikkie-link komt er automatisch bij het versturen.'
+            : 'Oude 50/50-factuur: de klant betaalt via overschrijving.'}
+        </div>
+      ) : url ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700 }}>✓ Tikkie-betaallink actief (geld direct op ABN AMRO)</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input className="form-ctrl" value={url} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} onFocus={e => e.target.select()} />
+            <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren" onClick={kopieer}>
+              <Icon name={gekopieerd ? 'check' : 'copy'} size={14} />
+            </button>
+          </div>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={haal} disabled={bezig}>
+            <Icon name="refresh" size={14} />
+            {bezig ? 'Bezig…' : 'Controleren / vernieuwen'}
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={haal} disabled={bezig}>
+          <Icon name="payments" size={14} />
+          {bezig ? 'Bezig…' : 'Tikkie-betaallink maken'}
+        </button>
+      )}
+      {fout && <div style={{ marginTop: 6, fontSize: '.72rem', color: '#dc2626' }}>{fout}</div>}
     </div>
   )
 }

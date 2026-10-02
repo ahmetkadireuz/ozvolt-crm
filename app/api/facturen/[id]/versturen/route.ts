@@ -5,6 +5,7 @@ import { sendMail, factuurMailHtml } from '@/lib/mail'
 import { genereerFactuurPDF } from '@/lib/pdf-factuur'
 import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
 import { idealAan } from '@/lib/betalen'
+import { tikkieVoorFactuur } from '@/lib/tikkie'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -27,10 +28,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const vervalDatum = new Date(factuur.factuurdatum)
   vervalDatum.setDate(vervalDatum.getDate() + (factuur.betalingstermijn ?? 14))
 
-  // iDEAL-link alleen meesturen als iDEAL aanstaat; standaard betaalt de klant direct via overschrijving
-  const betaalUrl: string | null = idealAan() ? (factuur.betaal_url ?? null) : null
-
   await sql`UPDATE facturen SET status = 'verstuurd', bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+
+  // Betaallink: Tikkie (geld direct op de rekening) als die is ingesteld, anders iDEAL via
+  // Moneybird als dat aanstaat. Zonder link betaalt de klant via overschrijving.
+  let betaalUrl: string | null = null
+  try { betaalUrl = await tikkieVoorFactuur(factuurId) } catch (err) { console.error('[tikkie bij versturen]', err) }
+  if (!betaalUrl && idealAan()) betaalUrl = factuur.betaal_url ?? null
 
   // Genereer PDF bijlage
   let pdfBuffer: Buffer | null = null
@@ -72,7 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 
-  // Stap 2: automatisch syncen naar Moneybird zodat Knab-betalingen straks
+  // Stap 2: automatisch syncen naar Moneybird zodat bankbetalingen straks
   // gematcht kunnen worden. Niet-blokkerend: factuur in CRM staat al op verstuurd.
   let moneybirdResultaat: { synced: boolean; error?: string; moneybird_id?: string } = { synced: false }
   if (process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
+import { verwerkBetaling } from '@/lib/betaling-verwerken'
 
 // Moneybird stuurt webhooks bij betalingen
 // Stel in via Moneybird → Instellingen → Webhooks
@@ -37,18 +38,11 @@ export async function POST(req: NextRequest) {
       if (mbStatus === 'paid') nieuweStatus = 'betaald'
       else if (mbStatus === 'late') nieuweStatus = 'te_laat'
 
-      if (nieuweStatus && factuur.status !== nieuweStatus) {
+      if (nieuweStatus === 'betaald') {
+        // Zelfde afhandeling als een Tikkie-betaling (project bijwerken, melding), zonder terugschrijven naar Moneybird
+        await verwerkBetaling(factuur.id, 'moneybird')
+      } else if (nieuweStatus && factuur.status !== nieuweStatus && factuur.status !== 'betaald') {
         await sql`UPDATE facturen SET status = ${nieuweStatus} WHERE id = ${factuur.id}`
-
-        // Notificatie aanmaken
-        if (nieuweStatus === 'betaald') {
-          await sql`
-            INSERT INTO admin_notifications (type, titel, bericht, link)
-            VALUES ('offerte_akkoord', 'Factuur betaald via Moneybird',
-              ${`Factuur is betaald en bijgewerkt in het CRM.`},
-              ${`/facturen/${factuur.id}`})
-          `
-        }
       }
     } catch (err) {
       console.error('[moneybird webhook]', err)

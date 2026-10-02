@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { haalAnalyses, haalRecenteDocumenten } from '@/lib/bonnen/data'
+import { controleerOpenTikkies } from '@/lib/tikkie'
+import { stuurHerinneringen } from '@/lib/herinneringen'
 
 // Vercel Cron Job — dagelijks uitvoeren
 // Voeg in vercel.json toe: { "crons": [{ "path": "/api/cron", "schedule": "0 8 * * *" }] }
@@ -15,6 +17,18 @@ export async function GET(req: NextRequest) {
   }
 
   const resultaten: string[] = []
+
+  // 0. Betalingen: eerst gemiste Tikkie-betalingen verwerken, dan pas herinneringen sturen
+  try {
+    for (const nr of await controleerOpenTikkies()) resultaten.push(`tikkie_betaald: ${nr}`)
+  } catch (err) {
+    console.error('[cron tikkie]', err)
+  }
+  try {
+    for (const h of await stuurHerinneringen()) resultaten.push(`herinnering: ${h}`)
+  } catch (err) {
+    console.error('[cron herinneringen]', err)
+  }
 
   // 1. Facturen te laat
   const teLaat = await sql`

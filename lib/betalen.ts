@@ -1,7 +1,8 @@
 import QRCode from 'qrcode'
 
 /* ============================================================
-   Betalen via bankoverschrijving naar de Knab-rekening.
+   Betalen via bankoverschrijving naar de zakelijke rekening.
+   IBAN/BIC komen uit BEDRIJF_IBAN / BEDRIJF_BIC in Vercel.
    Een overschrijving is in Nederland binnen enkele seconden
    binnen (instant payments); iDEAL via Moneybird wordt pas na
    ± 2 werkdagen uitbetaald.
