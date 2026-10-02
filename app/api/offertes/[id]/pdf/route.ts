@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
 import { requireSession } from '@/lib/session'
+import { ibanAanwezig, ibanLeesbaar } from '@/lib/betalen'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { meerprijsInclBtw, parseUoItems, tekstBlokken, type UoItem } from '@/lib/uitgangspunten'
 
@@ -271,7 +272,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       <div class="company-info">
         <strong>Ozvolt Elektrotechniek</strong><br>
         KVK 99837366<br>
-        IBAN: NL69 KNAB 0780 9871 79<br>
+        ${ibanAanwezig() ? `IBAN: ${ibanLeesbaar()}<br>` : ''}
         financien@ozvoltelektro.nl
       </div>
     </div>

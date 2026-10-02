@@ -11,6 +11,7 @@ import Icon from '@/components/Icon'
 import FactuurForm from './FactuurForm'
 import FactuurActions from './FactuurActions'
 import { ensureFactuurKolommen } from '@/lib/facturen'
+import { ensureTikkieKolommen, tikkieAan, tikkieGeldig } from '@/lib/tikkie'
 
 export const metadata: Metadata = { title: 'Factuur' }
 
@@ -20,6 +21,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
   if (isNaN(factuurId)) notFound()
 
   await ensureFactuurKolommen()
+  await ensureTikkieKolommen()
   const [factuurRows, klanten] = await Promise.all([
     sql`SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email, kt.telefoon AS klant_tel FROM facturen f JOIN klanten kt ON kt.id = f.klant_id WHERE f.id = ${factuurId}`,
     sql`SELECT id, naam FROM klanten ORDER BY naam`,
@@ -34,6 +36,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
   const totalen = berekenTotalen(factuur.regels ?? [], 0, factuur.btw_pct)
   const klanten2 = JSON.parse(JSON.stringify(klanten))
+  const tikkie = { aan: tikkieAan(), geldig: tikkieGeldig(factuur) }
   const mbConfigured = !!(process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID)
 
   return (
@@ -59,7 +62,7 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
       <div className="detail-grid">
         <FactuurForm factuur={factuur} klanten={klanten2} factuurId={factuurId} />
-        <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} mbConfigured={mbConfigured} />
+        <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} mbConfigured={mbConfigured} tikkie={tikkie} />
       </div>
     </div>
   )

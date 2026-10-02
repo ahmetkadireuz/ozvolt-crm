@@ -11,7 +11,7 @@ type Props = {
   titel?: string
 }
 
-// Directe overschrijving naar de Knab-rekening: binnen enkele seconden binnen
+// Directe overschrijving naar de zakelijke rekening: binnen enkele seconden binnen
 export default function Overschrijving({ bedrag, kenmerk, iban, tenaamstelling, qrSvg, titel }: Props) {
   const [gekopieerd, setGekopieerd] = useState<string | null>(null)
 
@@ -56,7 +56,7 @@ export default function Overschrijving({ bedrag, kenmerk, iban, tenaamstelling, 
         {qrSvg && (
           <div className="kp-qr">
             <div className="kp-qr-img" dangerouslySetInnerHTML={{ __html: qrSvg }} />
-            <div className="kp-qr-text">Scan met de app van uw bank (o.a. ING, Knab, bunq, ASN, SNS, RegioBank)</div>
+            <div className="kp-qr-text">Scan met de app van uw bank (o.a. ABN AMRO, ING, Rabobank, bunq, ASN, SNS)</div>
           </div>
         )}
       </div>

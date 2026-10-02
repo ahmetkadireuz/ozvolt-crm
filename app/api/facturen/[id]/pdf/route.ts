@@ -3,7 +3,8 @@ import { sql } from '@/lib/db'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
 import { requireSession } from '@/lib/session'
 import { getKlantSessie } from '@/lib/klant-sessie'
-import { BEDRIJF, betaalQrSvg, ibanLeesbaar } from '@/lib/betalen'
+import { BEDRIJF, betaalQrSvg, ibanAanwezig, ibanLeesbaar, linkQrSvg } from '@/lib/betalen'
+import { ensureTikkieKolommen, tikkieLinkVoorKlant } from '@/lib/tikkie'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -14,6 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const klantId = isAdmin ? null : await getKlantSessie()
   if (!isAdmin && !klantId) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
 
+  await ensureTikkieKolommen()
   const rows = await sql`
     SELECT f.*, k.naam AS klant_naam, k.email AS klant_email,
            k.telefoon AS klant_telefoon, k.locatie AS klant_adres
@@ -36,8 +38,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const vervalDatum = new Date(f.factuurdatum)
   vervalDatum.setDate(vervalDatum.getDate() + (Number(f.betalingstermijn) || 14))
   const teLaat = f.status !== 'betaald' && vervalDatum < new Date()
-  // QR voor directe overschrijving (scanbaar met o.a. ING, Knab, bunq, ASN/SNS/RegioBank)
+  // QR voor directe overschrijving (EPC-QR, scanbaar met de meeste bank-apps)
   const betaalQr = f.status !== 'betaald' ? await betaalQrSvg(Math.round(totalen.inclBtw * 100) / 100, f.factuurnummer) : null
+  const metIban = ibanAanwezig()
+  // Tikkie als eerste betaaloptie (alleen een geldige link voor een openstaande factuur)
+  const tikkieUrl = tikkieLinkVoorKlant(f)
+  const tikkieQr = tikkieUrl ? await linkQrSvg(tikkieUrl).catch(() => null) : null
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
@@ -123,6 +129,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .betaal-left .iban { font-size: 14px; font-weight: 700; color: var(--navy); }
   .betaal-left .iban-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .betaal-right .bl { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 4px; text-align: right; }
+  .tikkiebox { border-left-color: #4b3fbf; background: #f3f1ff; }
+  .tikkiebox .bl { color: #4b3fbf; }
+  .tikkie-btn { display: inline-block; background: #4b3fbf; color: #fff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 9px 18px; border-radius: 8px; margin: 2px 0 6px; }
   .betaal-amount { font-size: 24px; font-weight: 800; color: var(--navy); }
 
   .notities { margin-top: 24px; padding: 16px 20px; background: var(--light); border-left: 3px solid var(--blue); border-radius: 8px; }
@@ -237,9 +246,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     </div>
 
 
-    <div class="betaalbox">
+    ${tikkieUrl ? `
+    <div class="betaalbox tikkiebox">
       <div class="betaal-left">
-        <div class="bl">Betaalgegevens</div>
+        <div class="bl">Betaal met Tikkie</div>
+        <a class="tikkie-btn" href="${tikkieUrl}" target="_blank" rel="noopener noreferrer">Betaal met Tikkie — ${formatEuro(totalen.inclBtw)}</a>
+        <div class="iban-sub" style="word-break:break-all;">${tikkieUrl}</div>
+      </div>
+      ${tikkieQr ? `<div class="betaal-qr">${tikkieQr}<div class="qr-t">Scan om te betalen met Tikkie</div></div>` : ''}
+    </div>` : ''}
+
+    ${metIban ? `<div class="betaalbox">
+      <div class="betaal-left">
+        <div class="bl">${tikkieUrl ? 'Of via bankoverschrijving' : 'Betaalgegevens'}</div>
         <div class="iban">IBAN: ${ibanLeesbaar()}</div>
         <div class="iban-sub">t.n.v. ${BEDRIJF.naam} &nbsp;·&nbsp; Kenmerk: ${f.factuurnummer}</div>
       </div>
@@ -248,7 +267,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         <div class="betaal-amount">${formatEuro(totalen.inclBtw)}</div>
       </div>
       ${betaalQr ? `<div class="betaal-qr">${betaalQr}<div class="qr-t">Scan met uw bank-app</div></div>` : ''}
-    </div>
+    </div>` : ''}
 
   </div>
 

@@ -6,7 +6,7 @@ import { formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
 import PortaalOpenKnop from '@/components/PortaalOpenKnop'
 
-export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean }) {
+export default function FactuurActions({ factuur, factuurId, totalen, mbConfigured = false, tikkie = { aan: false, geldig: false } }: { factuur: any; factuurId: number; totalen: any; mbConfigured?: boolean; tikkie?: { aan: boolean; geldig: boolean } }) {
   const router = useRouter()
   const [betaallinkLoading, setBetaallinkLoading] = useState(false)
 
@@ -38,7 +38,10 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
     if (!confirm('Betaalnota per e-mail versturen naar de klant? De PDF wordt bijgevoegd.')) return
     const res = await fetch(`/api/facturen/${factuurId}/versturen`, { method: 'POST' })
     const data = await res.json()
-    if (data.ok) { updateStatus('verstuurd'); router.refresh() }
+    if (data.ok) {
+      if (data.tikkie?.fout) alert('Factuur verstuurd, maar zonder Tikkie: ' + data.tikkie.fout)
+      updateStatus('verstuurd'); router.refresh()
+    }
     else alert('Versturen mislukt: ' + (data.error ?? 'Onbekende fout'))
   }
 
@@ -156,6 +159,8 @@ export default function FactuurActions({ factuur, factuurId, totalen, mbConfigur
               </button>
             )}
           </div>
+
+          <TikkieBlok factuur={factuur} factuurId={factuurId} tikkie={tikkie} />
 
           {/* Moneybird boekhouden */}
           <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2 }}>
@@ -353,6 +358,100 @@ function PortaalLink({ factuur, factuurId, bedrag }: { factuur: any; factuurId: 
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function TikkieBlok({ factuur, factuurId, tikkie }: { factuur: any; factuurId: number; tikkie: { aan: boolean; geldig: boolean } }) {
+  const router = useRouter()
+  const [bezig, setBezig] = useState<string | null>(null)
+  const [fout, setFout] = useState<string | null>(null)
+  const [gekopieerd, setGekopieerd] = useState(false)
+  const betaaldViaTikkie = !!factuur.tikkie_betaald_op
+  const oudeStijl = !!factuur.betaling_50_50 && (factuur.soort ?? 'normaal') === 'normaal'
+
+  async function actie(soort: 'aanmaken' | 'nieuw' | 'controleren') {
+    if (soort === 'nieuw' && !confirm('Nieuwe Tikkie aanmaken? De klant krijgt dan de nieuwe link in portaal en PDF; een eerder verstuurde link blijft bij Tikkie nog werken tot hij verloopt.')) return
+    setBezig(soort)
+    setFout(null)
+    try {
+      const res = await fetch(`/api/facturen/${factuurId}/tikkie`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(soort === 'controleren' ? { actie: 'controleren' } : { actie: 'aanmaken', nieuw: soort === 'nieuw' }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) setFout(data.error ?? 'Tikkie fout')
+      else if (soort === 'controleren' && !data.betaald) {
+        alert(data.betaaldCenten > 0 ? `Deels betaald via Tikkie: ${formatEuro(data.betaaldCenten / 100)}` : 'Nog niet betaald via Tikkie.')
+      }
+      router.refresh()
+    } finally {
+      setBezig(null)
+    }
+  }
+
+  async function kopieer() {
+    await navigator.clipboard.writeText(factuur.tikkie_url)
+    setGekopieerd(true)
+    setTimeout(() => setGekopieerd(false), 2000)
+  }
+
+  if (!tikkie.aan) {
+    return (
+      <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2, fontSize: '.75rem', color: 'var(--text-soft)', fontStyle: 'italic' }}>
+        Tikkie niet geconfigureerd
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, marginTop: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {betaaldViaTikkie ? (
+        <div style={{ fontSize: '.72rem', color: 'var(--tint-green)', fontWeight: 700 }}>
+          ✓ Betaald via Tikkie ({new Date(factuur.tikkie_betaald_op).toLocaleDateString('nl-NL')})
+        </div>
+      ) : factuur.tikkie_url && tikkie.geldig ? (
+        <>
+          <div style={{ fontSize: '.72rem', color: 'var(--tint-green)', fontWeight: 700 }}>✓ Tikkie actief</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input className="form-ctrl" value={factuur.tikkie_url} readOnly style={{ fontSize: '.72rem', padding: '6px 8px' }} onFocus={e => e.target.select()} />
+            <button type="button" className="btn btn-ghost btn-sm" title="Kopiëren" onClick={kopieer}>
+              <Icon name={gekopieerd ? 'check' : 'copy'} size={14} />
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button type="button" className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => actie('controleren')} disabled={!!bezig}>
+              <Icon name="refresh" size={14} />
+              {bezig === 'controleren' ? 'Bezig…' : 'Betaling controleren'}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => actie('nieuw')} disabled={!!bezig || factuur.status === 'betaald'}>
+              {bezig === 'nieuw' ? 'Bezig…' : 'Nieuwe Tikkie'}
+            </button>
+          </div>
+        </>
+      ) : oudeStijl ? (
+        <div style={{ fontSize: '.75rem', color: 'var(--text-soft)', fontStyle: 'italic' }}>
+          Geen Tikkie bij de oude 50/50-werkwijze (twee termijnen op één factuur)
+        </div>
+      ) : (
+        <>
+          {factuur.tikkie_url && (
+            <div style={{ fontSize: '.72rem', color: 'var(--tint-amber)', fontWeight: 700 }}>
+              Tikkie verlopen of bedrag gewijzigd — maak een nieuwe aan
+            </div>
+          )}
+          <button type="button" className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
+            onClick={() => actie(factuur.tikkie_url ? 'nieuw' : 'aanmaken')} disabled={!!bezig || factuur.status === 'betaald'}>
+            <Icon name="payments" size={14} />
+            {bezig ? 'Bezig…' : factuur.tikkie_url ? 'Nieuwe Tikkie' : 'Tikkie aanmaken'}
+          </button>
+          {factuur.status === 'concept' && !factuur.tikkie_url && (
+            <div style={{ fontSize: '.7rem', color: 'var(--text-soft)' }}>Wordt ook automatisch aangemaakt bij versturen.</div>
+          )}
+        </>
+      )}
+      {fout && <div style={{ fontSize: 12, color: '#dc2626' }}>{fout}</div>}
     </div>
   )
 }

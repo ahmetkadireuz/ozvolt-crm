@@ -193,6 +193,8 @@ a.kp-chip:hover { background: rgba(255, 255, 255, .16); }
 }
 .kp-btn-primary { background: var(--kp-accent); color: #fff; }
 .kp-btn-primary:hover { filter: brightness(1.06); }
+.kp-btn-tikkie { background: #4b3fbf; color: #fff; }
+.kp-btn-tikkie:hover { background: #3d32a3; }
 .kp-btn-ghost { background: var(--kp-surface); color: var(--kp-text-2); border-color: var(--kp-line); }
 .kp-btn-ghost:hover { background: var(--kp-surface-mute); }
 .kp-btn-link { display: inline-block; margin-top: 10px; font-size: 13.5px; color: var(--kp-accent); text-decoration: none; font-weight: 700; }
