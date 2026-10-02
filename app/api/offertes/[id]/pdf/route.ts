@@ -3,6 +3,34 @@ import { sql } from '@/lib/db'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
 import { requireSession } from '@/lib/session'
 import { getKlantSessie } from '@/lib/klant-sessie'
+import { meerprijsInclBtw, parseUoItems, tekstBlokken, type UoItem } from '@/lib/uitgangspunten'
+
+function esc(v: unknown): string {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
+}
+
+/** Sectie "Uitgangspunten & opties" — informatief, telt niet mee in het totaal. Leeg = ''. */
+function uoSectieHtml(items: UoItem[], btwPct: number): string {
+  if (items.length === 0) return ''
+  return `
+    <div class="uo">
+      <div class="sec-title">Uitgangspunten &amp; opties</div>
+      ${items.map(item => {
+        const optie = item.soort === 'optie'
+        const tekst = tekstBlokken(item.tekst).map(b => b.type === 'lijst'
+          ? `<ul>${b.items.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`
+          : `<p>${b.regels.map(esc).join('<br>')}</p>`).join('')
+        const prijs = optie && item.meerprijs !== null
+          ? `<div class="uo-prijs"><strong>Meerprijs ${formatEuro(item.meerprijs)} excl. btw / ${formatEuro(meerprijsInclBtw(item.meerprijs, btwPct))} incl. btw</strong> <span>— alleen bij keuze, niet in het totaal inbegrepen</span></div>`
+          : ''
+        return `
+      <div class="uo-item${optie ? ' optie' : ''}">
+        <div class="uo-kop"><span class="uo-badge">${optie ? 'Optie' : 'Uitgangspunt'}</span>${item.titel ? `<span class="uo-titel">${esc(item.titel)}</span>` : ''}</div>
+        ${tekst}${prijs}
+      </div>`
+      }).join('')}
+    </div>`
+}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -29,6 +57,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   let regels: any[] = []
   if (Array.isArray(o.regels)) regels = o.regels
   else if (typeof o.regels === 'string') { try { regels = JSON.parse(o.regels) } catch {} }
+
+  const uoItems = parseUoItems(o.uo_items)
 
   const korting = Number(o.korting_pct ?? 0)
   const btwPct = Number(o.btw_pct ?? 21)
@@ -159,10 +189,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .tot-final .l { color: rgba(255,255,255,.65); font-size: 13px; font-weight: 600; }
   .tot-final .v { color: #fff; font-size: 22px; font-weight: 800; }
 
-  /* NOTITIES */
-  .notities { margin-top: 28px; padding: 16px 20px; background: var(--light); border-left: 3px solid var(--blue); border-radius: 8px; }
-  .notities-title { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
-  .notities p { font-size: 12px; color: #374151; line-height: 1.75; white-space: pre-wrap; }
+  /* UITGANGSPUNTEN & OPTIES */
+  .uo { margin-top: 32px; }
+  .uo-item { padding: 14px 18px; background: var(--light); border-left: 3px solid var(--navy); border-radius: 8px; margin-bottom: 10px; page-break-inside: avoid; break-inside: avoid; }
+  .uo-item.optie { background: #fffbeb; border-left-color: #d97706; }
+  .uo-kop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .uo-badge { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; background: #e3eaf3; color: var(--navy); }
+  .uo-item.optie .uo-badge { background: #fef3c7; color: #b45309; }
+  .uo-titel { font-weight: 700; font-size: 13px; color: var(--navy); }
+  .uo-item p { font-size: 12px; color: #374151; line-height: 1.7; margin: 4px 0; }
+  .uo-item ul { font-size: 12px; color: #374151; line-height: 1.7; margin: 4px 0; padding-left: 18px; }
+  .uo-prijs { font-size: 12px; color: var(--navy); margin-top: 6px; }
+  .uo-prijs span { color: var(--muted); }
 
   /* AKKOORD */
   .akkoord { margin-top: 28px; border: 1.5px dashed var(--border); border-radius: 10px; padding: 20px 22px; }
@@ -286,11 +324,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       </div>
     </div>
 
-    ${o.notities ? `
-    <div class="notities">
-      <div class="notities-title">Opmerkingen</div>
-      <p>${o.notities}</p>
-    </div>` : ''}
+    ${uoSectieHtml(uoItems, btwPct)}
 
     ${o.accepted_at ? `
     <div class="akkoord">

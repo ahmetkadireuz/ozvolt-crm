@@ -108,7 +108,7 @@ export async function maakFactuurVanOfferte(offerteId: number) {
     offerte_id: offerteId,
     regels,
     btw_pct: Number(o.btw_pct ?? 21),
-    notities: o.notities,
+    notities: null, // offerte-notities zijn intern en horen niet op de factuur (pdf/Moneybird)
   })
 }
 

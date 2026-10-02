@@ -4,7 +4,9 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import RegelEditor from '@/components/RegelEditor'
 import WerkafsprakenEditor, { type WaItem, type Bijlage } from '@/components/WerkafsprakenEditor'
+import UitgangspuntenOptiesEditor from '@/components/UitgangspuntenOptiesEditor'
 import Icon from '@/components/Icon'
+import { parseUoItems, type UoItem } from '@/lib/uitgangspunten'
 import type { RegelItem } from '@/lib/utils'
 
 export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: any; klanten: any[]; offerteId: number }) {
@@ -14,6 +16,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
   const [kortingPct, setKortingPct] = useState(Number(offerte.korting_pct))
   const [btwPct, setBtwPct] = useState(Number(offerte.btw_pct))
   const [waItems, setWaItems] = useState<WaItem[]>(offerte.wa_items ?? [])
+  const [uoItems, setUoItems] = useState<UoItem[]>(() => parseUoItems(offerte.uo_items))
   const [bijlagen, setBijlagen] = useState<Bijlage[]>(offerte.bijlagen ?? [])
 
   const vergrendeld = !!offerte.accepted_at
@@ -32,6 +35,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         korting_pct: kortingPct,
         btw_pct: btwPct,
         wa_items: waItems,
+        uo_items: uoItems,
       }),
     })
     if (!res.ok) {
@@ -93,6 +97,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
         </div>
         <div className="form-group" style={{ marginTop: 12, marginBottom: 0 }}>
           <label className="form-label">Notities (intern)</label>
+          <div style={{ fontSize: '.74rem', color: 'var(--text-soft)', marginBottom: 4 }}>Alleen zichtbaar voor Ozvolt</div>
           <textarea className="form-ctrl" name="notities" defaultValue={offerte.notities ?? ''} rows={3} />
         </div>
       </div>
@@ -104,6 +109,19 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
           kortingBedrag={Number(offerte.korting_pct)}
           btwPct={Number(offerte.btw_pct)}
           onChange={(r, k, b) => { setRegels(r); setKortingPct(k); setBtwPct(b) }}
+        />
+      </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="section-label">Uitgangspunten &amp; opties</div>
+        <div style={{ fontSize: '.78rem', color: 'var(--text-soft)', marginBottom: 12 }}>
+          Eisen/uitgangspunten van onze kant en optioneel meerwerk. Opties tellen niet mee in het totaal; de klant ziet ze alleen.
+        </div>
+        <UitgangspuntenOptiesEditor
+          initialItems={uoItems}
+          btwPct={btwPct}
+          disabled={vergrendeld}
+          onChange={setUoItems}
         />
       </div>
 
