@@ -4,15 +4,15 @@ import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 
 export const KLANT_COOKIE = 'ozvolt_klant'
-export const SESSIE_DAGEN = 30
+// Klant hoeft niet in te loggen: link en sessie blijven een jaar geldig
+export const SESSIE_DAGEN = 365
 
 function hashToken(token: string) {
   return createHash('sha256').update(token).digest('hex')
 }
 
-// Login-link is 24 uur geldig, kan meerdere keren gebruikt worden in die tijd
-// Sessie-cookie blijft 30 dagen geldig na inloggen
-const LINK_UREN = 24
+// Portaallink is een jaar geldig en kan steeds opnieuw gebruikt worden (geen inlogscherm voor de klant)
+const LINK_UREN = SESSIE_DAGEN * 24
 
 /** Alleen paden binnen het klantportaal als landingspagina (geen open redirect) */
 export function veiligKlantPad(pad: unknown): string | null {
@@ -23,7 +23,6 @@ export function veiligKlantPad(pad: unknown): string | null {
 export async function maakKlantSessie(klantId: number, geldigUren = LINK_UREN): Promise<string> {
   const token = randomBytes(16).toString('base64url')
   const hash = hashToken(token)
-  // Login-link verloopt na 24 uur; de sessie (nieuw token bij inloggen) na 30 dagen
   const verlopen = new Date(Date.now() + geldigUren * 3600_000)
 
   await sql`
@@ -35,7 +34,7 @@ export async function maakKlantSessie(klantId: number, geldigUren = LINK_UREN): 
 
 /**
  * Valideert een login-link token.
- * De link is 24 uur geldig en kan meerdere keren gebruikt worden (admin kan ook testen).
+ * De link is een jaar geldig en kan meerdere keren gebruikt worden (admin kan ook testen).
  */
 export async function valideerEnGebruikKlantToken(token: string): Promise<number | null> {
   const hash = hashToken(token)

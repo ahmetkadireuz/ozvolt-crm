@@ -114,7 +114,7 @@ export default function KlantActions({ klant, klantId }: { klant: any; klantId: 
       <div className="card">
         <div className="section-label">Klantportaal</div>
         <p style={{ fontSize: 12, color: 'var(--text-mute)', margin: '0 0 10px' }}>
-          Stuur de klant een beveiligde link zodat hij zijn dossier kan bekijken (geldig 30 dagen).
+          Stuur de klant een beveiligde link zodat hij zijn dossier kan bekijken (een jaar geldig, zonder inloggen).
         </p>
         <button type="button" className="btn btn-primary btn-sm" onClick={maakPortaalLink} disabled={linkBezig} style={{ width: '100%', justifyContent: 'center' }}>
           {linkBezig ? 'Aanmaken...' : '🔗 Portaallink aanmaken'}

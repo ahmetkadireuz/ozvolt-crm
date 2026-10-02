@@ -165,7 +165,7 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
         Op al onze werkzaamheden zijn onze algemene voorwaarden van toepassing.
       </p>
 
-      <div className="sign-grid">
+      <div className="od-sign-grid">
         <div>
           <label style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.08em', display: 'block', marginBottom: 6 }}>Uw naam *</label>
           <input

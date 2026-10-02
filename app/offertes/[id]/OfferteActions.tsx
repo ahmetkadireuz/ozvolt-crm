@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
 import WhatsAppKnop from './WhatsAppKnop'
+import PortaalOpenKnop from '@/components/PortaalOpenKnop'
 import { waNummer } from '@/lib/whatsapp'
 
 export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl, facturen, afspraken }: {
@@ -246,6 +247,16 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
                 Markeer als verstuurd
               </button>
             )}
+          </div>
+        )}
+        <PortaalOpenKnop
+          klantId={offerte.klant_id}
+          naar={offerte.status === 'concept' ? undefined : `/klant/offerte/${offerteId}`}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
+        />
+        {offerte.status === 'concept' && (
+          <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginTop: 4 }}>
+            Concept-offertes staan nog niet in het klantportaal; je komt op het overzicht van de klant.
           </div>
         )}
         {offerte.sent_at && (
