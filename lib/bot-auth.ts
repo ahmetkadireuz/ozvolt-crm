@@ -2,34 +2,65 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
 /* ============================================================
-   Bot-API (alleen-lezen) — toegang via Authorization: Bearer <sleutel>.
+   Bot-API (alleen-lezen) — toegang via Authorization: Bearer <sleutel>,
+   Authorization: <sleutel> of X-API-Key: <sleutel>.
    BOT_API_KEY = scope crm, BOT_API_KEY_FINANCE = scope crm + Moneybird.
-   De sleutels worden nooit gelogd.
+   De sleutels worden nooit gelogd of teruggegeven.
    ============================================================ */
 
 const GEEN_HEADERS = { 'Cache-Control': 'no-store' }
 
 export type BotScope = 'crm' | 'finance'
+export type BotSleutelVorm = 'bearer' | 'kaal' | 'x-api-key'
+
+/** Env-sleutel zonder spaties/enters aan begin of eind; leeg telt als niet ingesteld. */
+function verwachteSleutel(waarde: string | undefined): string | null {
+  const v = (waarde ?? '').trim()
+  return v || null
+}
+
+export function botSleutelIngesteld(scope: BotScope): boolean {
+  return verwachteSleutel(scope === 'finance' ? process.env.BOT_API_KEY_FINANCE : process.env.BOT_API_KEY) !== null
+}
 
 function sleutelKlopt(gegeven: string, verwacht: string | undefined): boolean {
-  if (!verwacht) return false
+  const v = verwachteSleutel(verwacht)
   // Hash beide kanten zodat de lengtes gelijk zijn en timingSafeEqual niet gooit
   const a = crypto.createHash('sha256').update(gegeven).digest()
-  const b = crypto.createHash('sha256').update(verwacht).digest()
-  return crypto.timingSafeEqual(a, b)
+  const b = crypto.createHash('sha256').update(v ?? '').digest()
+  return crypto.timingSafeEqual(a, b) && v !== null && gegeven !== ''
 }
 
 /**
- * Scope van de Bearer-sleutel (constant-time vergeleken):
+ * Sleutel uit de aanvraag, in deze volgorde (eerste niet-lege wint):
+ *   Authorization: Bearer <sleutel>  → 'bearer'
+ *   Authorization: <sleutel>         → 'kaal'
+ *   X-API-Key: <sleutel>             → 'x-api-key'
+ */
+export function botSleutelUitAanvraag(req: NextRequest): { sleutel: string; vorm: BotSleutelVorm } | null {
+  const auth = (req.headers.get('authorization') ?? '').trim()
+  if (auth) {
+    const m = auth.match(/^Bearer(?:\s+(.*))?$/i)
+    if (m) {
+      const sleutel = (m[1] ?? '').trim()
+      if (sleutel) return { sleutel, vorm: 'bearer' }
+    } else {
+      return { sleutel: auth, vorm: 'kaal' }
+    }
+  }
+  const xKey = (req.headers.get('x-api-key') ?? '').trim()
+  if (xKey) return { sleutel: xKey, vorm: 'x-api-key' }
+  return null
+}
+
+/**
+ * Scope van de sleutel (constant-time vergeleken):
  *   BOT_API_KEY         → 'crm'      (alle CRM-endpoints)
  *   BOT_API_KEY_FINANCE → 'finance'  (CRM + Moneybird)
  * Geen of foute sleutel → null.
  */
 export function botScope(req: NextRequest): BotScope | null {
-  const header = req.headers.get('authorization') ?? ''
-  const m = header.match(/^Bearer\s+(.+)$/i)
-  if (!m) return null
-  const gegeven = m[1].trim()
+  const gegeven = botSleutelUitAanvraag(req)?.sleutel ?? ''
   // Beide altijd vergelijken, zodat de responstijd niet verraadt welke sleutel bestaat
   const finance = sleutelKlopt(gegeven, process.env.BOT_API_KEY_FINANCE)
   const crm = sleutelKlopt(gegeven, process.env.BOT_API_KEY)

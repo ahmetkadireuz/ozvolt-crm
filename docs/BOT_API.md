@@ -7,9 +7,38 @@ Read-only API waarmee de Claude-bots van Ozvolt gegevens uit het CRM (en via het
 - Geen tokens (publieke links, magic links, betaallinks), wachtwoorden, IP-adressen of Moneybird-credentials in de antwoorden. De Moneybird-token blijft in het CRM.
 - Alle antwoorden: JSON met `Cache-Control: no-store`. Bedragen zijn getallen (euro's, afgerond op 2 decimalen). Datums als `YYYY-MM-DD`.
 
+## Eerste stap bij een 401: `GET /api/bot/status`
+
+Werkt ook **zonder** geldige sleutel en laat zien waarom een aanvraag geweigerd wordt — zonder ooit (delen van) sleutels, lengtes of hashes te tonen. Altijd `200`, `Cache-Control: no-store`; andere methodes `405`.
+
+```json
+{
+  "header_ontvangen": true,
+  "vorm": "bearer",
+  "crm_sleutel_ingesteld": true,
+  "finance_sleutel_ingesteld": true,
+  "scope": null
+}
+```
+
+| Veld | Betekenis |
+|---|---|
+| `header_ontvangen` | Er kwam een (niet-lege) sleutel binnen in een van de geaccepteerde headers |
+| `vorm` | `bearer`, `kaal`, `x-api-key` of `null` (geen sleutel ontvangen) |
+| `crm_sleutel_ingesteld` / `finance_sleutel_ingesteld` | `BOT_API_KEY` / `BOT_API_KEY_FINANCE` is in de omgeving gezet (niet leeg na trimmen) |
+| `scope` | `crm`, `finance` of `null` (sleutel klopt niet) |
+
+Lezen: `header_ontvangen: false` → de bot stuurt geen header mee. Sleutel ingesteld maar `scope: null` → de bot stuurt een andere sleutel dan in Vercel staat. `…_ingesteld: false` → env-variabele ontbreekt in Vercel (na wijzigen opnieuw deployen).
+
 ## Sleutels en scopes
 
-Elke aanvraag heeft de header `Authorization: Bearer <sleutel>` nodig. De sleutel wordt constant-time (`crypto.timingSafeEqual`) vergeleken met de env-variabelen:
+Elke aanvraag heeft een sleutel nodig, in een van deze headers (de eerste niet-lege telt):
+
+1. `Authorization: Bearer <sleutel>` (aanbevolen; `Bearer` hoofdletterongevoelig)
+2. `Authorization: <sleutel>` (zonder `Bearer`)
+3. `X-API-Key: <sleutel>`
+
+Spaties en enters aan begin of eind worden genegeerd, zowel in de header als in de env-variabele (handig bij plakken in Vercel). Een env-variabele die na trimmen leeg is, telt als niet ingesteld. De sleutel wordt constant-time (`crypto.timingSafeEqual`) vergeleken met beide env-variabelen:
 
 | Env-variabele (Vercel) | Scope | Mag lezen |
 |---|---|---|
@@ -33,7 +62,7 @@ Foutantwoorden:
 | Ongeldig / onbekend id | `400` / `404` | `{ "fout": "Ongeldig id" }` / `{ "fout": "Niet gevonden" }` |
 | Moneybird onbereikbaar | `502` | `{ "fout": "Moneybird ophalen mislukt", "detail": "…" }` |
 
-`/api/bot` (en sub-paden) is in `middleware.ts` uitgezonderd van de admin-sessiecheck; de routes controleren de sleutel zelf (`lib/bot-auth.ts`).
+`/api/bot` (en sub-paden, ook `/api/bot/status`) is in `middleware.ts` uitgezonderd van de admin-sessiecheck; de routes controleren de sleutel zelf (`lib/bot-auth.ts`).
 
 ## Gemeenschappelijke parameters (lijsten)
 
