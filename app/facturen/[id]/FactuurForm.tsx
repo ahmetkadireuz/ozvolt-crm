@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import RegelEditor from '@/components/RegelEditor'
 import Icon from '@/components/Icon'
+import KlantProjectInfo from '@/components/KlantProjectInfo'
 import type { RegelItem } from '@/lib/utils'
 
-export default function FactuurForm({ factuur, klanten, factuurId }: { factuur: any; klanten: any[]; factuurId: number }) {
+export default function FactuurForm({ factuur, factuurId }: { factuur: any; factuurId: number }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [regels, setRegels] = useState<RegelItem[]>(factuur.regels ?? [])
@@ -20,7 +21,6 @@ export default function FactuurForm({ factuur, klanten, factuurId }: { factuur: 
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        klant_id: fd.get('klant_id'),
         factuurdatum: fd.get('factuurdatum'),
         betalingstermijn: fd.get('betalingstermijn'),
         notities: fd.get('notities'),
@@ -37,12 +37,7 @@ export default function FactuurForm({ factuur, klanten, factuurId }: { factuur: 
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="section-label">Gegevens</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Klant</label>
-            <select className="form-ctrl" name="klant_id" defaultValue={factuur.klant_id}>
-              {klanten.map((k: any) => <option key={k.id} value={k.id}>{k.naam}</option>)}
-            </select>
-          </div>
+          <KlantProjectInfo document={factuur} />
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Factuurdatum</label>
             <input className="form-ctrl" type="date" name="factuurdatum" defaultValue={factuur.factuurdatum?.slice(0, 10)} />

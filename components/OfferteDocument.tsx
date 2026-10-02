@@ -45,6 +45,8 @@ export const OD_CSS = `
           .od-btn-licht { background: #fff; color: ${NAVY}; border: 1.5px solid #d6dee9; }
           .od-btn-wa { background: #25d366; color: #fff; }
           .od-btn svg { flex-shrink: 0; }
+          .od-status-vervangen { display: inline-flex; align-items: center; gap: 8px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 700; }
+          .od-vervangen { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; font-size: 14px; color: #475569; line-height: 1.6; }
           .od-status-ok { display: inline-flex; align-items: center; gap: 8px; background: #ecfdf3; color: #15803d; border: 1px solid #bbf7d0; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 700; }
           .od-hero-vragen { margin-top: 16px; font-size: 13px; color: #64748b; }
           .od-hero-vragen a { color: ${NAVY}; font-weight: 600; text-decoration: none; border-bottom: 1px solid #c8d3e1; }
@@ -137,7 +139,7 @@ export const OD_CSS = `
             .od-hero-groet { font-size: 20px; }
             .od-hero-tekst { font-size: 15px; }
             .od-hero-kaart { padding: 18px; }
-            .od-hero-kaart .od-btn, .od-hero-kaart .od-status-ok { width: 100%; justify-content: center; }
+            .od-hero-kaart .od-btn, .od-hero-kaart .od-status-ok, .od-hero-kaart .od-status-vervangen { width: 100%; justify-content: center; }
             .od-hero-bedrag { font-size: 30px; }
             .od-doc-body { padding: 24px 20px 28px; }
             .od-info-row { grid-template-columns: 1fr; gap: 12px; }
@@ -186,6 +188,8 @@ export default function OfferteDocument({ o, tekenen, onderaan }: {
   const datum = fmtDatum(o.datum)
   const geldigTot = o.geldig_tot ? fmtDatum(o.geldig_tot) : null
   const isGeaccepteerd = !!o.accepted_at || o.status === 'geaccepteerd'
+  // Vervangen door een nieuwere versie: alleen nog ter inzage, niet meer te tekenen
+  const isVervangen = !isGeaccepteerd && o.status === 'vervangen'
   const voornaam = String(o.klant_naam ?? '').trim().split(' ')[0]
   const fmtAantal = (n: any) => Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 2 })
 
@@ -211,7 +215,9 @@ export default function OfferteDocument({ o, tekenen, onderaan }: {
         <div className="od-hero">
           <div className="od-hero-groet">{voornaam ? `Beste ${voornaam},` : 'Beste klant,'}</div>
           <p className="od-hero-tekst">
-            {isGeaccepteerd
+            {isVervangen
+              ? 'Deze offerte is vervangen door een nieuwere versie en kan niet meer worden ondertekend. U vindt de actuele offerte in uw klantportaal, of neem contact met ons op.'
+              : isGeaccepteerd
               ? 'Bedankt voor uw akkoord! Hieronder vindt u de offerte nog eens terug. Wij nemen contact met u op om de werkzaamheden in te plannen.'
               : 'Bedankt voor uw aanvraag. Hieronder vindt u onze offerte. Bent u akkoord? Dan kunt u deze onderaan de pagina direct digitaal ondertekenen.'}
           </p>
@@ -220,7 +226,9 @@ export default function OfferteDocument({ o, tekenen, onderaan }: {
               <div className="od-hero-label">Totaal incl. {btwPct}% btw</div>
               <div className="od-hero-bedrag">{formatEuro(totalen.inclBtw)}</div>
             </div>
-            {isGeaccepteerd ? (
+            {isVervangen ? (
+              <span className="od-status-vervangen">Vervangen</span>
+            ) : isGeaccepteerd ? (
               <span className="od-status-ok"><IcoonCheck /> Geaccepteerd</span>
             ) : (
               <a href="#akkoord" className="od-btn od-btn-groen">Offerte accepteren <IcoonPijl /></a>
@@ -373,7 +381,11 @@ export default function OfferteDocument({ o, tekenen, onderaan }: {
           {/* Akkoord */}
           <div id="akkoord" className="od-akkoord">
             <div className="od-sec" style={{ marginBottom: 14 }}>Akkoord &amp; ondertekening</div>
-            {tekenen}
+            {isVervangen ? (
+              <div className="od-vervangen">
+                <strong>Deze offerte is vervangen.</strong> Er is een nieuwere versie van deze offerte gemaakt; deze versie kan niet meer worden ondertekend.
+              </div>
+            ) : tekenen}
           </div>
 
           {/* Contact */}

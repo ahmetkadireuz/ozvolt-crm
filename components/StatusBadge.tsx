@@ -9,6 +9,7 @@ export const STATUS_LABELS: Record<string, string> = {
   geaccepteerd: 'Geaccepteerd',
   verlopen: 'Verlopen',
   geweigerd: 'Geweigerd',
+  vervangen: 'Vervangen',
   verstuurd: 'Verstuurd',
   betaald: 'Betaald',
   te_laat: 'Te laat',

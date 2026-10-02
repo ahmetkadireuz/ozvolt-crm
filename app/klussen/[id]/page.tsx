@@ -15,6 +15,9 @@ import PuntenEditor from './PuntenEditor'
 import OfferteKoppelen from './OfferteKoppelen'
 import FactuurKoppelen from './FactuurKoppelen'
 import ProjectbeheerPaneel from './ProjectbeheerPaneel'
+import ProjectKlantWijzigen from './ProjectKlantWijzigen'
+import { klantOpties } from '@/lib/klanten'
+import { AFGESLOTEN_OFFERTE_STATUSSEN } from '@/lib/offertes'
 
 export const metadata: Metadata = { title: 'Project detail' }
 
@@ -40,7 +43,7 @@ export default async function KlusDetailPage({
   await ensureProjectbeheerTables()
   const leeg = () => [] as any[]
   const [klusRows, offertesRows, facturenRows, ongekoppeldeOffertes, ongekoppeldeFacturen, siblingRows,
-         documentenRows, portaalRows, rapporten, omzetRows, kostenRows] = await Promise.all([
+         documentenRows, portaalRows, rapporten, omzetRows, kostenRows, klanten] = await Promise.all([
     sql`
       SELECT k.*, kt.id AS klant_id, kt.naam AS klant_naam,
              kt.email AS klant_email, kt.telefoon AS klant_tel,
@@ -48,7 +51,7 @@ export default async function KlusDetailPage({
       FROM klussen k JOIN klanten kt ON kt.id = k.klant_id
       WHERE k.id = ${klusId}
     `,
-    sql`SELECT id, offertenummer, status, datum FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC`,
+    sql`SELECT id, offertenummer, status, datum, accepted_at FROM offertes WHERE klus_id = ${klusId} ORDER BY datum DESC, id DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum FROM facturen WHERE klus_id = ${klusId} ORDER BY factuurdatum DESC`,
     sql`SELECT id, offertenummer FROM offertes WHERE klus_id IS NULL AND klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer FROM facturen WHERE (klus_id IS NULL OR klus_id <> ${klusId}) AND klant_id = (SELECT klant_id FROM klussen WHERE id = ${klusId}) ORDER BY factuurdatum DESC`,
@@ -66,6 +69,7 @@ export default async function KlusDetailPage({
       FROM offertes WHERE klus_id = ${klusId} AND status = 'geaccepteerd'
     `,
     sql`SELECT COALESCE(SUM(bedrag), 0) AS totaal FROM kosten WHERE klus_id = ${klusId}`,
+    klantOpties(),
   ])
   const documenten: any[] = documentenRows
   const portaalPunten: any[] = Array.isArray(portaalRows[0]?.portaal_punten) ? portaalRows[0].portaal_punten : []
@@ -74,6 +78,8 @@ export default async function KlusDetailPage({
 
   const klus = klusRows[0]
   if (!klus) notFound()
+  // Eén actieve offerte per project: een nieuwe offerte wordt dan een nieuwe versie
+  const actieveOfferte = offertesRows.find((o: any) => !o.accepted_at && !AFGESLOTEN_OFFERTE_STATUSSEN.includes(o.status))
 
   const tel = (klus.klant_tel ?? '').replace(/[^0-9+]/g, '')
   const telWA = tel.startsWith('0') ? '31' + tel.slice(1) : tel.replace(/^\+/, '')
@@ -126,9 +132,10 @@ export default async function KlusDetailPage({
               </div>
               <div style={{ gridColumn: '1/-1' }}><span style={{ color: 'var(--text-soft)', display: 'block', fontSize: '.72rem' }}>Locatie</span>{klus.klant_locatie || '—'}</div>
             </div>
-            <Link href={`/klanten/${klus.klant_id}`} className="btn btn-ghost btn-sm" style={{ marginTop: 14 }}>
+            <Link href={`/klanten/${klus.klant_id}`} className="btn btn-ghost btn-sm" style={{ marginTop: 14, marginRight: 8 }}>
               Klantprofiel →
             </Link>
+            <ProjectKlantWijzigen klusId={klusId} klantId={klus.klant_id} klanten={JSON.parse(JSON.stringify(klanten))} />
           </div>
 
           {/* Aanvraagdetails — inline editable met auto-save */}
@@ -146,7 +153,7 @@ export default async function KlusDetailPage({
             )}
 
             {offertesRows.map((o: any) => (
-              <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}>
+              <Link key={o.id} href={`/offertes/${o.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', marginBottom: 8, opacity: o.status === 'vervangen' ? 0.6 : 1 }}>
                 <div>
                   <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '.84rem' }}>Offerte OZVT-{String(o.offertenummer).padStart(4,'0')}</span>
                   <span style={{ color: 'var(--text-soft)', fontSize: '.75rem', marginLeft: 8 }}>{new Date(o.datum).toLocaleDateString('nl-NL')}</span>
@@ -167,9 +174,10 @@ export default async function KlusDetailPage({
 
 
             <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-              <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>
+              <Link href={`/offertes/nieuw?klus=${klusId}`} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}
+                title={actieveOfferte ? `Nieuwe versie van OZVT-${String(actieveOfferte.offertenummer).padStart(4,'0')}` : undefined}>
                 <Icon name="file-text" size={15} />
-                Offerte
+                {actieveOfferte ? 'Nieuwe versie' : 'Offerte'}
               </Link>
               <Link href={`/facturen/nieuw?klus=${klusId}`} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', minWidth: 120 }}>
                 <Icon name="receipt" size={15} />
@@ -189,7 +197,7 @@ export default async function KlusDetailPage({
           {ongekoppeldeOffertes.length > 0 && (
             <OfferteKoppelen
               klusId={klusId}
-              offertes={ongekoppeldeOffertes}
+              offertes={ongekoppeldeOffertes as { id: number; offertenummer: number }[]}
             />
           )}
 

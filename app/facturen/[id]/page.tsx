@@ -10,6 +10,7 @@ import StatusBadge from '@/components/StatusBadge'
 import Icon from '@/components/Icon'
 import FactuurForm from './FactuurForm'
 import FactuurActions from './FactuurActions'
+import FactuurKoppelen from '@/app/klussen/[id]/FactuurKoppelen'
 import { ensureFactuurKolommen } from '@/lib/facturen'
 import { ensureTikkieKolommen, tikkieAan, tikkieGeldig } from '@/lib/tikkie'
 
@@ -22,20 +23,24 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
   await ensureFactuurKolommen()
   await ensureTikkieKolommen()
-  const [factuurRows, klanten] = await Promise.all([
-    sql`SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email, kt.telefoon AS klant_tel FROM facturen f JOIN klanten kt ON kt.id = f.klant_id WHERE f.id = ${factuurId}`,
-    sql`SELECT id, naam FROM klanten ORDER BY naam`,
-  ])
+  const factuurRows = await sql`
+    SELECT f.*, kt.naam AS klant_naam, kt.email AS klant_email, kt.telefoon AS klant_tel,
+           ks.type_werk AS klus_type_werk, ks.omschrijving AS klus_omschrijving
+    FROM facturen f JOIN klanten kt ON kt.id = f.klant_id
+    LEFT JOIN klussen ks ON ks.id = f.klus_id
+    WHERE f.id = ${factuurId}`
 
+  if (!factuurRows[0]) notFound()
   const factuur = JSON.parse(JSON.stringify(factuurRows[0]))
-  if (!factuur) notFound()
   if (factuur.gekoppelde_factuur_id) {
     const g = await sql`SELECT id, factuurnummer, status FROM facturen WHERE id = ${factuur.gekoppelde_factuur_id}`
     factuur.gekoppelde_factuur = g[0] ? JSON.parse(JSON.stringify(g[0])) : null
   }
 
   const totalen = berekenTotalen(factuur.regels ?? [], 0, factuur.btw_pct)
-  const klanten2 = JSON.parse(JSON.stringify(klanten))
+  // Losse factuur (van vóór "project is leidend"): koppelen aan een project van deze klant
+  const projectKeuzes = factuur.klus_id ? [] : JSON.parse(JSON.stringify(
+    await sql`SELECT id, type_werk, omschrijving, status FROM klussen WHERE klant_id = ${factuur.klant_id} ORDER BY aangemaakt_op DESC`))
   const tikkie = { aan: tikkieAan(), geldig: tikkieGeldig(factuur) }
   const mbConfigured = !!(process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID)
 
@@ -60,8 +65,12 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
         </Link>
       </div>
 
+      {!factuur.klus_id && (
+        <FactuurKoppelen factuurId={factuurId} klantId={factuur.klant_id} klantNaam={factuur.klant_naam} projecten={projectKeuzes} />
+      )}
+
       <div className="detail-grid">
-        <FactuurForm factuur={factuur} klanten={klanten2} factuurId={factuurId} />
+        <FactuurForm factuur={factuur} factuurId={factuurId} />
         <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} mbConfigured={mbConfigured} tikkie={tikkie} />
       </div>
     </div>

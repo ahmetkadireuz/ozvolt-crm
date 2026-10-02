@@ -26,13 +26,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const offerte = rows[0]
   if (!offerte) return NextResponse.json({ error: 'Offerte niet gevonden' }, { status: 404 })
   if (offerte.accepted_at) return NextResponse.json({ error: 'Al geaccepteerd' }, { status: 409 })
+  if (offerte.status === 'vervangen') {
+    return NextResponse.json({ error: 'Deze offerte is vervangen door een nieuwere versie en kan niet meer worden getekend — neem contact op met Ozvolt' }, { status: 409 })
+  }
   if (offerte.status !== 'gestuurd') {
     return NextResponse.json({ error: 'Deze offerte kan niet (meer) worden geaccepteerd — neem contact op met Ozvolt' }, { status: 409 })
   }
 
   const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? ''
 
-  await sql`
+  const getekend = await sql`
     UPDATE offertes SET
       status = 'geaccepteerd',
       accepted_at = NOW(),
@@ -40,8 +43,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       accepted_email = ${offerte.klant_email ?? null},
       accepted_ip = ${ip},
       bijgewerkt_op = NOW()
-    WHERE id = ${offerteId}
+    WHERE id = ${offerteId} AND status = 'gestuurd' AND accepted_at IS NULL
+    RETURNING id
   `
+  if (!getekend[0]) {
+    return NextResponse.json({ error: 'Deze offerte kan niet (meer) worden geaccepteerd — neem contact op met Ozvolt' }, { status: 409 })
+  }
 
   const regels = Array.isArray(offerte.regels) ? offerte.regels : JSON.parse(offerte.regels ?? '[]')
   const totalen = berekenTotalen(regels, Number(offerte.korting_pct ?? 0), Number(offerte.btw_pct ?? 21))
