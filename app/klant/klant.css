@@ -193,8 +193,6 @@ a.kp-chip:hover { background: rgba(255, 255, 255, .16); }
 }
 .kp-btn-primary { background: var(--kp-accent); color: #fff; }
 .kp-btn-primary:hover { filter: brightness(1.06); }
-.kp-btn-tikkie { background: #4b3fbf; color: #fff; }
-.kp-btn-tikkie:hover { background: #3d32a3; }
 .kp-btn-ghost { background: var(--kp-surface); color: var(--kp-text-2); border-color: var(--kp-line); }
 .kp-btn-ghost:hover { background: var(--kp-surface-mute); }
 .kp-btn-link { display: inline-block; margin-top: 10px; font-size: 13.5px; color: var(--kp-accent); text-decoration: none; font-weight: 700; }
@@ -276,3 +274,7 @@ a.kp-chip:hover { background: rgba(255, 255, 255, .16); }
 @media (max-width: 600px) {
   .kp-main .od-doc { border-radius: 14px; box-shadow: var(--kp-shadow); }
 }
+
+/* Factuur (zelfde od-opmaak als de offerte): portaalknoppen binnen .od niet laten resetten */
+.od .kp-btn { padding: 11px 16px; width: 100%; }
+.od .kp-alt { margin-top: 6px; }

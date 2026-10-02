@@ -4,7 +4,7 @@ import { berekenTotalen, formatEuro } from '@/lib/utils'
 import { requireSession } from '@/lib/session'
 import { getKlantSessie } from '@/lib/klant-sessie'
 import { BEDRIJF, betaalQrSvg, ibanAanwezig, ibanLeesbaar, linkQrSvg } from '@/lib/betalen'
-import { ensureTikkieKolommen, tikkieLinkVoorKlant } from '@/lib/tikkie'
+import { ensureTikkieKolommen, tikkieLinkMetAanmaken } from '@/lib/tikkie'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const betaalQr = f.status !== 'betaald' ? await betaalQrSvg(Math.round(totalen.inclBtw * 100) / 100, f.factuurnummer) : null
   const metIban = ibanAanwezig()
   // Tikkie als eerste betaaloptie (alleen een geldige link voor een openstaande factuur)
-  const tikkieUrl = tikkieLinkVoorKlant(f)
+  const tikkieUrl = await tikkieLinkMetAanmaken(f)
   const tikkieQr = tikkieUrl ? await linkQrSvg(tikkieUrl).catch(() => null) : null
 
   const html = `<!DOCTYPE html>
