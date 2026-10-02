@@ -52,7 +52,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
 
   const ogTitel = `Offerte ${offerteNr} — Ozvolt Elektrotechniek`
   const ogTekst = 'Bekijk uw offerte en accepteer deze eenvoudig online.'
-  const waLink = `https://wa.me/${OZVOLT_WA}?text=${encodeURIComponent(`Hallo Ahmet, ik heb een vraag over offerte ${offerteNr}.`)}`
+  const waLink = `https://wa.me/${OZVOLT_WA}?text=${encodeURIComponent(`Hallo Ozvolt, ik heb een vraag over offerte ${offerteNr}.`)}`
 
   return (
     <html lang="nl">
@@ -255,7 +255,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                 {geldigTot && <span className="chip">Geldig tot <b>{geldigTot}</b></span>}
               </div>
               <p className="hero-vragen">
-                Vragen? <a href={waLink}>App ons</a> of <a href={`tel:${OZVOLT_TEL}`}>bel 06 449 98 789</a>.
+                Vragen? <a href={waLink}>App ons</a> of <a href={`tel:${OZVOLT_TEL}`} style={{ whiteSpace: 'nowrap' }}>bel +31 6 44 99 87 89</a>.
               </p>
             </div>
 
@@ -416,7 +416,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
               <div className="contact">
                 <div>
                   <div className="contact-titel">Vragen over deze offerte?</div>
-                  <div className="contact-tekst">App of bel Ahmet, we denken graag met u mee.</div>
+                  <div className="contact-tekst">App of bel ons, we denken graag met u mee.</div>
                 </div>
                 <div className="contact-knoppen">
                   <a href={waLink} className="btn btn-wa"><IcoonWhatsApp /> WhatsApp</a>
@@ -433,7 +433,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
               </div>
               <div className="footer-details">
                 <a href="mailto:financien@ozvoltelektro.nl">financien@ozvoltelektro.nl</a><br />
-                <a href={`tel:${OZVOLT_TEL}`}>06 449 98 789</a> · <a href="https://ozvoltelektro.nl">ozvoltelektro.nl</a>
+                <a href={`tel:${OZVOLT_TEL}`}><span style={{ whiteSpace: 'nowrap' }}>+31 6 44 99 87 89</span></a> · <a href="https://ozvoltelektro.nl">ozvoltelektro.nl</a>
               </div>
             </div>
 
