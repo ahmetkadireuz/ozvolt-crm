@@ -17,9 +17,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true })
   }
 
-  const validStatuses = ['concept','gestuurd','geaccepteerd','verlopen','geweigerd']
+  const validStatuses = ['concept','gestuurd','geaccepteerd','verlopen','geweigerd','vervangen']
 
   if (body.status && validStatuses.includes(body.status)) {
+    // Vervangen offerte blijft vervangen (anders kan de klant hem weer tekenen); alleen de notitie mag nog
+    const cur = await sql`SELECT status FROM offertes WHERE id = ${offerteId}`
+    if (cur[0]?.status === 'vervangen' && body.status !== 'vervangen') {
+      return NextResponse.json({ error: 'Deze offerte is vervangen door een nieuwere versie.' }, { status: 409 })
+    }
     // Probeer met status_notitie, val terug zonder als kolom nog niet bestaat
     try {
       await sql`UPDATE offertes SET status = ${body.status}, status_notitie = ${body.status_notitie ?? null}, bijgewerkt_op = NOW() WHERE id = ${offerteId}`
@@ -42,7 +47,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const waItems = Array.isArray(body.wa_items) ? body.wa_items : []
 
+  // Vervangen offerte: niet meer te wijzigen, de nieuwe versie is leidend
+  if (huidig.status === 'vervangen') {
+    return NextResponse.json({ error: 'Deze offerte is vervangen door een nieuwere versie en kan niet meer worden gewijzigd.', vervangen: true }, { status: 409 })
+  }
+
   // Getekende offerte = vastgelegde afspraak: prijzen, regels, uitgangspunten/opties en klant liggen vast.
+  // De klant van een offerte komt altijd van het project en wordt hier nooit los gewijzigd.
   // Alleen de werkafspraken mogen nog bijgewerkt worden.
   if (huidig.accepted_at) {
     if (Array.isArray(body.wa_items)) {
@@ -66,7 +77,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     await sql`
       UPDATE offertes SET
-        klant_id = ${body.klant_id},
         datum = ${body.datum},
         geldig_tot = ${body.geldig_tot || null},
         regels = ${JSON.stringify(regels)}::jsonb,
@@ -85,7 +95,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   } catch {
     await sql`
       UPDATE offertes SET
-        klant_id = ${body.klant_id},
         datum = ${body.datum},
         geldig_tot = ${body.geldig_tot || null},
         regels = ${JSON.stringify(regels)}::jsonb,

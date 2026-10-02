@@ -95,6 +95,10 @@ export async function maakFactuurVanOfferte(offerteId: number) {
   const rows = await sql`SELECT * FROM offertes WHERE id = ${offerteId}`
   const o = rows[0]
   if (!o) throw new Error('Offerte niet gevonden')
+  // Project is leidend: de factuur komt in hetzelfde project en krijgt de klant van het project
+  if (!o.klus_id) throw new Error('Koppel de offerte eerst aan een project')
+  if (o.status === 'vervangen') throw new Error('Deze offerte is vervangen; maak de factuur vanuit de nieuwe versie')
+  const klus = await sql`SELECT klant_id FROM klussen WHERE id = ${o.klus_id}`
 
   const regels: Regel[] = Array.isArray(o.regels) ? [...o.regels] : []
   const korting = Math.min(Number(o.korting_pct ?? 0), subtotaal(regels))
@@ -103,7 +107,8 @@ export async function maakFactuurVanOfferte(offerteId: number) {
   }
 
   return maakFactuur({
-    klant_id: o.klant_id,
+    // Getekende offerte: klant ligt vast op de offerte; anders de klant van het project
+    klant_id: o.accepted_at ? o.klant_id : (klus[0]?.klant_id ?? o.klant_id),
     klus_id: o.klus_id,
     offerte_id: offerteId,
     regels,

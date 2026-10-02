@@ -67,7 +67,7 @@ export default function OffertesTable({ offertes }: { offertes: any[] }) {
                 <tbody>
                   {lijst.map((o: any) => {
                     const totalen = berekenTotalen(o.regels ?? [], o.korting_pct, o.btw_pct)
-                    const verlopen = o.geldig_tot && new Date(o.geldig_tot) < new Date() && !['geaccepteerd', 'geweigerd'].includes(o.status)
+                    const verlopen = o.geldig_tot && new Date(o.geldig_tot) < new Date() && !['geaccepteerd', 'geweigerd', 'vervangen'].includes(o.status)
                     return (
                       <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/offertes/${o.id}`)}>
                         <td className="mono" style={{ color: 'var(--text-soft)' }}>{String(o.offertenummer).padStart(4, '0')}</td>

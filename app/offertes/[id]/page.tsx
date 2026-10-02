@@ -11,6 +11,7 @@ import Icon from '@/components/Icon'
 import OfferteActions from './OfferteActions'
 import OfferteForm from './OfferteForm'
 import WhatsAppKnop from './WhatsAppKnop'
+import OfferteKoppelen from '@/app/klussen/[id]/OfferteKoppelen'
 import crypto from 'crypto'
 
 export const metadata: Metadata = { title: 'Offerte' }
@@ -27,9 +28,12 @@ export default async function OfferteDetailPage({
   const offerteId = parseInt(id)
   if (isNaN(offerteId)) notFound()
 
-  const [offerteRows, klanten, factuurRows, afspraakRows] = await Promise.all([
-    sql`SELECT o.*, kt.naam AS klant_naam, kt.email AS klant_email, kt.telefoon AS klant_tel FROM offertes o JOIN klanten kt ON kt.id = o.klant_id WHERE o.id = ${offerteId}`,
-    sql`SELECT id, naam, email FROM klanten ORDER BY naam`,
+  const [offerteRows, factuurRows, afspraakRows] = await Promise.all([
+    sql`SELECT o.*, kt.naam AS klant_naam, kt.email AS klant_email, kt.telefoon AS klant_tel,
+               ks.type_werk AS klus_type_werk, ks.omschrijving AS klus_omschrijving
+        FROM offertes o JOIN klanten kt ON kt.id = o.klant_id
+        LEFT JOIN klussen ks ON ks.id = o.klus_id
+        WHERE o.id = ${offerteId}`,
     sql`SELECT id, factuurnummer, status FROM facturen WHERE offerte_id = ${offerteId}`,
     sql`SELECT id, afspraaknummer, status, accept_token, sent_at FROM werkafspraken WHERE offerte_id = ${offerteId} ORDER BY aangemaakt_op DESC`.catch(() => []),
   ])
@@ -56,7 +60,12 @@ export default async function OfferteDetailPage({
   const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
   const acceptUrl = offerte.accept_token ? `${siteUrl}/offerte/${offerte.accept_token}` : null
   const offerteNr = `OZVT-${String(offerte.offertenummer).padStart(4,'0')}`
-  const klanten2 = JSON.parse(JSON.stringify(klanten))
+  // Losse offerte (van vóór "project is leidend"): koppelen aan een project van deze klant
+  const projectKeuzes = offerte.klus_id ? [] : JSON.parse(JSON.stringify(
+    await sql`SELECT id, type_werk, omschrijving, status FROM klussen WHERE klant_id = ${offerte.klant_id} ORDER BY aangemaakt_op DESC`))
+  const vervangenDoor = offerte.vervangen_door_id
+    ? (await sql`SELECT id, offertenummer FROM offertes WHERE id = ${offerte.vervangen_door_id}`)[0] ?? null
+    : null
   const facturen2 = JSON.parse(JSON.stringify(factuurRows))
   const kosten = JSON.parse(JSON.stringify(kostenRows))
   const afspraken2 = JSON.parse(JSON.stringify(Array.isArray(afspraakRows) ? afspraakRows : []))
@@ -95,9 +104,22 @@ export default async function OfferteDetailPage({
 
       {msg && <div className="alert alert-ok">{decodeURIComponent(msg)}</div>}
 
+      {offerte.status === 'vervangen' && (
+        <div className="alert alert-warn">
+          Deze offerte is vervangen{vervangenDoor ? <> door{' '}
+            <Link href={`/offertes/${vervangenDoor.id}`} style={{ color: 'inherit', fontWeight: 700 }}>
+              OZVT-{String(vervangenDoor.offertenummer).padStart(4, '0')}
+            </Link></> : ' door een nieuwere versie'} en kan door de klant niet meer getekend worden.
+        </div>
+      )}
+
+      {!offerte.klus_id && (
+        <OfferteKoppelen offerteId={offerteId} klantId={offerte.klant_id} klantNaam={offerte.klant_naam} projecten={projectKeuzes} />
+      )}
+
       <div className="detail-grid">
         {/* Formulier */}
-        <OfferteForm offerte={offerte} klanten={klanten2} offerteId={offerteId} />
+        <OfferteForm offerte={offerte} offerteId={offerteId} />
 
         {/* Acties sidebar */}
         <OfferteActions

@@ -24,6 +24,7 @@ function badgeKlasse(status: string): string {
   const s = status.toLowerCase()
   if (['betaald', 'geaccepteerd', 'afgerond'].includes(s)) return 'kp-badge-green'
   if (['te_laat', 'te laat', 'verlopen', 'geweigerd', 'geannuleerd'].includes(s)) return 'kp-badge-red'
+  if (s === 'vervangen') return 'kp-badge-grey'
   if (['gepland', 'gestuurd', 'verzonden'].includes(s)) return 'kp-badge-blue'
   if (['bezig', 'in_behandeling'].includes(s)) return 'kp-badge-purple'
   if (['nieuw', 'concept', 'openstaand', 'verstuurd'].includes(s)) return 'kp-badge-amber'
@@ -43,6 +44,7 @@ function statusLabel(s: string) {
     geaccepteerd: 'Geaccepteerd',
     geweigerd: 'Geweigerd',
     verlopen: 'Verlopen',
+    vervangen: 'Vervangen',
     verstuurd: 'Verstuurd',
     betaald: 'Betaald',
     te_laat: 'Te laat',
@@ -60,7 +62,7 @@ export default async function KlantDashboard() {
   const [klantRows, klussen, offertes, facturen, werkafspraken, rapporten, documenten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
-    sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} AND status <> 'concept' ORDER BY datum DESC`,
+    sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} AND status NOT IN ('concept', 'vervangen') ORDER BY datum DESC`,
     sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct FROM facturen WHERE klant_id = ${klantId} AND status <> 'concept' ORDER BY factuurdatum DESC`,
     sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klant_id = ${klantId} AND jsonb_array_length(afspraken) > 0 ORDER BY datum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op, getekend_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,

@@ -18,9 +18,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const regels = Array.isArray(body.regels) ? body.regels : []
   const btw = Number(body.btw_pct ?? 21)
 
+  // De klant van een factuur komt van het project en wordt hier niet los gewijzigd
   await sql`
     UPDATE facturen SET
-      klant_id = ${body.klant_id},
       factuurdatum = ${body.factuurdatum},
       betalingstermijn = ${body.betalingstermijn ?? 14},
       regels = ${JSON.stringify(regels)}::jsonb,

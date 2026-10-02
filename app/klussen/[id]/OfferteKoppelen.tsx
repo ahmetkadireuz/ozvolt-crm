@@ -1,55 +1,21 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { DocumentAanProject, ProjectAanDocument } from './Koppelen'
 
-interface Props {
-  klusId: number
-  offertes: any[]
-}
+type Props =
+  | { klusId: number; offertes: { id: number; offertenummer: number }[] }
+  | { offerteId: number; klantId: number; klantNaam: string; projecten: { id: number; type_werk: string | null; omschrijving: string | null; status: string }[] }
 
-export default function OfferteKoppelen({ klusId, offertes }: Props) {
-  const router = useRouter()
-  const [selected, setSelected] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  async function koppel() {
-    if (!selected) return
-    setSaving(true)
-    await fetch(`/api/klussen/${klusId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ koppel_offerte_id: selected }),
-    })
-    setSaving(false)
-    router.refresh()
+/** Op het project: losse offerte koppelen. Op de offerte: offerte aan een project koppelen. */
+export default function OfferteKoppelen(props: Props) {
+  if ('offerteId' in props) {
+    return <ProjectAanDocument soort="offerte" documentId={props.offerteId} klantId={props.klantId} klantNaam={props.klantNaam} projecten={props.projecten} />
   }
-
   return (
-    <div className="card">
-      <div className="section-label">Bestaande offerte koppelen</div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <select
-          className="form-ctrl"
-          value={selected}
-          onChange={e => setSelected(e.target.value)}
-        >
-          <option value="">— Kies offerte —</option>
-          {offertes.map(o => (
-            <option key={o.id} value={o.id}>
-              OZVT-{String(o.offertenummer).padStart(4, '0')}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          onClick={koppel}
-          disabled={!selected || saving}
-        >
-          {saving ? 'Bezig…' : 'Koppelen'}
-        </button>
-      </div>
-    </div>
+    <DocumentAanProject
+      soort="offerte"
+      klusId={props.klusId}
+      opties={props.offertes.map(o => ({ id: o.id, label: `OZVT-${String(o.offertenummer).padStart(4, '0')}` }))}
+    />
   )
 }

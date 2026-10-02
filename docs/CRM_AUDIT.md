@@ -120,6 +120,17 @@ _Bijgewerkt: 2026-06-05_
 
 ---
 
+## Project is leidend (2026-10-02)
+
+- **Geen dubbele klanten**: `lib/klanten.ts` (`vindOfMaakKlant`) zoekt eerst op naam (hoofdletters/spaties genegeerd), e-mail of telefoon (laatste 9 cijfers) en hergebruikt die klant. Gebruikt door klanten/nieuw, klussen/nieuw, offertes/nieuw, facturen/nieuw en "Andere klant" op het project. Matchregels gedeeld met de browser via `lib/klant-match.ts`.
+- **Klantzoeker**: `components/KlantZoeker.tsx` (typeahead met e-mail/plaats) met melding "Deze klant bestaat al: … — gebruiken?".
+- **Project verplicht**: nieuwe offertes/facturen hangen altijd aan een project (`components/ProjectKiezer.tsx`: bestaand project of in dezelfde stap een nieuw project). Geen stille auto-koppeling meer. De klant komt van het project; OfferteForm/FactuurForm tonen klant + project als vaste info en de PATCH-routes wijzigen `klant_id` niet meer.
+- **Klant van project wijzigen** (`PATCH /api/klussen/[id]` met `klant_id`): niet-getekende offertes en facturen die niet betaald zijn en niet in Moneybird staan volgen mee (`lib/projecten.ts`).
+- **Losse documenten** (zonder `klus_id`): melding "Niet gekoppeld aan een project" met koppelen (OfferteKoppelen/FactuurKoppelen) of een nieuw project voor die klant (`POST /api/klussen`). Factuur vanuit offerte vereist een gekoppeld project.
+- **Eén actieve offerte per project** (`lib/offertes.ts`): een tweede offerte wordt na bevestiging een nieuwe versie (kopie). De oude krijgt status `vervangen` (+ `offertes.vervangen_door_id`), is niet meer te tekenen/versturen/wijzigen en verdwijnt uit het klantportaal-overzicht. Na tekenen loopt meerwerk via `project_meerwerk`.
+
+---
+
 ## Bekende risico's
 
 | Risico | Prioriteit | Status |

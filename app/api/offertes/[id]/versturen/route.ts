@@ -16,6 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   `
   const offerte = rows[0]
   if (!offerte) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
+  if (offerte.status === 'vervangen') return NextResponse.json({ error: 'Deze offerte is vervangen door een nieuwere versie; verstuur de nieuwe versie.' }, { status: 409 })
   if (!offerte.klant_email) return NextResponse.json({ error: 'Klant heeft geen e-mailadres' }, { status: 400 })
 
   const token = offerte.accept_token || crypto.randomBytes(32).toString('hex')

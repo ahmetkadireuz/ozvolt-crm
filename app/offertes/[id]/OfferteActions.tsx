@@ -71,7 +71,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
     const res = await fetch(`/api/offertes/${offerteId}/factuur`, { method: 'POST' })
     const data = await res.json()
     if (data.factuurId) router.push(`/facturen/${data.factuurId}`)
-    else alert('Aanmaken mislukt')
+    else alert(data.error ? `Aanmaken mislukt: ${data.error}` : 'Aanmaken mislukt')
   }
 
   const [betaallinkLoading, setBetaallinkLoading] = useState(false)
@@ -320,6 +320,11 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
       {/* Status */}
       <div className="card">
         <div className="section-label">Status</div>
+        {offerte.status === 'vervangen' ? (
+          <div style={{ fontSize: '.82rem', color: 'var(--text-2)' }}>
+            Vervangen door een nieuwere versie. De status ligt vast; de klant kan deze offerte niet meer tekenen.
+          </div>
+        ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {STATUSES.map(s => (
             <button
@@ -336,6 +341,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
             </button>
           ))}
         </div>
+        )}
       </div>
 
       {/* Status notitie */}

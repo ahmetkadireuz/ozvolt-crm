@@ -16,11 +16,12 @@ const STATUS_TABS = [
   { key: 'geaccepteerd', label: 'Geaccepteerd' },
   { key: 'verlopen', label: 'Verlopen' },
   { key: 'geweigerd', label: 'Geweigerd' },
+  { key: 'vervangen', label: 'Vervangen' },
 ]
 
 export default async function OffertesPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const { status = 'alles' } = await searchParams
-  const validStatuses = ['concept','gestuurd','geaccepteerd','verlopen','geweigerd']
+  const validStatuses = ['concept','gestuurd','geaccepteerd','verlopen','geweigerd','vervangen']
   const filter = validStatuses.includes(status) ? status : null
 
   const offertes = filter

@@ -6,63 +6,47 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { maakFactuur } from '@/lib/facturen'
+import { klantOpties } from '@/lib/klanten'
+import { projectOpties, projectUitFormulier } from '@/lib/projecten'
+import { projectTitel } from '@/lib/project-opties'
+import ProjectKiezer from '@/components/ProjectKiezer'
 import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Nieuwe factuur' }
 
+const FOUTEN: Record<string, string> = {
+  klant: 'Kies een klant of vul de naam van een nieuwe klant in.',
+  project: 'Kies eerst een project, of maak in dezelfde stap een nieuw project aan.',
+}
+
 export default async function NieuweFactuurPage({
   searchParams,
 }: {
-  searchParams: Promise<{ klant?: string; klus?: string }>
+  searchParams: Promise<{ klant?: string; klus?: string; fout?: string }>
 }) {
-  const { klant: klantParam, klus: klusParam } = await searchParams
-  const klanten = await sql`SELECT id, naam FROM klanten ORDER BY naam`
+  const { klant: klantParam, klus: klusParam, fout } = await searchParams
+  const klantId = parseInt(klantParam ?? '') || 0
+  const klusId = parseInt(klusParam ?? '') || 0
 
-  let vooringevuldKlantId = klantParam ? parseInt(klantParam) : 0
-  let vooringevuldKlusId = klusParam ? parseInt(klusParam) : 0
-  if (vooringevuldKlusId && !vooringevuldKlantId) {
-    const rows = await sql`SELECT klant_id FROM klussen WHERE id = ${vooringevuldKlusId}`
-    if (rows[0]) vooringevuldKlantId = rows[0].klant_id
-  }
+  const projectRows = klusId
+    ? await sql`
+        SELECT k.id, k.type_werk, k.omschrijving, kt.naam AS klant_naam
+        FROM klussen k JOIN klanten kt ON kt.id = k.klant_id WHERE k.id = ${klusId}`
+    : []
+  const project: any = projectRows[0] ?? null
+  const [projecten, klanten] = project ? [[], []] : await Promise.all([projectOpties(), klantOpties()])
 
   async function createFactuur(formData: FormData) {
     'use server'
-    let klantId = parseInt(String(formData.get('klant_id') ?? '0'))
-    let klusId: number | null = parseInt(String(formData.get('klus_id') ?? '0')) || null
-    const nieuweNaam = String(formData.get('nieuwe_naam') ?? '').trim()
-
-    if (!klantId && nieuweNaam) {
-      const r = await sql`
-        INSERT INTO klanten (naam, email, telefoon, type)
-        VALUES (${nieuweNaam},
-                ${String(formData.get('nieuwe_email') ?? '') || null},
-                ${String(formData.get('nieuwe_telefoon') ?? '') || null},
-                ${String(formData.get('nieuwe_type') ?? 'Particulier')})
-        RETURNING id`
-      klantId = r[0].id
-    }
-    if (!klantId) redirect('/facturen/nieuw?fout=klant')
-
-    // Auto-koppel aan meest recente actieve klus als geen klus is meegegeven
-    if (!klusId) {
-      const klusRows = await sql`
-        SELECT id FROM klussen
-        WHERE klant_id = ${klantId} AND status <> 'afgerond'
-        ORDER BY aangemaakt_op DESC
-        LIMIT 1
-      `
-      if (klusRows[0]) klusId = klusRows[0].id
-    }
-
-    const result = await maakFactuur({ klant_id: klantId, klus_id: klusId, regels: [], btw_pct: 21 })
+    const r = await projectUitFormulier(formData)
+    if ('fout' in r) redirect(`/facturen/nieuw?fout=${r.fout}`)
+    const klus = await sql`SELECT id, klant_id FROM klussen WHERE id = ${r.klusId}`
+    // De klant van de factuur is altijd de klant van het project
+    const result = await maakFactuur({ klant_id: klus[0].klant_id, klus_id: klus[0].id, regels: [], btw_pct: 21 })
     redirect(`/facturen/${result.id}`)
   }
 
-  const terugUrl = vooringevuldKlusId
-    ? `/klussen/${vooringevuldKlusId}`
-    : vooringevuldKlantId
-    ? `/klanten/${vooringevuldKlantId}`
-    : '/facturen'
+  const terugUrl = project ? `/klussen/${project.id}` : klantId ? `/klanten/${klantId}` : '/facturen'
 
   return (
     <div>
@@ -74,51 +58,28 @@ export default async function NieuweFactuurPage({
           <h1 className="page-title">Nieuwe factuur</h1>
         </div>
       </div>
-      <div style={{ maxWidth: 480 }}>
+      <div style={{ maxWidth: 560 }}>
+        {fout && FOUTEN[fout] && <div className="alert alert-err">{FOUTEN[fout]}</div>}
+
         <form action={createFactuur} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <input type="hidden" name="klus_id" value={vooringevuldKlusId || ''} />
-
-          <div>
-            <label className="form-label">Klant</label>
-            <select className="form-ctrl" name="klant_id">
-              <option value="">— Kies een klant —</option>
-              {(klanten as any[]).map((k) => (
-                <option key={k.id} value={k.id} selected={k.id === vooringevuldKlantId}>
-                  {k.naam}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-            <span style={{ fontSize: '.72rem', color: 'var(--text-soft)', fontWeight: 700, whiteSpace: 'nowrap' }}>OF NIEUWE KLANT</span>
-            <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-          </div>
-
-          <div style={{ background: 'var(--surface-mute)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {project ? (
             <div>
-              <label className="form-label">Naam nieuwe klant</label>
-              <input className="form-ctrl" name="nieuwe_naam" placeholder="Voor- en achternaam of bedrijfsnaam" />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div>
-                <label className="form-label">Telefoon</label>
-                <input className="form-ctrl" name="nieuwe_telefoon" type="tel" placeholder="06 12345678" />
-              </div>
-              <div>
-                <label className="form-label">E-mail</label>
-                <input className="form-ctrl" name="nieuwe_email" type="email" placeholder="naam@email.nl" />
+              <input type="hidden" name="klus_id" value={project.id} />
+              <div className="section-label">Project</div>
+              <div className="zoeker-keuze">
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '.86rem' }}>{project.klant_naam} — {projectTitel(project)}</div>
+                  <div style={{ fontSize: '.74rem', color: 'var(--text-soft)' }}>Project #{project.id} · de klant van de factuur is de klant van het project</div>
+                </div>
+                <Link href={`/klussen/${project.id}`} className="btn btn-ghost btn-sm">Open</Link>
               </div>
             </div>
-            <div>
-              <label className="form-label">Type</label>
-              <select className="form-ctrl" name="nieuwe_type">
-                <option value="Particulier">Particulier</option>
-                <option value="Zakelijk">Zakelijk</option>
-              </select>
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="section-label" style={{ marginBottom: 0 }}>Bij welk project hoort de factuur?</div>
+              <ProjectKiezer projecten={projecten as any} klanten={klanten as any} klantId={klantId || null} />
+            </>
+          )}
 
           <p style={{ fontSize: 12, color: 'var(--text-mute)', margin: 0 }}>
             50/50 betalen? Vul eerst de regels in en zet daarna op de factuur het 50/50-betaalplan aan.

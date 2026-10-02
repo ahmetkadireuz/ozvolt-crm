@@ -11,8 +11,15 @@ import Icon from '@/components/Icon'
 
 export const metadata: Metadata = { title: 'Klantprofiel' }
 
-export default async function KlantDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function KlantDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ msg?: string }>
+}) {
   const { id } = await params
+  const { msg } = await searchParams
   const klantId = parseInt(id)
   if (isNaN(klantId)) notFound()
 
@@ -42,6 +49,8 @@ export default async function KlantDetailPage({ params }: { params: Promise<{ id
           </Link>
         </div>
       </div>
+
+      {msg && <div className="alert alert-warn">{msg}</div>}
 
       <div className="detail-grid">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

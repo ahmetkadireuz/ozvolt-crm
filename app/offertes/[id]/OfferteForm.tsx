@@ -6,10 +6,11 @@ import RegelEditor from '@/components/RegelEditor'
 import WerkafsprakenEditor, { type WaItem, type Bijlage } from '@/components/WerkafsprakenEditor'
 import UitgangspuntenOptiesEditor from '@/components/UitgangspuntenOptiesEditor'
 import Icon from '@/components/Icon'
+import KlantProjectInfo from '@/components/KlantProjectInfo'
 import { parseUoItems, type UoItem } from '@/lib/uitgangspunten'
 import type { RegelItem } from '@/lib/utils'
 
-export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: any; klanten: any[]; offerteId: number }) {
+export default function OfferteForm({ offerte, offerteId }: { offerte: any; offerteId: number }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [regels, setRegels] = useState<RegelItem[]>(offerte.regels ?? [])
@@ -20,6 +21,7 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
   const [bijlagen, setBijlagen] = useState<Bijlage[]>(offerte.bijlagen ?? [])
 
   const vergrendeld = !!offerte.accepted_at
+  const vervangen = offerte.status === 'vervangen'
   const [melding, setMelding] = useState<string | null>(null)
 
   async function saveForm(fd: FormData) {
@@ -27,7 +29,6 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        klant_id: fd.get('klant_id'),
         datum: fd.get('datum'),
         geldig_tot: fd.get('geldig_tot'),
         notities: fd.get('notities'),
@@ -74,18 +75,18 @@ export default function OfferteForm({ offerte, klanten, offerteId }: { offerte: 
           Alleen de werkafspraken kun je nog bijwerken. Voor andere wijzigingen maak je een nieuwe offerte.
         </div>
       )}
+      {vervangen && (
+        <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid var(--line-strong)', fontSize: '.84rem', color: 'var(--text-2)' }}>
+          <strong>Vervangen.</strong> Deze offerte is vervangen door een nieuwere versie en kan niet meer getekend of gewijzigd worden.
+        </div>
+      )}
       {melding && !vergrendeld && (
         <div className="card" style={{ marginBottom: 16, borderLeft: '4px solid #dc2626', fontSize: '.84rem' }}>{melding}</div>
       )}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="section-label">Gegevens</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Klant</label>
-            <select className="form-ctrl" name="klant_id" defaultValue={offerte.klant_id}>
-              {klanten.map((k: any) => <option key={k.id} value={k.id}>{k.naam}</option>)}
-            </select>
-          </div>
+          <KlantProjectInfo document={offerte} />
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Datum</label>
             <input className="form-ctrl" type="date" name="datum" defaultValue={offerte.datum?.slice(0, 10)} />
