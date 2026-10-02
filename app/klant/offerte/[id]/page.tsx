@@ -6,6 +6,8 @@ import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
 import AccepteerKnop from './AccepteerKnop'
 import Icon from '@/components/Icon'
+import UitgangspuntenOptiesWeergave from '@/components/UitgangspuntenOptiesWeergave'
+import { parseUoItems } from '@/lib/uitgangspunten'
 
 export default async function KlantOffertePagina({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -40,6 +42,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
 
   const isGeaccepteerd = o.status === 'geaccepteerd'
   const waItems: { omschrijving: string; door: string; toelichting: string }[] = o.wa_items ?? []
+  const uoItems = parseUoItems(o.uo_items)
   const bijlagen: { naam: string; url: string; type: string }[] = o.bijlagen ?? []
 
   return (
@@ -99,6 +102,15 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
           {korting > 0 && <TotaalRegel label="Korting" waarde={`- ${formatEuro(korting)}`} />}
           <TotaalRegel label={`BTW (${o.btw_pct}%)`} waarde={formatEuro(btw)} />
           <TotaalRegel label="Totaal incl. BTW" waarde={formatEuro(totaal)} vet />
+        </div>
+
+        {/* Uitgangspunten & opties (informatief, telt niet mee in het totaal) */}
+        <div style={{ marginTop: 24 }}>
+          <UitgangspuntenOptiesWeergave
+            items={uoItems}
+            btwPct={Number(o.btw_pct ?? 21)}
+            titelStijl={{ fontSize: 14, fontWeight: 700, color: '#0d1b3e', margin: '0 0 12px' }}
+          />
         </div>
 
         {/* Werkzaamheden */}

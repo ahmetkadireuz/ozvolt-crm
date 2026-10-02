@@ -3,6 +3,8 @@ import { berekenTotalen, formatEuro } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import SignForm from './SignForm'
 import Icon from '@/components/Icon'
+import UitgangspuntenOptiesWeergave from '@/components/UitgangspuntenOptiesWeergave'
+import { parseUoItems } from '@/lib/uitgangspunten'
 
 const SITE = 'https://portaal.ozvoltelektro.nl'
 
@@ -30,6 +32,8 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
   let bijlagen: any[] = []
   if (Array.isArray(o.bijlagen)) bijlagen = o.bijlagen
   else if (typeof o.bijlagen === 'string') { try { bijlagen = JSON.parse(o.bijlagen) } catch {} }
+
+  const uoItems = parseUoItems(o.uo_items)
 
   const korting = Number(o.korting_pct ?? 0)
   const btwPct = Number(o.btw_pct ?? 21)
@@ -101,11 +105,6 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
           .tot-final { background: #1d2f4c; border-radius: 4px; padding: 14px 18px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
           .tot-final .l { color: rgba(255,255,255,.65); font-size: 13px; font-weight: 500; }
           .tot-final .v { color: #fff; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
-
-          /* Notities */
-          .notities { margin-bottom: 36px; padding: 16px 20px; background: #f8fafc; border-left: 3px solid #1d2f4c; border-radius: 0 4px 4px 0; }
-          .nt-lbl { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; }
-          .nt-p { font-size: 13px; color: #374151; line-height: 1.75; white-space: pre-wrap; }
 
           /* Betalen */
           .pay-section { margin-bottom: 32px; }
@@ -243,13 +242,12 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
                 </div>
               </div>
 
-              {/* Notities */}
-              {o.notities && (
-                <div className="notities" style={{ marginBottom: 32 }}>
-                  <div className="nt-lbl">Opmerkingen</div>
-                  <p className="nt-p">{o.notities}</p>
-                </div>
-              )}
+              {/* Uitgangspunten & opties (informatief, telt niet mee in het totaal) */}
+              <UitgangspuntenOptiesWeergave
+                items={uoItems}
+                btwPct={btwPct}
+                titelStijl={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 12 }}
+              />
 
               {/* Betaalknop (alleen als er een betaallink is en nog niet betaald) */}
               {(o.betaal_url || o.betaling_50_50) && isGeaccepteerd && (
