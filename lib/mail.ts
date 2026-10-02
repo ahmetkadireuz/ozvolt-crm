@@ -217,6 +217,110 @@ export function offerteMailHtml(params: {
   return mailWrapper({ accentColor: GREEN, headerBg: BRAND, tagline: 'Werkvoorstel', body })
 }
 
+// ── Offerte-mail V2 (kopiëren/plakken in Outlook of Apple Mail) ───────────────
+// Alleen tabellen + inline CSS, geen flex/grid/rgba/box-shadow: na plakken in
+// Outlook (Word-engine) en Apple Mail blijft de opmaak zo intact.
+
+function escHtml(s: string) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+export function offerteMailHtmlV2(params: {
+  klantNaam: string
+  offerteNr: string
+  titel?: string | null
+  totaal: string
+  geldigTot?: string | null
+  acceptUrl: string
+}) {
+  const { klantNaam, offerteNr, titel, totaal, geldigTot, acceptUrl } = params
+  const naam = escHtml((klantNaam ?? '').trim())
+  const url = escHtml(acceptUrl)
+  const T = `font-family:${F};`
+
+  const rij = (label: string, waarde: string, kleur = BRAND, laatste = false) => `
+          <tr>
+            <td style="${T}padding:11px 18px;font-size:13px;color:#6b7fa0;${laatste ? '' : 'border-bottom:1px solid #e4e9f0;'}" width="40%">${label}</td>
+            <td style="${T}padding:11px 18px;font-size:14px;font-weight:bold;color:${kleur};text-align:right;${laatste ? '' : 'border-bottom:1px solid #e4e9f0;'}">${waarde}</td>
+          </tr>`
+
+  const rijen: { label: string; waarde: string; kleur?: string }[] = [
+    { label: 'Offertenummer', waarde: escHtml(offerteNr) },
+    ...(titel ? [{ label: 'Omschrijving', waarde: escHtml(titel) }] : []),
+    { label: 'Totaal incl. btw', waarde: escHtml(totaal), kleur: GREEN },
+    ...(geldigTot ? [{ label: 'Geldig tot', waarde: escHtml(geldigTot) }] : []),
+  ]
+
+  return `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Uw offerte ${escHtml(offerteNr)}</title>
+</head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;">
+<tr><td align="left" style="padding:0;">
+
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;border-collapse:collapse;">
+
+  <tr><td bgcolor="${GREEN}" style="background:${GREEN};height:5px;font-size:0;line-height:0;">&nbsp;</td></tr>
+  <tr><td bgcolor="${BRAND}" style="background:${BRAND};padding:22px 32px;">
+    <img src="${LOGO_URL}" alt="Ozvolt Elektrotechniek" width="131" height="36" style="display:block;width:131px;height:36px;border:0;outline:none;text-decoration:none;">
+  </td></tr>
+
+  <tr><td bgcolor="#ffffff" style="background:#ffffff;padding:32px 32px 8px;border-left:1px solid #dde3ec;border-right:1px solid #dde3ec;">
+    <p style="${T}margin:0 0 16px;font-size:16px;line-height:24px;color:${BRAND};">Beste ${naam || 'klant'},</p>
+    <p style="${T}margin:0 0 14px;font-size:14px;line-height:22px;color:#4a5568;">
+      Hartelijk dank voor uw aanvraag. Hierbij ontvangt u onze offerte. Via de knop hieronder kunt u de offerte rustig online bekijken en, als u akkoord bent, direct digitaal accepteren.
+    </p>
+    <p style="${T}margin:0 0 24px;font-size:14px;line-height:22px;color:#4a5568;">
+      Heeft u vragen of wilt u iets aanpassen? Beantwoord gerust deze mail of bel ons.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e4e9f0;border-collapse:collapse;background:#f8fafd;" bgcolor="#f8fafd">${
+      rijen.map((r, i) => rij(r.label, r.waarde, r.kleur, i === rijen.length - 1)).join('')}
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 10px;">
+    <tr><td align="center">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+      <tr><td bgcolor="${GREEN}" align="center" style="background:${GREEN};border-radius:6px;">
+        <a href="${url}" target="_blank" style="${T}display:inline-block;padding:15px 30px;font-size:16px;font-weight:bold;line-height:20px;color:#ffffff;text-decoration:none;border-radius:6px;">Bekijk en accepteer uw offerte</a>
+      </td></tr>
+      </table>
+    </td></tr>
+    </table>
+
+    <p style="${T}margin:16px 0 4px;font-size:12px;line-height:18px;color:#6b7fa0;">Werkt de knop niet? Kopieer dan deze link in uw browser:</p>
+    <p style="${T}margin:0 0 28px;font-size:12px;line-height:18px;word-break:break-all;"><a href="${url}" target="_blank" style="color:#3b6fa0;text-decoration:underline;">${url}</a></p>
+
+    <p style="${T}margin:0 0 28px;font-size:14px;line-height:22px;color:#4a5568;">
+      Met vriendelijke groet,<br>
+      <strong style="color:${BRAND};">Ahmet Öz</strong><br>
+      Ozvolt Elektrotechniek
+    </p>
+  </td></tr>
+
+  <tr><td bgcolor="#f5f7fa" style="background:#f5f7fa;border:1px solid #dde3ec;padding:18px 32px;">
+    <p style="${T}margin:0 0 3px;font-size:13px;font-weight:bold;color:${BRAND};">Ozvolt Elektrotechniek</p>
+    <p style="${T}margin:0 0 2px;font-size:11px;line-height:16px;color:#7b8a9c;">KVK 99837366 &nbsp;·&nbsp; BTW NL005413208B33</p>
+    <p style="${T}margin:0;font-size:11px;line-height:16px;color:#7b8a9c;">
+      <a href="mailto:financien@ozvoltelektro.nl" style="color:#7b8a9c;text-decoration:none;">financien@ozvoltelektro.nl</a>
+      &nbsp;·&nbsp; 06 449 98 789 &nbsp;·&nbsp;
+      <a href="https://ozvoltelektro.nl" style="color:#7b8a9c;text-decoration:none;">ozvoltelektro.nl</a>
+    </p>
+  </td></tr>
+
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>`
+}
+
 // ── Werkvoorstel bevestiging (intern naar Ozvolt) ─────────────────────────────
 
 export function offerteBevestigingMailHtml(params: {
