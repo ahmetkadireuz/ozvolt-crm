@@ -77,6 +77,7 @@ _Bijgewerkt: 2026-06-05_
 | `/api/bot/moneybird/inkoop` | finance | Inkoopfacturen en bonnen uit Moneybird |
 | `/api/bot/moneybird/btw` | finance | Btw-overzicht per kwartaal (samengesteld) |
 | `/api/bot/moneybird/sync-status` | finance | Verschillen CRM vs Moneybird |
+| `/api/bot/tikkie` | finance | Diagnose Tikkie-koppeling (env ja/nee, testaanroep, Tikkie per open factuur) |
 
 > Uitgezonderd van de admin-sessie in `middleware.ts`; sleutelcheck in `lib/bot-auth.ts` (`BOT_API_KEY` = crm, `BOT_API_KEY_FINANCE` = crm + Moneybird; crm-sleutel op Moneybird → 403). Alleen GET (rest → 405), geen tokens/credentials in antwoorden. Zie `docs/BOT_API.md`.
 
