@@ -17,11 +17,15 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
   const [maakAfspraakLoading, setMaakAfspraakLoading] = useState(false)
 
   async function updateStatus(status: string) {
-    await fetch(`/api/offertes/${offerteId}`, {
+    const res = await fetch(`/api/offertes/${offerteId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      alert('Status wijzigen mislukt: ' + (data?.error ?? `Serverfout ${res.status}`))
+    }
     router.refresh()
   }
 
@@ -67,11 +71,19 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
     else alert('Aanmaken mislukt')
   }
 
+  const [factuurBezig, setFactuurBezig] = useState(false)
+  const geaccepteerd = offerte.status === 'geaccepteerd' || !!offerte.accepted_at
+  // Ook vóór akkoord factureren (bv. mondeling akkoord, of de offerte is intussen verlopen)
+  const kanFactureren = geaccepteerd || ['gestuurd', 'verlopen'].includes(offerte.status)
+
   async function maakFactuur() {
+    if (!geaccepteerd && !confirm('Offerte is nog niet geaccepteerd. Toch factureren?')) return
+    setFactuurBezig(true)
     const res = await fetch(`/api/offertes/${offerteId}/factuur`, { method: 'POST' })
     const data = await res.json()
-    if (data.factuurId) router.push(`/facturen/${data.factuurId}`)
-    else alert(data.error ? `Aanmaken mislukt: ${data.error}` : 'Aanmaken mislukt')
+    if (data.factuurId) { router.push(`/facturen/${data.factuurId}`); return }
+    setFactuurBezig(false)
+    alert(data.error ? `Aanmaken mislukt: ${data.error}` : 'Aanmaken mislukt')
   }
 
   const [betaallinkLoading, setBetaallinkLoading] = useState(false)
@@ -258,10 +270,10 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
       </div>
 
       {/* Factuur aanmaken */}
-      {facturen.length === 0 && offerte.status === 'geaccepteerd' && (
-        <button type="button" className="btn btn-success" style={{ width: '100%', justifyContent: 'center' }} onClick={maakFactuur}>
+      {facturen.length === 0 && kanFactureren && (
+        <button type="button" className="btn btn-success" style={{ width: '100%', justifyContent: 'center' }} onClick={maakFactuur} disabled={factuurBezig}>
           <Icon name="receipt" size={16} />
-          Factuur aanmaken
+          {factuurBezig ? 'Aanmaken…' : 'Factuur aanmaken'}
         </button>
       )}
       {facturen.map((f: any) => (

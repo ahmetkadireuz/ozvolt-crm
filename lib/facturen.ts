@@ -1,11 +1,14 @@
 import { sql } from '@/lib/db'
+import { berekenTotalen } from '@/lib/utils'
 
 /* ============================================================
    Facturen: nummering, aanmaken vanuit offerte en 50/50-splitsing
    in een voorschotfactuur + eindfactuur.
 
-   Nummering: OZV-F-<jaar>-<volgnummer>, per jaar doorlopend.
-   Oudere facturen (OZVT-xxxx) blijven ongewijzigd.
+   Nummering: F<jj><volgnummer>, bv. F26002 (minimaal 3 cijfers, na 999 gewoon F261000).
+   Het volgnummer loopt per jaar door over de oude vorm OZV-F-<jaar>-<nr> heen.
+   Oudere facturen (OZVT-xxxx, OZV-F-…) blijven ongewijzigd; alleen nooit
+   verstuurde concepten worden eenmalig omgenummerd (zie migreerFactuurnummers).
    ============================================================ */
 
 type Regel = { omschrijving: string; beschrijving?: string; aantal: number; prijs: number; btw: number }
@@ -21,7 +24,7 @@ export async function ensureFactuurKolommen(): Promise<void> {
       WHERE table_name = 'facturen'
         AND column_name IN ('betaal_url', 'betaal_url_2', 'betaling_50_50', 'soort', 'gekoppelde_factuur_id')
     `
-    if (ok[0]?.n === 5) { _ensured = true; return }
+    if (ok[0]?.n === 5) { _ensured = true; await migreerFactuurnummers(); return }
   } catch { /* val terug op de volledige migratie */ }
   await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url TEXT`
   await sql`ALTER TABLE facturen ADD COLUMN IF NOT EXISTS betaal_url_2 TEXT`
@@ -36,17 +39,75 @@ export async function ensureFactuurKolommen(): Promise<void> {
     console.error('[facturen] unieke index op factuurnummer niet aangemaakt (dubbele nummers aanwezig?):', err)
   }
   _ensured = true
+  await migreerFactuurnummers()
+}
+
+let _gemigreerd = false
+
+/**
+ * Eenmalig en idempotent: concepten die nooit de deur uit zijn gegaan (status concept, niet in
+ * Moneybird, niet betaald, geen Tikkie) en nog OZV-F-<jaar>-<nr> heten, krijgen F<jj><nr>
+ * met hetzelfde volgnummer (OZV-F-2026-0002 → F26002). Al het andere blijft zoals het is.
+ */
+async function migreerFactuurnummers(): Promise<void> {
+  if (_gemigreerd) return
+  try {
+    const tikkie = await sql`
+      SELECT COUNT(*)::int AS n FROM information_schema.columns
+      WHERE table_name = 'facturen' AND column_name IN ('tikkie_token', 'tikkie_betaald_op')
+    `
+    const metTikkie = tikkie[0]?.n === 2
+    const kandidaten = await sql`
+      SELECT f.id, f.factuurnummer FROM facturen f
+      WHERE f.factuurnummer ~ '^OZV-F-[0-9]{4}-[0-9]+$'
+        AND f.status = 'concept' AND f.moneybird_id IS NULL
+    `
+    for (const k of kandidaten) {
+      const [, jaar, nr] = String(k.factuurnummer).match(/^OZV-F-(\d{4})-(\d+)$/) ?? []
+      if (!jaar) continue
+      const nieuw = factuurnummerVoor(Number(jaar), Number(nr))
+      // Geen Tikkie (referentie = factuurnummer) en niet betaald; nooit een bestaand nummer overschrijven
+      if (metTikkie) {
+        await sql`
+          UPDATE facturen SET factuurnummer = ${nieuw}, bijgewerkt_op = NOW()
+          WHERE id = ${k.id} AND factuurnummer = ${k.factuurnummer} AND status = 'concept'
+            AND moneybird_id IS NULL AND tikkie_token IS NULL AND tikkie_betaald_op IS NULL
+            AND NOT EXISTS (SELECT 1 FROM facturen x WHERE x.factuurnummer = ${nieuw})
+        `
+      } else {
+        await sql`
+          UPDATE facturen SET factuurnummer = ${nieuw}, bijgewerkt_op = NOW()
+          WHERE id = ${k.id} AND factuurnummer = ${k.factuurnummer} AND status = 'concept'
+            AND moneybird_id IS NULL
+            AND NOT EXISTS (SELECT 1 FROM facturen x WHERE x.factuurnummer = ${nieuw})
+        `
+      }
+    }
+    _gemigreerd = true
+  } catch (err) {
+    console.error('[facturen] factuurnummers omzetten naar F<jj><nr> mislukt:', err)
+  }
+}
+
+/** F + 2-cijferig jaar + volgnummer van minimaal 3 cijfers: F26002, F261000 */
+export function factuurnummerVoor(jaar: number, volgnummer: number): string {
+  return `F${String(jaar).slice(-2)}${String(volgnummer).padStart(3, '0')}`
 }
 
 export async function volgendFactuurnummer(jaar = new Date().getFullYear()): Promise<string> {
-  const prefix = `OZV-F-${jaar}-`
+  // Doorlopend over beide vormen in hetzelfde jaar: OZV-F-2026-0002 en F26002 delen de reeks
+  const oud = `OZV-F-${jaar}-`
+  const nieuw = `^F${String(jaar).slice(-2)}[0-9]{3,}$`
   const rows = await sql`
-    SELECT COALESCE(MAX(CAST(split_part(factuurnummer, '-', 4) AS INTEGER)), 0) AS max_nr
-    FROM facturen
-    WHERE factuurnummer LIKE ${prefix + '%'} AND split_part(factuurnummer, '-', 4) ~ '^[0-9]+$'
+    SELECT COALESCE(MAX(nr), 0) AS max_nr FROM (
+      SELECT CAST(split_part(factuurnummer, '-', 4) AS INTEGER) AS nr FROM facturen
+      WHERE factuurnummer LIKE ${oud + '%'} AND split_part(factuurnummer, '-', 4) ~ '^[0-9]+$'
+      UNION ALL
+      SELECT CAST(substr(factuurnummer, 4) AS INTEGER) AS nr FROM facturen
+      WHERE factuurnummer ~ ${nieuw}
+    ) t
   `
-  const volgend = Number(rows[0]?.max_nr ?? 0) + 1
-  return `${prefix}${String(volgend).padStart(4, '0')}`
+  return factuurnummerVoor(jaar, Number(rows[0]?.max_nr ?? 0) + 1)
 }
 
 export type NieuweFactuur = {
@@ -85,13 +146,22 @@ export async function maakFactuur(f: NieuweFactuur): Promise<{ id: number; factu
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 const subtotaal = (regels: Regel[]) => regels.reduce((s, r) => s + Number(r.aantal) * Number(r.prijs), 0)
+/** Regels uit jsonb; vangt ook een (oud) als tekst opgeslagen lijst op */
+const alsLijst = (raw: unknown): Regel[] => {
+  if (Array.isArray(raw)) return raw
+  if (typeof raw === 'string') { try { const p = JSON.parse(raw); if (Array.isArray(p)) return p } catch {} }
+  return []
+}
 
 export function offerteNummer(nr: number | string) {
   return `OZVT-${String(nr).padStart(4, '0')}`
 }
 
-/** Factuur op basis van een offerte; de offertekorting (bedrag in €) wordt een negatieve regel. */
-export async function maakFactuurVanOfferte(offerteId: number) {
+/**
+ * Factuurgegevens uit een offerte: de regels (zonder interne velden), de offertekorting
+ * (bedrag in €) als negatieve regel, en de klant. Offerte-notities zijn intern en gaan nooit mee.
+ */
+async function factuurUitOfferte(offerteId: number) {
   const rows = await sql`SELECT * FROM offertes WHERE id = ${offerteId}`
   const o = rows[0]
   if (!o) throw new Error('Offerte niet gevonden')
@@ -100,21 +170,87 @@ export async function maakFactuurVanOfferte(offerteId: number) {
   if (o.status === 'vervangen') throw new Error('Deze offerte is vervangen; maak de factuur vanuit de nieuwe versie')
   const klus = await sql`SELECT klant_id FROM klussen WHERE id = ${o.klus_id}`
 
-  const regels: Regel[] = Array.isArray(o.regels) ? [...o.regels] : []
+  const btwPct = Number(o.btw_pct ?? 21)
+  const regels: Regel[] = alsLijst(o.regels).map(r => ({
+    omschrijving: r.omschrijving ?? '',
+    ...(r.beschrijving ? { beschrijving: r.beschrijving } : {}),
+    aantal: Number(r.aantal ?? 0),
+    prijs: Number(r.prijs ?? 0),
+    btw: r.btw !== undefined && r.btw !== null && (r.btw as unknown) !== '' ? Number(r.btw) : btwPct,
+  }))
+  if (regels.length === 0) throw new Error('Deze offerte heeft nog geen regels')
   const korting = Math.min(Number(o.korting_pct ?? 0), subtotaal(regels))
   if (korting > 0) {
-    regels.push({ omschrijving: 'Korting', aantal: 1, prijs: -r2(korting), btw: Number(o.btw_pct ?? 21) })
+    regels.push({ omschrijving: 'Korting', aantal: 1, prijs: -r2(korting), btw: btwPct })
   }
 
-  return maakFactuur({
+  return {
     // Getekende offerte: klant ligt vast op de offerte; anders de klant van het project
     klant_id: o.accepted_at ? o.klant_id : (klus[0]?.klant_id ?? o.klant_id),
-    klus_id: o.klus_id,
-    offerte_id: offerteId,
+    klus_id: o.klus_id as number,
     regels,
-    btw_pct: Number(o.btw_pct ?? 21),
+    btw_pct: btwPct,
+  }
+}
+
+/** Factuur op basis van een offerte; de offertekorting (bedrag in €) wordt een negatieve regel. */
+export async function maakFactuurVanOfferte(offerteId: number) {
+  const f = await factuurUitOfferte(offerteId)
+  return maakFactuur({
+    ...f,
+    offerte_id: offerteId,
     notities: null, // offerte-notities zijn intern en horen niet op de factuur (pdf/Moneybird)
   })
+}
+
+/** Waarom een factuur niet (meer) uit een offerte gevuld mag worden, of null als het kan. */
+export function vullenGeblokkeerd(f: any): string | null {
+  if (f.moneybird_id) return 'deze factuur staat al in Moneybird'
+  if (f.status === 'betaald' || f.tikkie_betaald_op) return 'deze factuur is al betaald'
+  if (f.status !== 'concept') return 'deze factuur is al verstuurd'
+  if (f.soort === 'voorschot' || f.soort === 'eind') return 'deze factuur is gesplitst in voorschot en eind'
+  return null
+}
+
+/** Vervangt de regels van een conceptfactuur door die van een offerte uit hetzelfde project. */
+export async function vulFactuurUitOfferte(factuurId: number, offerteId: number) {
+  await ensureFactuurKolommen()
+  const rows = await sql`SELECT * FROM facturen WHERE id = ${factuurId}`
+  const factuur = rows[0]
+  if (!factuur) throw new Error('Factuur niet gevonden')
+  const blokkade = vullenGeblokkeerd(factuur)
+  if (blokkade) throw new Error(`Overnemen kan niet: ${blokkade}`)
+  const o = await factuurUitOfferte(offerteId)
+  if (factuur.klus_id !== o.klus_id) throw new Error('Deze offerte hoort bij een ander project')
+
+  await sql`
+    UPDATE facturen SET regels = ${JSON.stringify(o.regels)}::jsonb, btw_pct = ${o.btw_pct},
+      klant_id = ${o.klant_id}, offerte_id = ${offerteId}, bijgewerkt_op = NOW()
+    WHERE id = ${factuurId} AND status = 'concept' AND moneybird_id IS NULL
+  `
+}
+
+export type ProjectOfferte = { id: number; offertenummer: number; status: string; geaccepteerd: boolean; inclBtw: number }
+
+/** Offertes van een project waaruit gefactureerd kan worden (niet vervangen), nieuwste eerst. */
+export async function offertesVoorFactuur(klusId: number): Promise<ProjectOfferte[]> {
+  const rows = await sql`
+    SELECT id, offertenummer, status, accepted_at, regels, korting_pct, btw_pct FROM offertes
+    WHERE klus_id = ${klusId} AND status <> 'vervangen'
+    ORDER BY datum DESC, id DESC
+  `
+  return rows.filter((o: any) => alsLijst(o.regels).length > 0).map((o: any) => ({
+    id: o.id,
+    offertenummer: o.offertenummer,
+    status: o.status,
+    geaccepteerd: !!o.accepted_at || o.status === 'geaccepteerd',
+    inclBtw: r2(berekenTotalen(alsLijst(o.regels), Number(o.korting_pct ?? 0), Number(o.btw_pct ?? 21)).inclBtw),
+  }))
+}
+
+/** Standaardkeuze: de nieuwste geaccepteerde offerte, anders de nieuwste. */
+export function standaardOfferte(offertes: ProjectOfferte[]): ProjectOfferte | null {
+  return offertes.find(o => o.geaccepteerd) ?? offertes[0] ?? null
 }
 
 /**
@@ -131,7 +267,7 @@ export async function splitsInVoorschot(factuurId: number) {
   if (f.moneybird_id) throw new Error('Splitsen kan niet meer: deze factuur staat al in Moneybird')
   if (f.status === 'betaald' || f.tikkie_betaald_op) throw new Error('Splitsen kan niet meer: deze factuur is al betaald')
 
-  const regels: Regel[] = Array.isArray(f.regels) ? f.regels : []
+  const regels: Regel[] = alsLijst(f.regels)
   const netto = subtotaal(regels)
   if (netto <= 0) throw new Error('Vul eerst de factuurregels in')
   const voorschot = r2(netto / 2)
