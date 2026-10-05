@@ -25,6 +25,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (cur[0]?.status === 'vervangen' && body.status !== 'vervangen') {
       return NextResponse.json({ error: 'Deze offerte is vervangen door een nieuwere versie.' }, { status: 409 })
     }
+    // Alleen status: de notitie blijft staan (een statusknop wiste hem eerder)
+    if (body.status_notitie === undefined) {
+      await sql`UPDATE offertes SET status = ${body.status}, bijgewerkt_op = NOW() WHERE id = ${offerteId}`
+      return NextResponse.json({ ok: true })
+    }
     // Probeer met status_notitie, val terug zonder als kolom nog niet bestaat
     try {
       await sql`UPDATE offertes SET status = ${body.status}, status_notitie = ${body.status_notitie ?? null}, bijgewerkt_op = NOW() WHERE id = ${offerteId}`

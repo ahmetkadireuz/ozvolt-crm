@@ -146,7 +146,7 @@ _Bijgewerkt: 2026-06-05_
 
 - [ ] Projectstatussen moderniseren naar nieuwe flow
 - [ ] Offertenummering → OZV-O-2026-0001 formaat
-- [ ] Factuurnummering → OZV-F-2026-0001 formaat
+- [x] Factuurnummering → F26002 formaat (F + jaar + volgnummer; loopt door na OZV-F-2026-xxxx)
 - [ ] Token-beveiliging PDF-routes voor klantportaal
 - [ ] Mollie webhook signature-verificatie
 - [ ] Inkoop/kosten koppelen aan winstmarge per project

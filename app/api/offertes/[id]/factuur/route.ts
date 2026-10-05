@@ -7,7 +7,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params
 
   try {
-    // Offertekorting gaat mee als negatieve regel; nummer volgens OZV-F-<jaar>-<nr>
+    // Offertekorting gaat mee als negatieve regel; nummer volgens F<jj><nr>
     const factuur = await maakFactuurVanOfferte(parseInt(id))
     return NextResponse.json({ factuurId: factuur.id })
   } catch (err) {

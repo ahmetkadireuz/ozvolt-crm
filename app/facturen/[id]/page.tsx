@@ -11,7 +11,8 @@ import Icon from '@/components/Icon'
 import FactuurForm from './FactuurForm'
 import FactuurActions from './FactuurActions'
 import FactuurKoppelen from '@/app/klussen/[id]/FactuurKoppelen'
-import { ensureFactuurKolommen } from '@/lib/facturen'
+import { ensureFactuurKolommen, offertesVoorFactuur, standaardOfferte, vullenGeblokkeerd } from '@/lib/facturen'
+import RegelsUitOfferte from './RegelsUitOfferte'
 import { ensureTikkieKolommen, tikkieAan, tikkieGeldig } from '@/lib/tikkie'
 
 export const metadata: Metadata = { title: 'Factuur' }
@@ -41,6 +42,11 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
   // Losse factuur (van vóór "project is leidend"): koppelen aan een project van deze klant
   const projectKeuzes = factuur.klus_id ? [] : JSON.parse(JSON.stringify(
     await sql`SELECT id, type_werk, omschrijving, status FROM klussen WHERE klant_id = ${factuur.klant_id} ORDER BY aangemaakt_op DESC`))
+  // Conceptfactuur (niet in Moneybird, niet betaald, niet gesplitst): regels uit een offerte van het project
+  // (niet als hij al uit een offerte gevuld is)
+  const heeftRegels = Array.isArray(factuur.regels) && factuur.regels.length > 0
+  const offertes = factuur.klus_id && !vullenGeblokkeerd(factuur) && !(factuur.offerte_id && heeftRegels)
+    ? await offertesVoorFactuur(factuur.klus_id) : []
   const tikkie = { aan: tikkieAan(), geldig: tikkieGeldig(factuur) }
   const mbConfigured = !!(process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID)
 
@@ -67,6 +73,10 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
 
       {!factuur.klus_id && (
         <FactuurKoppelen factuurId={factuurId} klantId={factuur.klant_id} klantNaam={factuur.klant_naam} projecten={projectKeuzes} />
+      )}
+
+      {offertes.length > 0 && (
+        <RegelsUitOfferte factuurId={factuurId} offertes={offertes} standaardId={standaardOfferte(offertes)?.id ?? null} heeftRegels={heeftRegels} />
       )}
 
       <div className="detail-grid">
