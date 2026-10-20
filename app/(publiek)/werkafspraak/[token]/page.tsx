@@ -2,6 +2,7 @@ import { sql } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import AfspraakSignForm from './AfspraakSignForm'
+import ToelichtingTekst from '@/components/ToelichtingTekst'
 
 const CSS = `
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -107,7 +108,7 @@ export default async function WerkafspraakPage({ params }: { params: Promise<{ t
                   <div className="bullet">{i + 1}</div>
                   <div>
                     <div className="at">{a.omschrijving || '—'}</div>
-                    {a.toelichting && <div className="as">{a.toelichting}</div>}
+                    {a.toelichting && <div className="as"><ToelichtingTekst tekst={a.toelichting} /></div>}
                     {a.verantwoordelijke === 'klant' && <span className="ver ver-klant">Regelt u zelf</span>}
                     {a.verantwoordelijke === 'ozvolt' && <span className="ver ver-ozvolt">Regelt Ozvolt</span>}
                   </div>

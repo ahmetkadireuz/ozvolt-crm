@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Icon from '@/components/Icon'
+import ToelichtingVeld from '@/components/ToelichtingVeld'
 
 interface Item {
   omschrijving: string
@@ -80,11 +81,9 @@ export default function WerkafspraakInlineEditor({ afspraakId, klantId, klusId, 
                     onChange={e => updateItem(i, 'omschrijving', e.target.value)}
                     style={{ fontWeight: 600 }}
                   />
-                  <input
-                    className="form-ctrl"
-                    placeholder="Toelichting (optioneel)"
-                    value={item.toelichting}
-                    onChange={e => updateItem(i, 'toelichting', e.target.value)}
+                  <ToelichtingVeld
+                    value={item.toelichting ?? ''}
+                    onChange={v => updateItem(i, 'toelichting', v)}
                     style={{ fontSize: '.8rem', borderStyle: 'dashed' }}
                   />
                   <select
