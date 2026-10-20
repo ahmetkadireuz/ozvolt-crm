@@ -40,28 +40,7 @@ export function parseUoItems(raw: unknown): UoItem[] {
   return arr.map(normaliseerUoItem).filter(i => i.titel.trim() || i.tekst.trim() || i.meerprijs !== null)
 }
 
-export type TekstBlok = { type: 'lijst'; items: string[] } | { type: 'alinea'; regels: string[] }
-
-/** Regels die met * of - beginnen worden een opsomming; overige regels alinea's (regelafbrekingen behouden). */
-export function tekstBlokken(tekst: string): TekstBlok[] {
-  const blokken: TekstBlok[] = []
-  for (const ruw of tekst.replace(/\r\n?/g, '\n').split('\n')) {
-    const regel = ruw.trimEnd()
-    const m = regel.match(/^\s*[*-]\s*(.*)$/)
-    const laatste = blokken[blokken.length - 1]
-    if (m) {
-      if (laatste?.type === 'lijst') laatste.items.push(m[1])
-      else blokken.push({ type: 'lijst', items: [m[1]] })
-    } else if (!regel.trim()) {
-      blokken.push({ type: 'alinea', regels: [] }) // lege regel sluit het blok af
-    } else if (laatste?.type === 'alinea' && laatste.regels.length > 0) {
-      laatste.regels.push(regel)
-    } else {
-      blokken.push({ type: 'alinea', regels: [regel] })
-    }
-  }
-  return blokken.filter(b => (b.type === 'lijst' ? b.items.length > 0 : b.regels.length > 0))
-}
+export { tekstBlokken, type TekstBlok } from './tekst'
 
 export function meerprijsInclBtw(exclBtw: number, btwPct: number): number {
   return Math.round(exclBtw * (1 + Number(btwPct) / 100) * 100) / 100

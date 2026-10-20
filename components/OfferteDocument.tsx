@@ -3,6 +3,7 @@ import { berekenTotalen, formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
 import UitgangspuntenOptiesWeergave from '@/components/UitgangspuntenOptiesWeergave'
 import { parseUoItems } from '@/lib/uitgangspunten'
+import ToelichtingTekst from '@/components/ToelichtingTekst'
 
 // Offerte zoals de klant hem ziet. Gedeeld door de publieke link (/offerte/<token>)
 // en het klantportaal (/klant/offerte/<id>), zodat beide er precies hetzelfde uitzien.
@@ -351,7 +352,7 @@ export default function OfferteDocument({ o, tekenen, onderaan }: {
                   <div className="od-wa-item" key={i}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>{item.omschrijving || '—'}</div>
-                      {item.toelichting && <div style={{ fontSize: 13, color: '#64748b', marginTop: 3, lineHeight: 1.5 }}>{item.toelichting}</div>}
+                      {item.toelichting && <div style={{ fontSize: 13, color: '#64748b', marginTop: 3, lineHeight: 1.5 }}><ToelichtingTekst tekst={item.toelichting} /></div>}
                     </div>
                     <span className={`od-wa-door od-wa-door-${item.door ?? 'ozvolt'}`}>
                       {item.door === 'klant' ? 'Klant' : item.door === 'gezamenlijk' ? 'Gezamenlijk' : 'Ozvolt'}

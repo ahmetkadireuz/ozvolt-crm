@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 import { ibanAanwezig, ibanLeesbaar } from '@/lib/betalen'
+import { escapeHtml, tekstHtml } from '@/lib/tekst'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -129,7 +130,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         <div class="info-card-label">Documentgegevens</div>
         <div class="meta-row"><span class="meta-k">Nummer</span><span class="meta-v">${afspraakNr}</span></div>
         <div class="meta-row"><span class="meta-k">Datum</span><span class="meta-v">${datum}</span></div>
-        ${w.titel ? `<div class="meta-row"><span class="meta-k">Onderwerp</span><span class="meta-v">${w.titel}</span></div>` : ''}
+        ${w.titel ? `<div class="meta-row"><span class="meta-k">Onderwerp</span><span class="meta-v">${escapeHtml(w.titel)}</span></div>` : ''}
       </div>
     </div>
 
@@ -142,8 +143,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           <li>
             <div class="bullet">${i + 1}</div>
             <div>
-              <div class="afspraak-title">${a.omschrijving || '—'}</div>
-              ${a.toelichting ? `<div class="afspraak-sub">${a.toelichting}</div>` : ''}
+              <div class="afspraak-title">${escapeHtml(a.omschrijving || "—")}</div>
+              ${a.toelichting ? `<div class="afspraak-sub">${tekstHtml(a.toelichting)}</div>` : ''}
               ${a.verantwoordelijke === 'klant'
                 ? `<span class="verantwoordelijkheid ver-klant">Regelt u zelf</span>`
                 : a.verantwoordelijke === 'ozvolt'

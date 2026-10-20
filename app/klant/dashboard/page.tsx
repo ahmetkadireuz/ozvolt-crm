@@ -7,6 +7,8 @@ import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
 import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
 import Icon from '@/components/Icon'
+import ToelichtingTekst from '@/components/ToelichtingTekst'
+import { isMeerregelig } from '@/lib/tekst'
 
 type Regel = { aantal: number; prijs: number }
 
@@ -170,7 +172,9 @@ export default async function KlantDashboard() {
                       <span className="kp-bullet-dot" />
                       <div>
                         <span className="kp-bullet-text">{p.omschrijving}</span>
-                        {p.toelichting && <span className="kp-bullet-toel"> — {p.toelichting}</span>}
+                        {p.toelichting && (isMeerregelig(p.toelichting)
+                          ? <div className="kp-bullet-toel"><ToelichtingTekst tekst={p.toelichting} /></div>
+                          : <span className="kp-bullet-toel"> — {p.toelichting}</span>)}
                         {p.door === 'klant'      && <span className="kp-pill kp-pill-klant">Door u</span>}
                         {p.door === 'gezamenlijk'&& <span className="kp-pill kp-pill-samen">Gezamenlijk</span>}
                       </div>
@@ -236,7 +240,9 @@ export default async function KlantDashboard() {
                         <span className="kp-bullet-dot" />
                         <div>
                           <span className="kp-bullet-text">{a.omschrijving}</span>
-                          {a.toelichting && <span className="kp-bullet-toel"> — {a.toelichting}</span>}
+                          {a.toelichting && (isMeerregelig(a.toelichting)
+                          ? <div className="kp-bullet-toel"><ToelichtingTekst tekst={a.toelichting} /></div>
+                          : <span className="kp-bullet-toel"> — {a.toelichting}</span>)}
                           {a.door === 'klant'      && <span className="kp-pill kp-pill-klant">Door u</span>}
                           {a.door === 'gezamenlijk'&& <span className="kp-pill kp-pill-samen">Gezamenlijk</span>}
                           {a.door === 'ozvolt'     && <span className="kp-pill kp-pill-ozvolt">Door Ozvolt</span>}

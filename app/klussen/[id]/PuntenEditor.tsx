@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAutosave } from '@/lib/use-autosave'
 import Icon from '@/components/Icon'
+import ToelichtingVeld from '@/components/ToelichtingVeld'
 
 interface Punt {
   omschrijving: string
@@ -71,11 +72,9 @@ export default function PuntenEditor({ klusId, initialPunten }: Props) {
                 onChange={e => update(i, 'omschrijving', e.target.value)}
                 style={{ fontWeight: 600 }}
               />
-              <input
-                className="form-ctrl"
-                placeholder="Toelichting (optioneel)"
-                value={p.toelichting}
-                onChange={e => update(i, 'toelichting', e.target.value)}
+              <ToelichtingVeld
+                value={p.toelichting ?? ''}
+                onChange={v => update(i, 'toelichting', v)}
                 style={{ fontSize: '.8rem', borderStyle: 'dashed' }}
               />
               <select

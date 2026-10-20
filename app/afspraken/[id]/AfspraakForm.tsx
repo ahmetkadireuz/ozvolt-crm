@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Icon from '@/components/Icon'
+import ToelichtingVeld from '@/components/ToelichtingVeld'
 
 interface AfspraakItem {
   omschrijving: string
@@ -88,11 +89,10 @@ export default function AfspraakForm({ afspraak, klanten, afspraakId }: { afspra
                   onChange={e => updateItem(i, 'omschrijving', e.target.value)}
                   style={{ fontWeight: 600, marginBottom: 6 }}
                 />
-                <input
-                  className="form-ctrl"
-                  placeholder="Toelichting / voorwaarden (optioneel)"
+                <ToelichtingVeld
+                  placeholder='Toelichting / voorwaarden (optioneel) — begin een regel met "-" voor een opsomming'
                   value={item.toelichting ?? ''}
-                  onChange={e => updateItem(i, 'toelichting', e.target.value)}
+                  onChange={v => updateItem(i, 'toelichting', v)}
                   style={{ fontSize: '.8rem', color: 'var(--text-soft)', fontStyle: 'italic', borderStyle: 'dashed', marginBottom: 6 }}
                 />
                 <select

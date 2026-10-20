@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Icon from '@/components/Icon'
+import ToelichtingVeld from '@/components/ToelichtingVeld'
 
 export interface WaItem {
   omschrijving: string
@@ -114,11 +115,9 @@ export default function WerkafsprakenEditor({ initialItems = [], initialBijlagen
                   onChange={e => updateItem(i, 'omschrijving', e.target.value)}
                   style={{ padding: '7px 10px', fontWeight: 600, marginBottom: 4 }}
                 />
-                <input
-                  className="form-ctrl"
-                  placeholder="Toelichting (optioneel)"
-                  value={item.toelichting}
-                  onChange={e => updateItem(i, 'toelichting', e.target.value)}
+                <ToelichtingVeld
+                  value={item.toelichting ?? ''}
+                  onChange={v => updateItem(i, 'toelichting', v)}
                   style={{ padding: '5px 10px', fontSize: '.8rem', color: 'var(--text-mute)', borderStyle: 'dashed' }}
                 />
               </div>

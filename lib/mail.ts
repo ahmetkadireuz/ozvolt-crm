@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { BEDRIJF, ibanAanwezig, ibanLeesbaar } from '@/lib/betalen'
+import { escapeHtml, tekstHtml } from '@/lib/tekst'
 
 let transporter: nodemailer.Transporter | null = null
 
@@ -343,8 +344,8 @@ export function betaaldBevestigingMailHtml(params: {
                        font-size:11px;font-weight:700;text-align:center;line-height:24px;font-family:${F};">${i + 1}</div>
                 </td>
                 <td style="vertical-align:top;">
-                  <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">${a.omschrijving}</p>
-                  ${a.toelichting ? `<p style="margin:0 0 4px;font-size:12px;color:#64748b;font-family:${F};line-height:1.6;">${a.toelichting}</p>` : ''}
+                  <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">${escapeHtml(a.omschrijving)}</p>
+                  ${a.toelichting ? `<div style="margin:0 0 4px;font-size:12px;color:#64748b;font-family:${F};line-height:1.6;">${tekstHtml(a.toelichting)}</div>` : ''}
                   ${a.verantwoordelijke === 'klant' ? `<span style="display:inline-block;background:#fef9c3;color:#92400e;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:${F};">Regelt u zelf</span>` : ''}
                   ${a.verantwoordelijke === 'ozvolt' ? `<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:${F};">Regelt Ozvolt</span>` : ''}
                 </td>
@@ -419,8 +420,8 @@ export function werkafspraakBevestigingMailHtml(params: {
                        font-size:11px;font-weight:700;text-align:center;line-height:24px;font-family:${F};">${i + 1}</div>
                 </td>
                 <td style="vertical-align:top;">
-                  <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">${a.omschrijving}</p>
-                  ${a.toelichting ? `<p style="margin:0 0 4px;font-size:12px;color:#64748b;font-family:${F};line-height:1.6;">${a.toelichting}</p>` : ''}
+                  <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#1b2d4a;font-family:${F};">${escapeHtml(a.omschrijving)}</p>
+                  ${a.toelichting ? `<div style="margin:0 0 4px;font-size:12px;color:#64748b;font-family:${F};line-height:1.6;">${tekstHtml(a.toelichting)}</div>` : ''}
                   ${a.verantwoordelijke === 'klant' ? `<span style="display:inline-block;background:#fef9c3;color:#92400e;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:${F};">Regelt u zelf</span>` : ''}
                   ${a.verantwoordelijke === 'ozvolt' ? `<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:${F};">Regelt Ozvolt</span>` : ''}
                 </td>
