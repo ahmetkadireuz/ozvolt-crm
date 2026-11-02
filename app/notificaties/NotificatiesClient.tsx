@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Icon, { type IconName } from '@/components/Icon'
+import PushMeldingenKnop from '@/components/PushMeldingenKnop'
 
 type Notif = {
   id: number
@@ -17,6 +18,7 @@ type Notif = {
 const typeConfig: Record<string, { icon: IconName; color: string }> = {
   nieuw_klus:       { icon: 'construction',    color: '#3b82f6' },
   offerte_akkoord:  { icon: 'check-circle',    color: '#16a34a' },
+  offerte_geopend:  { icon: 'eye',             color: '#3E8EDE' },
   factuur_te_laat:  { icon: 'alert-triangle',  color: '#dc2626' },
   afspraak_morgen:  { icon: 'calendar',        color: '#8b5cf6' },
   klus_stilstand:   { icon: 'hourglass',       color: '#f59e0b' },
@@ -72,6 +74,8 @@ export default function NotificatiesClient({ notifs }: { notifs: Notif[] }) {
           </button>
         )}
       </div>
+
+      <PushMeldingenKnop />
 
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>

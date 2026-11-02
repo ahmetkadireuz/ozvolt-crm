@@ -8,6 +8,7 @@ import { formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
 import OfferteDocument, { offerteTotalen } from '@/components/OfferteDocument'
 import SignForm from '@/components/OfferteSignForm'
+import OfferteGeopendMelder from '@/components/OfferteGeopendMelder'
 import crypto from 'crypto'
 
 export default async function KlantOffertePagina({ params }: { params: Promise<{ id: string }> }) {
@@ -34,6 +35,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
 
   return (
     <div>
+      <OfferteGeopendMelder token={o.accept_token} />
       <a href="/klant/dashboard" className="kp-terug">← Terug naar overzicht</a>
       <OfferteDocument
         o={o}

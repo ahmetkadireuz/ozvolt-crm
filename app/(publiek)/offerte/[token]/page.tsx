@@ -3,6 +3,7 @@ import { formatEuro } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import SignForm from '@/components/OfferteSignForm'
+import OfferteGeopendMelder from '@/components/OfferteGeopendMelder'
 import OfferteDocument, { offerteNummer, offerteTotalen } from '@/components/OfferteDocument'
 
 const SITE = 'https://portaal.ozvoltelektro.nl'
@@ -57,6 +58,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
     <>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       <style dangerouslySetInnerHTML={{ __html: PAGINA_CSS }} />
+      <OfferteGeopendMelder token={token} />
         <OfferteDocument
           o={o}
           tekenen={

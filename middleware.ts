@@ -10,6 +10,8 @@ const PUBLIC_PATHS = [
   '/offerte',
   '/werkafspraak',
   '/api/offertes/accepteren',
+  '/sw.js',                  // service worker voor pushmeldingen
+  '/api/offertes/geopend',  // offertepagina meldt eerste opening (alleen token)
   '/api/afspraken/accepteren',
   '/klant/login',
   '/api/klant/login',
