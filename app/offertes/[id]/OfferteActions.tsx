@@ -262,6 +262,11 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
             Verzonden: {new Date(offerte.sent_at).toLocaleString('nl-NL')}
           </div>
         )}
+        {offerte.geopend_op && (
+          <div style={{ fontSize: '.75rem', color: 'var(--text-soft)', marginTop: 4 }}>
+            Geopend door klant: {new Date(offerte.geopend_op).toLocaleString('nl-NL')}
+          </div>
+        )}
         {offerte.accepted_at && (
           <div style={{ fontSize: '.75rem', color: '#16a34a', marginTop: 4, fontWeight: 600 }}>
             ✓ Akkoord ontvangen van {offerte.accepted_name}
