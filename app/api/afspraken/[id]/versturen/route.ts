@@ -30,8 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;">
 <tr><td style="background:#0d1b3e;padding:28px 40px;text-align:center;">
-  <div style="color:#fff;font-size:22px;font-weight:900;">OZVOLT</div>
-  <div style="color:#8ba8c4;font-size:12px;">Elektrotechniek</div>
+  <img src="https://portaal.ozvoltelektro.nl/logo-wit.png?v=3" alt="Ozvolt Elektrotechniek" height="38" style="display:inline-block;height:38px;width:auto;border:0;">
 </td></tr>
 <tr><td style="padding:40px;">
   <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#5b7fa6;text-transform:uppercase;letter-spacing:1.5px;">Werkafspraken</p>

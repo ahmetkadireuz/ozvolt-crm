@@ -122,7 +122,7 @@ export default function FactuurDocument({ f, regels, totalen, iban, tenaamstelli
 
           {/* Header */}
           <div className="od-doc-header">
-            <img src={`${SITE}/logo-wit.png`} alt="Ozvolt Elektrotechniek" className="od-doc-logo" />
+            <img src={`${SITE}/logo-wit.png?v=3`} alt="Ozvolt Elektrotechniek" className="od-doc-logo" />
             <div className="od-doc-meta">
               <div className="od-doc-type">Factuur</div>
               <div className="od-doc-nr">{f.factuurnummer}</div>

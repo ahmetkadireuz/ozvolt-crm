@@ -36,7 +36,7 @@ export async function sendMail(opts: {
   })
 }
 
-const LOGO_URL = 'https://portaal.ozvoltelektro.nl/logo-wit.png'
+const LOGO_URL = 'https://portaal.ozvoltelektro.nl/logo-wit.png?v=3'
 const BRAND = '#1b2d4a'
 const GREEN = '#1a7a3c'
 const TIKKIE = '#413f80'

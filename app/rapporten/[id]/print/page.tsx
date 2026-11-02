@@ -81,7 +81,7 @@ export default async function RapportPrintPagina({ params }: { params: Promise<{
           <header style={{ display: 'grid', gridTemplateColumns: '1fr 64mm', gap: '10mm', color: '#fff', minHeight: '38mm' }}>
             <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-wit.png" alt={BEDRIJF.naam} style={{ width: '40mm', display: 'block', marginBottom: '5mm' }} />
+              <img src="/logo-wit.png?v=3" alt={BEDRIJF.naam} style={{ width: '40mm', display: 'block', marginBottom: '5mm' }} />
               <div style={{ fontSize: '8.5pt', fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.78)' }}>
                 Opleveringsrapport
               </div>
