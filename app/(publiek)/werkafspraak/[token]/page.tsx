@@ -8,7 +8,7 @@ const CSS = `
           body { font-family: 'Poppins', sans-serif; background: #f0f4f8; color: #1d2f4c; font-size: 14px; }
           .wrap { max-width: 740px; margin: 0 auto; padding: 24px 16px 60px; }
           .header { background: #1d2f4c; border-radius: 16px 16px 0 0; padding: 28px 36px; display: flex; justify-content: space-between; align-items: flex-end; }
-          .logo { font-size: 22px; font-weight: 900; color: #fff; }
+          .logo { height: 40px; width: auto; display: block; }
           .sub { font-size: 11px; color: rgba(255,255,255,.5); }
           .doc-nr { font-size: 18px; font-weight: 800; color: #fff; text-align: right; }
           .doc-lbl { font-size: 11px; color: rgba(255,255,255,.5); text-align: right; margin-bottom: 2px; }
@@ -72,8 +72,8 @@ export default async function WerkafspraakPage({ params }: { params: Promise<{ t
         <div className="wrap">
           <div className="header">
             <div>
-              <div className="logo">OZVOLT</div>
-              <div className="sub">Elektrotechniek</div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="logo" src="/logo-wit.png?v=3" alt="Ozvolt Elektrotechniek" />
             </div>
             <div>
               <div className="doc-lbl">Werkafspraken</div>

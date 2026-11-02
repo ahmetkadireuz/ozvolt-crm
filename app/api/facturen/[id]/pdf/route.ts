@@ -170,7 +170,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   <div class="header">
     <div class="header-left">
-      <img class="logo-img" src="https://portaal.ozvoltelektro.nl/logo-wit-site.png" alt="Ozvolt" onerror="this.style.display='none'">
+      <img class="logo-img" src="https://portaal.ozvoltelektro.nl/logo-wit-site.png?v=3" alt="Ozvolt" onerror="this.style.display='none'">
       <div class="company-info">
         <strong>Ozvolt Elektrotechniek</strong><br>
         KVK 99837366 · BTW NL005413208B33

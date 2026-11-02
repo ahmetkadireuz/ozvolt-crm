@@ -95,7 +95,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 <div class="page">
   <div class="header">
     <div class="header-left">
-      <img class="logo-img" src="https://portaal.ozvoltelektro.nl/logo-wit-site.png" alt="Ozvolt Elektrotechniek" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <img class="logo-img" src="https://portaal.ozvoltelektro.nl/logo-wit-site.png?v=3" alt="Ozvolt Elektrotechniek" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
       <div style="display:none;font-size:22px;font-weight:900;color:#fff;margin-bottom:20px;">Ozvolt</div>
       <div class="company-info">
         <strong>Ozvolt Elektrotechniek</strong><br>

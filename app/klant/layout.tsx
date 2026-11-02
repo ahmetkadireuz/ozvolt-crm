@@ -23,7 +23,7 @@ export default function KlantLayout({ children }: { children: React.ReactNode })
         <header className="kp-header">
           <Link href="/klant/dashboard" className="kp-brand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-transparant.png" alt="Ozvolt Elektrotechniek" />
+            <img src="/logo-wit.png?v=3" alt="Ozvolt Elektrotechniek" />
             <span className="kp-brand-tag">Klantportaal</span>
           </Link>
           <a href="mailto:info@ozvoltelektro.nl" className="kp-header-link">

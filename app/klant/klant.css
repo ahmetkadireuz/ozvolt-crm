@@ -41,7 +41,7 @@
   box-shadow: 0 1px 0 rgba(255, 255, 255, .04), 0 6px 20px rgba(13, 24, 41, .12);
 }
 .kp-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
-.kp-brand img { height: 30px; width: auto; display: block; object-fit: contain; filter: brightness(0) invert(1); }
+.kp-brand img { height: 30px; width: auto; display: block; object-fit: contain; }
 .kp-brand-tag {
   color: rgba(255, 255, 255, .6);
   font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
