@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
   if (!o) return NextResponse.json({ ok: true })
 
   const offerteNr = `OZVT-${String(o.offertenummer).padStart(4, '0')}`
-  const siteUrl = process.env.SITE_URL ?? 'https://portaal.ozvoltelektro.nl'
   const titel = `👀 ${o.klant_naam} heeft offerte ${offerteNr} geopend`
 
   try {
@@ -40,7 +39,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[offerte geopend notificatie]', err)
   }
-  await stuurPushMelding({ titel, bericht: 'De klant bekijkt de offerte nu.', link: `${siteUrl}/offertes/${o.id}` })
+  await stuurPushMelding({ titel, bericht: 'De klant bekijkt de offerte nu.', link: `/offertes/${o.id}` })
 
   return NextResponse.json({ ok: true })
 }
