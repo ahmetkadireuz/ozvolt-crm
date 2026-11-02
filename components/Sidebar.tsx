@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
+import Logo from '@/components/Logo'
 import { usePathname } from 'next/navigation'
 import Icon, { IconName } from './Icon'
 import ThemaKnop from './ThemaKnop'
@@ -76,15 +76,7 @@ export default function Sidebar({ nieuwCount = 0, notifCount = 0 }: { nieuwCount
     <>
       <aside className="sidebar" id="sidebar">
         <div className="sb-brand">
-          <Image
-            src="/logo-transparant.png"
-            alt="Ozvolt Elektrotechniek"
-            width={170}
-            height={48}
-            priority
-            className="sb-logo"
-            style={{ objectFit: 'contain', height: 'auto', width: 'auto', maxHeight: 44, maxWidth: '100%' }}
-          />
+          <Logo size={34} variant="neg" />
         </div>
 
         <nav className="sb-nav">

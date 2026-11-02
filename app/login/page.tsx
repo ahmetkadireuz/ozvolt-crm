@@ -1,12 +1,23 @@
 export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import Icon, { type IconName } from '@/components/Icon'
+import Logo, { Bars } from '@/components/Logo'
+import './login.css'
 
 export const metadata: Metadata = { title: 'Inloggen — Ozvolt CRM' }
+
+// Huisstijl 2026 (zie ozvolt-website/CLAUDE.md): navy #1C2A44, staalblauw #5B7A99,
+// accent #3E8EDE, Outfit + JetBrains Mono. De inlogpagina is altijd licht, ook in donkere modus.
+
+const PUNTEN: { icon: IconName; text: string }[] = [
+  { icon: 'construction', text: 'Klussen & klanten beheren' },
+  { icon: 'file-text',    text: 'Offertes & facturen versturen' },
+  { icon: 'calendar',     text: 'Agenda & afspraken plannen' },
+  { icon: 'sparkles',     text: 'AI-gestuurde mails opstellen' },
+]
 
 export default async function LoginPage({
   searchParams,
@@ -19,87 +30,49 @@ export default async function LoginPage({
   const { error } = await searchParams
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      background: 'var(--surface-mute)',
-    }}>
-      {/* Linker paneel — branding */}
-      <div style={{
-        width: '45%',
-        background: 'linear-gradient(160deg, #0d1b3e 0%, #1a3260 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '60px 48px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Decoratieve cirkels */}
-        <div style={{ position: 'absolute', top: -80, right: -80, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
-        <div style={{ position: 'absolute', bottom: -60, left: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
+    <div className="lg">
+      {/* Linker paneel — merk */}
+      <aside className="lg-merk">
+        <Bars variant="neg" thickness={34} gap={26} className="lg-deco" />
 
-        <div style={{ position: 'relative', textAlign: 'center' }}>
-          <div style={{ marginBottom: 18, display: 'flex', justifyContent: 'center' }}>
-            <Image
-              src="/logo-transparant.png"
-              alt="Ozvolt Elektrotechniek"
-              width={220}
-              height={62}
-              priority
-              className="sb-logo"
-              style={{ objectFit: 'contain', height: 'auto', width: 220 }}
-            />
-          </div>
-          <p style={{ color: 'rgba(226,234,245,.6)', margin: '0 0 44px', fontSize: '.82rem', letterSpacing: '.08em', textTransform: 'uppercase', fontWeight: 600 }}>CRM Beheerportaal</p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
-            {([
-              { icon: 'construction', text: 'Klussen & klanten beheren' },
-              { icon: 'file-text',    text: 'Offertes & facturen versturen' },
-              { icon: 'calendar',     text: 'Agenda & afspraken plannen' },
-              { icon: 'sparkles',     text: 'AI-gestuurde mails opstellen' },
-            ] as { icon: IconName; text: string }[]).map(item => (
-              <div key={item.icon} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name={item.icon} size={18} style={{ color: '#fff' }} />
-                </div>
-                <span style={{ color: 'rgba(226,234,245,.72)', fontSize: '.88rem' }}>{item.text}</span>
-              </div>
-            ))}
-          </div>
+        <div className="lg-merk-top">
+          <Logo size={46} variant="neg" />
+          <p className="lg-label">CRM · Beheerportaal</p>
         </div>
 
-        <p style={{ position: 'absolute', bottom: 24, color: 'rgba(226,234,245,.45)', fontSize: '.75rem' }}>
-          © {new Date().getFullYear()} Ozvolt Elektrotechniek · KVK 99837366
+        <div className="lg-merk-midden">
+          <h1 className="lg-kop">
+            Alles voor je klussen,<br />
+            <span>op één plek.</span>
+          </h1>
+          <ul className="lg-punten">
+            {PUNTEN.map(p => (
+              <li key={p.icon}>
+                <span className="lg-punt-ico"><Icon name={p.icon} size={18} /></span>
+                {p.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="lg-voet">
+          © {new Date().getFullYear()} Ozvolt Elektrotechniek · KVK 99837366 · BTW NL005413208B33
         </p>
-      </div>
+      </aside>
 
       {/* Rechter paneel — inlogformulier */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 32px',
-      }}>
-        <div style={{ width: '100%', maxWidth: 380 }}>
-          <div style={{ marginBottom: 36 }}>
-            <h2 style={{ margin: '0 0 6px', fontSize: '1.5rem', fontWeight: 900, color: 'var(--text)' }}>
-              Welkom terug
-            </h2>
-            <p style={{ margin: 0, color: 'var(--text-soft)', fontSize: '.88rem' }}>
-              Log in om het CRM-portaal te openen
-            </p>
-          </div>
+      <main className="lg-form-paneel">
+        <div className="lg-form-wrap">
+          <div className="lg-mobiel-logo"><Logo size={36} variant="pos" /></div>
+
+          <p className="lg-label lg-label-licht">Inloggen</p>
+          <h2 className="lg-welkom">
+            Welkom <span>terug</span>
+          </h2>
+          <p className="lg-sub">Log in om het CRM-portaal te openen.</p>
 
           {error && (
-            <div style={{
-              background: 'var(--soft-red)', border: '1px solid var(--tint-red-bg)', borderRadius: 10,
-              padding: '12px 16px', marginBottom: 20, fontSize: '.85rem', color: '#dc2626',
-              display: 'flex', alignItems: 'center', gap: 8,
-            }}>
+            <div className="lg-fout" role="alert">
               <Icon name="alert-circle" size={18} />
               {error === 'locked'
                 ? 'Te veel pogingen. Probeer het over 5 minuten opnieuw.'
@@ -107,56 +80,35 @@ export default async function LoginPage({
             </div>
           )}
 
-          <form action="/api/auth/login" method="POST" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label className="form-label">Gebruikersnaam</label>
-              <div style={{ position: 'relative' }}>
-                <Icon name="user" size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-soft)', pointerEvents: 'none' }} />
-                <input
-                  className="form-ctrl"
-                  type="text"
-                  name="username"
-                  autoComplete="username"
-                  required
-                  autoFocus
-                  style={{ paddingLeft: 40 }}
-                />
-              </div>
-            </div>
+          <form action="/api/auth/login" method="POST" className="lg-form">
+            <label className="lg-veld">
+              <span>Gebruikersnaam</span>
+              <span className="lg-invoer">
+                <Icon name="user" size={18} />
+                <input type="text" name="username" autoComplete="username" required autoFocus />
+              </span>
+            </label>
 
-            <div>
-              <label className="form-label">Wachtwoord</label>
-              <div style={{ position: 'relative' }}>
-                <Icon name="lock" size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-soft)', pointerEvents: 'none' }} />
-                <input
-                  className="form-ctrl"
-                  type="password"
-                  name="password"
-                  autoComplete="current-password"
-                  required
-                  style={{ paddingLeft: 40 }}
-                />
-              </div>
-            </div>
+            <label className="lg-veld">
+              <span>Wachtwoord</span>
+              <span className="lg-invoer">
+                <Icon name="lock" size={18} />
+                <input type="password" name="password" autoComplete="current-password" required />
+              </span>
+            </label>
 
-            <button
-              type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%', justifyContent: 'center', padding: '13px', fontSize: '.95rem', marginTop: 4, borderRadius: 12 }}
-            >
-              <Icon name="login" size={18} />
+            <button type="submit" className="lg-knop">
               Inloggen
+              <Icon name="login" size={18} />
             </button>
           </form>
 
-          <p style={{ marginTop: 32, textAlign: 'center', fontSize: '.78rem', color: 'var(--text-soft)' }}>
-            Problemen met inloggen? Neem contact op via{' '}
-            <a href="mailto:info@ozvoltelektro.nl" style={{ color: 'var(--text)', fontWeight: 600 }}>
-              info@ozvoltelektro.nl
-            </a>
+          <p className="lg-hulp">
+            Problemen met inloggen? Mail{' '}
+            <a href="mailto:info@ozvoltelektro.nl">info@ozvoltelektro.nl</a>
           </p>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

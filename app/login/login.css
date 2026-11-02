@@ -1,0 +1,193 @@
+/* Inlogpagina — huisstijl 2026 (zelfde kleuren en letters als ozvoltelektro.nl) */
+.lg {
+  --lg-ink: #1C2A44;
+  --lg-deep: #0F1828;
+  --lg-steel: #5B7A99;
+  --lg-sky: #9DB8D3;
+  --lg-accent: #3E8EDE;
+  --lg-accent-dark: #2A6FB5;
+  --lg-mist: #F4F6F9;
+  --lg-line: #E3E8EE;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  background: var(--lg-mist);
+  color: var(--lg-ink);
+  font-family: var(--font-outfit), 'Outfit', var(--font-inter), sans-serif;
+  color-scheme: light;
+}
+
+/* ── Merkpaneel ───────────────────────────────────────── */
+.lg-merk {
+  position: relative;
+  overflow: hidden;
+  width: 46%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 56px 56px 32px;
+  background: radial-gradient(120% 90% at 0% 0%, #23345A 0%, var(--lg-ink) 45%, var(--lg-deep) 100%);
+  color: #fff;
+}
+.lg-deco {
+  position: absolute;
+  right: -90px;
+  bottom: 90px;
+  width: 360px;
+  opacity: .08;
+  pointer-events: none;
+}
+.lg-merk-top, .lg-merk-midden, .lg-voet { position: relative; }
+
+.lg-label {
+  margin: 18px 0 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--lg-sky);
+}
+.lg-label-licht { margin: 0 0 10px; color: var(--lg-steel); }
+
+.lg-kop {
+  margin: 0 0 32px;
+  font-size: clamp(1.9rem, 2.6vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -.02em;
+}
+.lg-kop span { color: var(--lg-accent); }
+
+.lg-punten { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.lg-punten li {
+  display: flex; align-items: center; gap: 14px;
+  font-size: .98rem;
+  color: rgba(255, 255, 255, .78);
+}
+.lg-punt-ico {
+  width: 38px; height: 38px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  background: rgba(157, 184, 211, .12);
+  border: 1px solid rgba(157, 184, 211, .18);
+  color: var(--lg-sky);
+}
+
+.lg-voet {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .68rem;
+  letter-spacing: .04em;
+  color: rgba(157, 184, 211, .55);
+}
+
+/* ── Formulier ────────────────────────────────────────── */
+.lg-form-paneel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+}
+.lg-form-wrap {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 36px 32px;
+  background: #fff;
+  border: 1px solid var(--lg-line);
+  border-radius: 22px;
+  box-shadow: 0 24px 60px -28px rgba(28, 42, 68, .28);
+}
+.lg-mobiel-logo { display: none; margin-bottom: 28px; }
+
+.lg-welkom {
+  margin: 0 0 6px;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+  color: var(--lg-ink);
+}
+.lg-welkom span { color: var(--lg-accent); }
+.lg-sub { margin: 0 0 28px; font-size: .95rem; color: var(--lg-steel); }
+
+.lg-fout {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 20px; padding: 12px 16px;
+  border-radius: 12px;
+  background: #FEF2F2; border: 1px solid #FECACA;
+  color: #B91C1C; font-size: .88rem;
+}
+
+.lg-form { display: flex; flex-direction: column; gap: 16px; }
+.lg-veld > span:first-child {
+  display: block;
+  margin-bottom: 6px;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--lg-ink);
+}
+.lg-invoer { position: relative; display: block; }
+.lg-invoer svg {
+  position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--lg-steel);
+  pointer-events: none;
+}
+.lg-invoer input {
+  width: 100%;
+  padding: 12px 14px 12px 44px;
+  border: 1px solid var(--lg-line);
+  border-radius: 12px;
+  background: var(--lg-mist);
+  color: var(--lg-ink);
+  font: inherit;
+  font-size: 1rem; /* ≥16px: geen inzoomen op iPhone */
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.lg-invoer input:focus {
+  border-color: var(--lg-accent);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(62, 142, 222, .15);
+}
+
+.lg-knop {
+  margin-top: 8px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lg-ink);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.lg-knop:hover { background: var(--lg-accent-dark); }
+.lg-knop:active { transform: translateY(1px); }
+.lg-knop:focus-visible { outline: 2px solid var(--lg-accent); outline-offset: 3px; }
+
+.lg-hulp {
+  margin: 28px 0 0;
+  text-align: center;
+  font-size: .82rem;
+  color: var(--lg-steel);
+}
+.lg-hulp a { color: var(--lg-ink); font-weight: 600; text-decoration: none; }
+.lg-hulp a:hover { color: var(--lg-accent-dark); }
+
+/* ── Mobiel: alleen het formulier, met logo erboven ───── */
+@media (max-width: 860px) {
+  .lg-merk { display: none; }
+  .lg-form-paneel { padding: 32px 16px; align-items: flex-start; padding-top: 12vh; }
+  .lg-form-wrap { padding: 32px 24px 28px; }
+  .lg-mobiel-logo { display: block; }
+}

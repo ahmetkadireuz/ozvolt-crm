@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { requireSession } from '@/lib/session'
 import { sql } from '@/lib/db'
@@ -16,12 +17,26 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
+// Huisstijl 2026: Outfit (logo, koppen inlogpagina) en JetBrains Mono (kleine labels)
+const outfit = localFont({
+  src: './fonts/outfit-latin.woff2',
+  weight: '100 900',
+  display: 'swap',
+  variable: '--font-outfit',
+})
+const mono = localFont({
+  src: './fonts/jetbrains-mono-latin.woff2',
+  weight: '100 800',
+  display: 'swap',
+  variable: '--font-mono',
+})
+
 export const metadata: Metadata = {
   title: { default: 'Ozvolt CRM', template: '%s — Ozvolt CRM' },
   description: 'Ozvolt Elektrotechniek CRM-portaal',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
   manifest: '/manifest.webmanifest',
-  themeColor: '#0d1b3e',
+  themeColor: '#1C2A44',
   appleWebApp: {
     capable: true,
     title: 'Ozvolt',
@@ -29,10 +44,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icon-192.png?v=2', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png?v=2', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.svg?v=3', type: 'image/svg+xml' },
+      { url: '/icon-192.png?v=3', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png?v=3', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/apple-touch-icon.png?v=2',
+    apple: '/apple-touch-icon.png?v=3',
   },
 }
 
@@ -68,7 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="nl" className={`${inter.variable} crm`} suppressHydrationWarning>
+    <html lang="nl" className={`${inter.variable} ${outfit.variable} ${mono.variable} crm`} suppressHydrationWarning>
       <head>
         {/* Gekozen thema toepassen vóór het tekenen (geen witte flits in donkere modus) */}
         <script dangerouslySetInnerHTML={{ __html: THEMA_SCRIPT }} />
