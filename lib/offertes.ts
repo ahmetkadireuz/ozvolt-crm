@@ -21,6 +21,8 @@ export async function ensureOfferteKolommen(): Promise<void> {
   await sql`ALTER TABLE offertes ADD COLUMN IF NOT EXISTS wa_items JSONB DEFAULT '[]'`
   await sql`ALTER TABLE offertes ADD COLUMN IF NOT EXISTS bijlagen JSONB DEFAULT '[]'`
   await sql`ALTER TABLE offertes ADD COLUMN IF NOT EXISTS betaling_50_50 BOOLEAN DEFAULT FALSE`
+  // 'bot' = concept aangemaakt via de bot-API (POST /api/bot/offertes); anders leeg
+  await sql`ALTER TABLE offertes ADD COLUMN IF NOT EXISTS aangemaakt_door TEXT`
   _ensured = true
 }
 
@@ -52,16 +54,44 @@ async function volgendOffertenummer(): Promise<number> {
   return (maxRow[0]?.max_nr ?? 1000) + 1
 }
 
+/**
+ * Unieke index op offertenummer (lazy). Bestaan er al dubbele nummers, dan lukt dat niet;
+ * dat wordt gelogd en de nummering werkt zoals voorheen (zonder retry-garantie).
+ */
+let _uniekGeprobeerd = false
+async function zorgVoorUniekOffertenummer(): Promise<void> {
+  if (_uniekGeprobeerd) return
+  _uniekGeprobeerd = true
+  try {
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS offertes_offertenummer_uniek ON offertes (offertenummer)`
+  } catch (err: any) {
+    console.error('[offertes] unieke index op offertenummer niet aangemaakt (dubbele nummers aanwezig?):', err?.code ?? err)
+  }
+}
+
+/** Voert een INSERT met een vers offertenummer uit; bij een gelijktijdig uitgegeven nummer opnieuw. */
+async function metVolgendOffertenummer<T>(insert: (nr: number) => Promise<T>): Promise<T> {
+  await zorgVoorUniekOffertenummer()
+  for (let poging = 1; ; poging++) {
+    const nr = await volgendOffertenummer()
+    try {
+      return await insert(nr)
+    } catch (err: any) {
+      if (err?.code === '23505' && poging < 5) continue // unique_violation: nummer net vergeven
+      throw err
+    }
+  }
+}
+
 /** Nieuwe, lege concept-offerte in een project; de klant komt van het project. */
 export async function maakOfferteVoorProject(klusId: number): Promise<number> {
   const klus = await sql`SELECT klant_id FROM klussen WHERE id = ${klusId}`
   if (!klus[0]) throw new Error('Project niet gevonden')
-  const nextNr = await volgendOffertenummer()
-  const result = await sql`
+  const result = await metVolgendOffertenummer(nextNr => sql`
     INSERT INTO offertes (offertenummer, klant_id, klus_id, status, datum, geldig_tot, regels, korting_pct, btw_pct)
     VALUES (${nextNr}, ${klus[0].klant_id}, ${klusId}, 'concept', CURRENT_DATE, CURRENT_DATE + INTERVAL '30 days', '[]'::jsonb, 0, 21)
     RETURNING id
-  `
+  `)
   return result[0].id
 }
 
@@ -84,10 +114,9 @@ export async function maakNieuweVersie(oudId: number): Promise<number> {
 
   const klus = o.klus_id ? await sql`SELECT klant_id FROM klussen WHERE id = ${o.klus_id}` : []
   const klantId = klus[0]?.klant_id ?? o.klant_id
-  const nextNr = await volgendOffertenummer()
   const json = (v: unknown) => JSON.stringify(Array.isArray(v) ? v : [])
 
-  const nieuw = await sql`
+  const nieuw = await metVolgendOffertenummer(nextNr => sql`
     INSERT INTO offertes (offertenummer, klant_id, klus_id, status, datum, geldig_tot, regels, korting_pct, btw_pct,
                           notities, wa_items, bijlagen, uo_items, betaling_50_50)
     VALUES (${nextNr}, ${klantId}, ${o.klus_id}, 'concept', CURRENT_DATE, CURRENT_DATE + INTERVAL '30 days',
@@ -95,7 +124,7 @@ export async function maakNieuweVersie(oudId: number): Promise<number> {
             ${o.notities ?? null}, ${json(o.wa_items)}::jsonb, ${json(o.bijlagen)}::jsonb, ${json(o.uo_items)}::jsonb,
             ${!!o.betaling_50_50})
     RETURNING id
-  `
+  `)
   const nieuwId = nieuw[0].id
   await sql`UPDATE offertes SET vervangen_door_id = ${nieuwId} WHERE id = ${oudId}`
   return nieuwId

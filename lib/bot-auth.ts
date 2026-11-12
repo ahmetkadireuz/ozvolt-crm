@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
 /* ============================================================
-   Bot-API (alleen-lezen) — toegang via Authorization: Bearer <sleutel>,
+   Bot-API — toegang via Authorization: Bearer <sleutel>,
    Authorization: <sleutel> of X-API-Key: <sleutel>.
    BOT_API_KEY = scope crm, BOT_API_KEY_FINANCE = scope crm + Moneybird.
    De sleutels worden nooit gelogd of teruggegeven.
+   Alles is alleen-lezen (botAlleenLezen), met één uitzondering:
+   POST /api/bot/offertes maakt een nieuwe concept-offerte, en alleen
+   als BOT_SCHRIJVEN=aan (zie botSchrijfAuth).
    ============================================================ */
 
 const GEEN_HEADERS = { 'Cache-Control': 'no-store' }
@@ -77,6 +80,22 @@ export function botAuth(req: NextRequest, nodig: BotScope = 'crm'): NextResponse
   return null
 }
 
+/** Schrijven via de bot staat alleen aan met env BOT_SCHRIJVEN=aan. */
+export function botSchrijvenAan(): boolean {
+  return (process.env.BOT_SCHRIJVEN ?? '').trim().toLowerCase() === 'aan'
+}
+
+/**
+ * Auth voor de (enige) schrijvende bot-route: eerst de sleutel (401), dan BOT_SCHRIJVEN (403).
+ * Geeft een foutresponse terug, of null als schrijven mag.
+ */
+export function botSchrijfAuth(req: NextRequest, nodig: BotScope = 'crm'): NextResponse | null {
+  const geweigerd = botAuth(req, nodig)
+  if (geweigerd) return geweigerd
+  if (!botSchrijvenAan()) return botJson({ fout: 'Schrijven via de bot staat uit' }, 403)
+  return null
+}
+
 export function botJson(data: unknown, status = 200) {
   return NextResponse.json(data, { status, headers: GEEN_HEADERS })
 }
@@ -85,19 +104,20 @@ export function botGeenToegang() {
   return botJson({ fout: 'Geen toegang' }, 401)
 }
 
-/** 405 voor alles behalve GET — de bot-API is alleen-lezen. */
-export function botMethodeNietToegestaan() {
+/** 405 voor niet-toegestane methodes; `allow` = de methodes die de route wél kent. */
+export function botMethodeNietToegestaan(allow = 'GET') {
   return NextResponse.json(
     { fout: 'Methode niet toegestaan' },
-    { status: 405, headers: { ...GEEN_HEADERS, Allow: 'GET' } },
+    { status: 405, headers: { ...GEEN_HEADERS, Allow: allow } },
   )
 }
 
+const alleenGet = () => botMethodeNietToegestaan('GET')
 export const botAlleenLezen = {
-  POST: botMethodeNietToegestaan,
-  PUT: botMethodeNietToegestaan,
-  PATCH: botMethodeNietToegestaan,
-  DELETE: botMethodeNietToegestaan,
+  POST: alleenGet,
+  PUT: alleenGet,
+  PATCH: alleenGet,
+  DELETE: alleenGet,
 }
 
 /** Offertenummer zoals op de PDF: OZVT-0012 */

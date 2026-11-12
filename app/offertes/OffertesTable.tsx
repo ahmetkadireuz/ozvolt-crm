@@ -80,7 +80,10 @@ export default function OffertesTable({ offertes }: { offertes: any[] }) {
                           {verlopen && <div style={{ color: '#dc2626', fontSize: '.7rem', fontWeight: 700 }}>verlopen</div>}
                         </td>
                         <td className="mono" style={{ fontWeight: 700, color: 'var(--text)' }}>{formatEuro(totalen.inclBtw)}</td>
-                        <td><StatusBadge status={o.status} /></td>
+                        <td>
+                          <StatusBadge status={o.status} />
+                          {o.aangemaakt_door === 'bot' && <span className="badge badge-bot" style={{ marginLeft: 6 }} title="Concept aangemaakt door de offertebot">door bot</span>}
+                        </td>
                         <td onClick={e => e.stopPropagation()}>
                           <div className="row-actions">
                             <a href={`/offertes/${o.id}`} className="btn-open">Openen</a>
@@ -110,6 +113,7 @@ export default function OffertesTable({ offertes }: { offertes: any[] }) {
                     </div>
                     <div className="klus-card-side">
                       <StatusBadge status={o.status} />
+                      {o.aangemaakt_door === 'bot' && <span className="badge badge-bot" title="Concept aangemaakt door de offertebot">door bot</span>}
                       <span className="klus-card-bedrag">{formatEuro(totalen.inclBtw)}</span>
                     </div>
                   </div>

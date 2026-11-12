@@ -90,6 +90,7 @@ export default async function OfferteDetailPage({
             <h1 className="page-title">Offerte {offerteNr}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <StatusBadge status={offerte.status} />
+              {offerte.aangemaakt_door === 'bot' && <span className="badge badge-bot" title="Concept aangemaakt door de offertebot — controleer voor versturen">door bot</span>}
               <span style={{ color: 'var(--text-soft)', fontSize: '.78rem' }}>{offerte.klant_naam}</span>
             </div>
           </div>
