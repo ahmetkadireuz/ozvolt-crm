@@ -639,3 +639,5 @@ textarea.form-ctrl { resize: vertical; min-height: 90px; }
 }
 .alert-warn { background: var(--tint-amber-bg); color: var(--tint-amber); border: 1px solid var(--tint-amber-bg); }
 .badge-vervangen        { background: var(--tint-gray-bg); color: var(--tint-gray); text-decoration: line-through; }
+/* Concept-offerte aangemaakt door de offertebot (offertes.aangemaakt_door = 'bot') */
+.badge-bot              { background: var(--tint-purple-bg); color: var(--tint-purple); }

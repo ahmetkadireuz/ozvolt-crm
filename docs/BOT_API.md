@@ -1,8 +1,8 @@
-# Bot-API (alleen-lezen)
+# Bot-API
 
-Read-only API waarmee de Claude-bots van Ozvolt gegevens uit het CRM (en via het CRM uit Moneybird) kunnen lezen — zonder admin-login en zonder iets te kunnen wijzigen.
+API waarmee de Claude-bots van Ozvolt gegevens uit het CRM (en via het CRM uit Moneybird) kunnen lezen — zonder admin-login. De API is alleen-lezen, met één uitzondering: de offertebot kan een **nieuwe concept-offerte** aanmaken (`POST /api/bot/offertes`, zie onderaan).
 
-- Alleen `GET`; `POST`/`PUT`/`PATCH`/`DELETE` geven `405`.
+- Alleen `GET`; `POST`/`PUT`/`PATCH`/`DELETE` geven `405` — behalve `POST /api/bot/offertes`.
 - Alleen `SELECT`-queries en Moneybird-`GET`-verzoeken. De bot-API maakt geen tabellen of kolommen aan; ontbreekt een (lazy aangemaakte) tabel, dan komt er een lege lijst terug.
 - Geen tokens (publieke links, magic links, betaallinks), wachtwoorden, IP-adressen of Moneybird-credentials in de antwoorden. De Moneybird-token blijft in het CRM.
 - Alle antwoorden: JSON met `Cache-Control: no-store`. Bedragen zijn getallen (euro's, afgerond op 2 decimalen). Datums als `YYYY-MM-DD`.
@@ -134,6 +134,73 @@ Moneybird biedt geen btw-aangifte via de API; het overzicht wordt samengesteld u
 
 ### `GET /api/bot/moneybird/sync-status?jaar=2026`
 Vergelijkt CRM-facturen met Moneybird: aantal gekoppeld, `niet_in_moneybird`, `gekoppeld_maar_niet_gevonden`, `status_verschillen`, `bedrag_verschillen`, `alleen_in_moneybird`. Er wordt niets gesynchroniseerd.
+
+## Schrijven: `POST /api/bot/offertes` (scope crm)
+
+Zet een offerte die de offertebot uit een klantaanvraag heeft gemaakt als **concept** in het CRM. Ahmet controleert het concept en verstuurt het zelf. In de offertelijst en -editor staat een badge **door bot** (`offertes.aangemaakt_door = 'bot'`).
+
+De bot kan hiermee **nooit**: versturen, mailen, de status wijzigen, bestaande offertes/klanten/facturen wijzigen of verwijderen, een nieuwe versie maken of Moneybird aanraken. Een bestaande klant wordt hergebruikt (`vindOfMaakKlant`: nooit dubbel; alleen lege e-mail/telefoon/plaats worden aangevuld, niets overschreven).
+
+Alleen als in Vercel `BOT_SCHRIJVEN=aan` staat (daarna opnieuw deployen). Anders `403`.
+
+### Body (JSON, max. 100 kB)
+
+| Veld | Verplicht | Betekenis |
+|---|---|---|
+| `klant` | ja, tenzij `klus_id` | `{ "id": 12 }` of `{ "naam", "email"?, "telefoon"?, "locatie"?, "type"? ('Particulier' \| 'Zakelijk') }` |
+| `klus_id` | nee | Bestaand project. De klant komt dan van het project (`klant` mag weg; een `klant.id` moet bij het project horen, een klant op naam wordt genegeerd) |
+| `project` | ja, zonder `klus_id` | `{ "type_werk", "omschrijving"? }` — nieuw project met bron `bot` |
+| `regels` | ja | 1–50 regels `{ "omschrijving", "beschrijving"?, "aantal" (> 0), "prijs_ex_btw" (≥ 0), "btw_tarief" (0, 9 of 21) }`. Alle regels hetzelfde tarief (de offerte rekent met één btw-tarief) |
+| `uitgangspunten` | nee | `[{ "titel"?, "tekst" }]` |
+| `opties` | nee | `[{ "titel", "tekst"?, "meerprijs"? }]` — meerprijs ex btw, telt nooit mee in het totaal |
+| `betaalplan` | nee | `volledig` (standaard) of `50_50` |
+| `notities_intern` | nee | Komt in de interne notities; nooit zichtbaar voor de klant |
+
+Teksten worden ingekort tot de limieten van het CRM (omschrijving 500, beschrijving 5000, titel 300, tekst 10000, klantnaam 255 tekens).
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $CRM_BOT_KEY" -H "Content-Type: application/json" \
+  "$CRM/api/bot/offertes" -d '{
+  "klant": { "naam": "J. de Vries", "email": "jdevries@example.nl", "telefoon": "0612345678", "locatie": "Utrecht" },
+  "project": { "type_werk": "Laadpaal", "omschrijving": "Laadpaal 11 kW op de oprit" },
+  "regels": [
+    { "omschrijving": "Laadpaal 11 kW", "aantal": 1, "prijs_ex_btw": 850, "btw_tarief": 21 },
+    { "omschrijving": "Installatie", "beschrijving": "Montage en aansluiten", "aantal": 3, "prijs_ex_btw": 55, "btw_tarief": 21 }
+  ],
+  "uitgangspunten": [{ "titel": "Groepenkast", "tekst": "Er is ruimte voor een extra groep." }],
+  "opties": [{ "titel": "Load balancing", "tekst": "Slim laden op hoofdaansluiting", "meerprijs": 175 }],
+  "betaalplan": "50_50",
+  "notities_intern": "Aanvraag via mail"
+}'
+```
+
+### Antwoord `201`
+
+```json
+{
+  "id": 57, "offertenummer": "OZVT-1057", "klant_id": 31, "klant_bestaand": false, "klus_id": 44,
+  "totalen": { "totaal_ex_btw": 1015, "btw_pct": 21, "btw": 213.15, "totaal_incl_btw": 1228.15,
+               "eerste_termijn_incl_btw": 614.08, "tweede_termijn_incl_btw": 614.07 },
+  "url": "/offertes/57"
+}
+```
+
+Ahmet krijgt een pushmelding "Nieuwe concept-offerte van de bot: OZVT-xxxx – <klant>" met een link naar de offerte.
+
+### Fouten
+
+| Situatie | Status | Body |
+|---|---|---|
+| Geen of foute sleutel | `401` | `{ "fout": "Geen toegang" }` |
+| `BOT_SCHRIJVEN` niet `aan` | `403` | `{ "fout": "Schrijven via de bot staat uit" }` |
+| Ongeldige JSON | `400` | `{ "fout": "Ongeldige JSON" }` |
+| Ongeldige velden | `400` | `{ "fout": "Ongeldige invoer", "velden": { "regels[2].aantal": "Aantal moet groter dan 0 zijn", … } }` |
+| Onbekend `klus_id` / `klant.id` | `404` | `{ "fout": "Project niet gevonden", "velden": { … } }` |
+| Project heeft al een actieve of getekende offerte | `409` | `{ "fout": "Dit project heeft al een actieve offerte", "bestaande_offerte_id": 12 }` |
+| Body groter dan 100 kB | `413` | `{ "fout": "Body is te groot (maximaal 100 kB)" }` |
+| `PUT`/`PATCH`/`DELETE` | `405` | `{ "fout": "Methode niet toegestaan" }` |
+
+Bij een `409` maakt de bot niets aan: geen nieuwe versie, niets vervangen. Laat Ahmet de bestaande offerte aanpassen.
 
 ## Voorbeelden
 
