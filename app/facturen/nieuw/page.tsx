@@ -112,6 +112,7 @@ export default async function NieuweFactuurPage({
                       Op basis van offerte {offerteNr(o.offertenummer)} ({formatEuro(o.inclBtw)} incl. btw)
                       <span style={{ display: 'block', fontSize: '.74rem', color: 'var(--text-soft)' }}>
                         {o.geaccepteerd ? 'Geaccepteerd' : 'Nog niet geaccepteerd'} · regels en korting gaan mee
+                        {o.betaling5050 && ' · 50-50: wordt direct een voorschot- en een eindfactuur'}
                       </span>
                     </span>
                   </label>
@@ -125,7 +126,7 @@ export default async function NieuweFactuurPage({
           )}
 
           <p style={{ fontSize: 12, color: 'var(--text-mute)', margin: 0 }}>
-            50/50 betalen? Vul eerst de regels in en zet daarna op de factuur het 50/50-betaalplan aan.
+            Staat de offerte op 50-50, dan wordt de factuur direct gesplitst in een voorschot- en een eindfactuur; de klant kan beide meteen betalen. Bij een lege factuur: vul eerst de regels in en zet daarna op de factuur het 50/50-betaalplan aan.
           </p>
 
           <div style={{ display: 'flex', gap: 10 }}>

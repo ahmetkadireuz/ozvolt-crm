@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     `,
     sql`
       SELECT id, factuurnummer, status, soort, betaling_50_50, regels, btw_pct,
-             tikkie_token IS NOT NULL AS heeft_token, tikkie_url, tikkie_bedrag_centen, tikkie_verloopt_op,
+             tikkie_token, tikkie_url, tikkie_bedrag_centen, tikkie_verloopt_op,
              tikkie_aangemaakt_op, tikkie_betaald_op
       FROM facturen WHERE status IN ('verstuurd', 'te_laat') OR tikkie_token IS NOT NULL
       ORDER BY id DESC LIMIT 20
@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
       soort: f.soort,
       oude_5050: !!f.betaling_50_50,
       bedrag_centen: factuurBedragCenten(f),
-      heeft_tikkie: f.heeft_token,
+      // Het token zelf gaat nooit mee in het antwoord: alleen ja/nee
+      heeft_tikkie: !!f.tikkie_token,
       tikkie_geldig: tikkieGeldig(f),
       tikkie_bedrag_centen: f.tikkie_bedrag_centen,
       tikkie_verloopt_op: f.tikkie_verloopt_op,

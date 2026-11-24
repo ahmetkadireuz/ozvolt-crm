@@ -35,7 +35,7 @@ export default async function OfferteDetailPage({
         FROM offertes o JOIN klanten kt ON kt.id = o.klant_id
         LEFT JOIN klussen ks ON ks.id = o.klus_id
         WHERE o.id = ${offerteId}`,
-    sql`SELECT id, factuurnummer, status, soort FROM facturen WHERE offerte_id = ${offerteId} ORDER BY id`,
+    sql`SELECT id, factuurnummer, status, soort, moneybird_id IS NOT NULL AS in_moneybird FROM facturen WHERE offerte_id = ${offerteId} ORDER BY id`,
     sql`SELECT id, afspraaknummer, status, accept_token, sent_at FROM werkafspraken WHERE offerte_id = ${offerteId} ORDER BY aangemaakt_op DESC`.catch(() => []),
   ])
 

@@ -6,6 +6,7 @@ import { genereerFactuurPDF } from '@/lib/pdf-factuur'
 import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
 import { idealAan } from '@/lib/betalen'
 import { tikkieAan, zorgVoorTikkie } from '@/lib/tikkie'
+import { zetEindfactuurMeeOpen } from '@/lib/facturen'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -32,6 +33,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const betaalUrl: string | null = idealAan() ? (factuur.betaal_url ?? null) : null
 
   await sql`UPDATE facturen SET status = 'verstuurd', bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+  // 50/50: met de voorschotfactuur wordt ook de eindfactuur zichtbaar en te betalen in het klantportaal
+  await zetEindfactuurMeeOpen(factuurId)
 
   // Tikkie voor het bedrag van déze (deel)factuur. Mislukt het, dan versturen we zonder Tikkie.
   let tikkieUrl: string | null = null

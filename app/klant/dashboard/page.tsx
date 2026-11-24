@@ -7,6 +7,8 @@ import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql, formatEuro } from '@/lib/db'
 import { ensureProjectbeheerTables } from '@/lib/projectbeheer'
 import Icon from '@/components/Icon'
+import { ensureFactuurKolommen } from '@/lib/facturen'
+import { ensureTikkieKolommen, tikkieLinkMetAanmaken } from '@/lib/tikkie'
 
 type Regel = { aantal: number; prijs: number }
 
@@ -58,12 +60,14 @@ export default async function KlantDashboard() {
   if (!klantId) redirect('/klant/geen-toegang')
 
   await ensureProjectbeheerTables()
+  await ensureFactuurKolommen()
+  await ensureTikkieKolommen()
 
   const [klantRows, klussen, offertes, facturen, werkafspraken, rapporten, documenten] = await Promise.all([
     sql`SELECT naam, email, telefoon, locatie FROM klanten WHERE id = ${klantId}`,
     sql`SELECT id, type_werk, omschrijving, status, aangemaakt_op FROM klussen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, klus_id, offertenummer, status, datum, regels, korting_pct, btw_pct, wa_items, bijlagen FROM offertes WHERE klant_id = ${klantId} AND status NOT IN ('concept', 'vervangen') ORDER BY datum DESC`,
-    sql`SELECT id, factuurnummer, status, factuurdatum, regels, btw_pct FROM facturen WHERE klant_id = ${klantId} AND status <> 'concept' ORDER BY factuurdatum DESC`,
+    sql`SELECT * FROM facturen WHERE klant_id = ${klantId} AND status <> 'concept' ORDER BY factuurdatum DESC, id DESC`,
     sql`SELECT id, afspraaknummer, status, datum, titel, afspraken FROM werkafspraken WHERE klant_id = ${klantId} AND jsonb_array_length(afspraken) > 0 ORDER BY datum DESC`,
     sql`SELECT id, klus_id, titel, aangemaakt_op, getekend_op FROM opleveringsrapporten WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
     sql`SELECT id, naam, url, aangemaakt_op FROM groenverklaringen WHERE klant_id = ${klantId} ORDER BY aangemaakt_op DESC`,
@@ -92,11 +96,29 @@ export default async function KlantDashboard() {
 
   const voornaam = (klant.naam ?? '').split(' ')[0] || 'klant'
 
+  // 50/50: voorschot- en eindfactuur horen bij elkaar en staan samen in één kaart, elk met een eigen Tikkie.
+  // De query hierboven filtert op de klant van deze sessie: alleen díe klant krijgt de Tikkie-links.
+  const termijnNaam = (f: any) => f.soort === 'voorschot' ? 'Eerste termijn (50%)' : f.soort === 'eind' ? 'Tweede termijn (50%)' : null
+  const eindVan = new Map<number, any>()
+  for (const f of facturen as any[]) {
+    if (f.soort !== 'voorschot') continue
+    const eind = (facturen as any[]).find(e => e.soort === 'eind' && e.id === f.gekoppelde_factuur_id)
+    if (eind) eindVan.set(f.id, eind)
+  }
+  const inPaar = new Set<number>(Array.from(eindVan.values()).map(e => e.id))
+  const tikkieUrls = new Map<number, string | null>()
+  await Promise.all(Array.from(eindVan.entries()).flatMap(([vId, eind]) => {
+    const v = (facturen as any[]).find(f => f.id === vId)
+    return [v, eind].filter(f => f.status !== 'betaald' && totaalFactuur(f) > 0).map(async f => {
+      tikkieUrls.set(f.id, await tikkieLinkMetAanmaken(f).catch(() => null))
+    })
+  }))
+
   // Openstaande acties voor de klant, bovenaan het portaal
   type Taak = { href: string; soort: 'pay' | 'sign'; titel: string; meta: string; cta: string }
   const teDoen: Taak[] = [
     ...facturen.filter((f: any) => f.status !== 'betaald' && totaalFactuur(f) > 0).map((f: any): Taak => ({
-      href: `/klant/factuur/${f.id}`, soort: 'pay', titel: `Factuur ${f.factuurnummer} betalen`,
+      href: `/klant/factuur/${f.id}`, soort: 'pay', titel: termijnNaam(f) ? `${termijnNaam(f)} betalen · factuur ${f.factuurnummer}` : `Factuur ${f.factuurnummer} betalen`,
       meta: `${formatEuro(totaalFactuur(f))}${f.status === 'te_laat' ? ' · vervaldatum verstreken' : ''}`, cta: 'Betalen',
     })),
     ...offertes.filter((o: any) => o.status === 'gestuurd').map((o: any): Taak => ({
@@ -261,6 +283,36 @@ export default async function KlantDashboard() {
         ) : facturen.map((f: any) => {
           const isBetaald = f.status === 'betaald'
           const bedrag = totaalFactuur(f)
+          // Tweede termijn staat al in de kaart van de eerste
+          if (inPaar.has(f.id)) return null
+          const eind = eindVan.get(f.id)
+          if (eind) return (
+            <div key={f.id} className="kp-card">
+              <div className="kp-card-title">Betaling in twee termijnen</div>
+              <div className="kp-card-meta" style={{ marginBottom: 4 }}>U kunt beide termijnen nu al betalen, elk met een eigen betaallink.</div>
+              {[f, eind].map((t: any, i: number) => {
+                const betaald = t.status === 'betaald'
+                const url = tikkieUrls.get(t.id) ?? `/klant/factuur/${t.id}`
+                return (
+                  <div key={t.id} className="kp-card-row" style={{ alignItems: 'center', paddingTop: 12, marginTop: 12, borderTop: '1px solid var(--kp-line)' }}>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{i === 0 ? 'Eerste termijn (50%)' : 'Tweede termijn (50%)'}</div>
+                      <div className="kp-card-meta">
+                        <Link href={`/klant/factuur/${t.id}`} style={{ color: 'inherit' }}>Factuur {t.factuurnummer}</Link>
+                        {' · '}{i === 0 ? 'bij start' : 'na oplevering'}
+                      </div>
+                    </div>
+                    <div className="kp-card-side">
+                      <div className="kp-card-amount">{formatEuro(totaalFactuur(t))}</div>
+                      {betaald
+                        ? <span className="kp-badge kp-badge-green">✓ Betaald</span>
+                        : <a href={url} className="kp-btn kp-btn-primary" style={{ padding: '8px 14px' }}>Betalen</a>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
           return (
             <Link key={f.id} href={`/klant/factuur/${f.id}`} className="kp-card-link">
               <div className="kp-card">

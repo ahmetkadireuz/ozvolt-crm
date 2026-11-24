@@ -64,7 +64,7 @@ export default async function NieuweOffertePage({
     // Na tekenen loopt meerwerk via het project; een aparte offerte alleen na expliciete keuze
     if (!formData.get('toch_apart') && await getekendeOfferte(klusId)) redirect(`/offertes/nieuw?klus=${klusId}`)
 
-    const id = await maakOfferteVoorProject(klusId)
+    const id = await maakOfferteVoorProject(klusId, { betaling5050: formData.get('betaalplan') === '50_50' })
     redirect(`/offertes/${id}`)
   }
 
@@ -127,16 +127,20 @@ export default async function NieuweOffertePage({
                   </div>
                 </>
               ) : (
+                <>
+                <BetaalplanKeuze />
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button type="submit" className="btn btn-primary">Offerte aanmaken</button>
                   <Link href={terugUrl} className="btn btn-ghost">Annuleren</Link>
                 </div>
+                </>
               )}
             </>
           ) : (
             <>
               <div className="section-label" style={{ marginBottom: 0 }}>Bij welk project hoort de offerte?</div>
               <ProjectKiezer projecten={projecten as any} klanten={klanten as any} klantId={klantId || null} />
+              <BetaalplanKeuze />
               <div style={{ display: 'flex', gap: 10 }}>
                 <button type="submit" className="btn btn-primary">Offerte aanmaken</button>
                 <Link href={terugUrl} className="btn btn-ghost">Annuleren</Link>
@@ -144,6 +148,28 @@ export default async function NieuweOffertePage({
             </>
           )}
         </form>
+      </div>
+    </div>
+  )
+}
+
+/** Betaalplan bij een nieuwe offerte; later te wijzigen op de offerte zolang er geen factuur verstuurd is. */
+function BetaalplanKeuze() {
+  return (
+    <div>
+      <div className="section-label">Betaalplan</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <label className="factuur-bron">
+          <input type="radio" name="betaalplan" value="volledig" defaultChecked />
+          <span>In één keer</span>
+        </label>
+        <label className="factuur-bron">
+          <input type="radio" name="betaalplan" value="50_50" />
+          <span>
+            50-50
+            <span style={{ display: 'block', fontSize: '.74rem', color: 'var(--text-soft)' }}>50% bij start, 50% na oplevering</span>
+          </span>
+        </label>
       </div>
     </div>
   )

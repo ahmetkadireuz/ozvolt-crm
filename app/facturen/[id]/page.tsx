@@ -11,7 +11,8 @@ import Icon from '@/components/Icon'
 import FactuurForm from './FactuurForm'
 import FactuurActions from './FactuurActions'
 import FactuurKoppelen from '@/app/klussen/[id]/FactuurKoppelen'
-import { ensureFactuurKolommen, offertesVoorFactuur, standaardOfferte, vullenGeblokkeerd } from '@/lib/facturen'
+import { ensureFactuurKolommen, offertesVoorFactuur, splitsingControle, standaardOfferte, vullenGeblokkeerd } from '@/lib/facturen'
+import SplitsingHerstellen from './SplitsingHerstellen'
 import RegelsUitOfferte from './RegelsUitOfferte'
 import { ensureTikkieKolommen, tikkieAan, tikkieGeldig } from '@/lib/tikkie'
 
@@ -47,6 +48,8 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
   const heeftRegels = Array.isArray(factuur.regels) && factuur.regels.length > 0
   const offertes = factuur.klus_id && !vullenGeblokkeerd(factuur) && !(factuur.offerte_id && heeftRegels)
     ? await offertesVoorFactuur(factuur.klus_id) : []
+  // Voorschot-/eindfactuur: klopt het voorschot nog met de helft en met de aftrek op de eindfactuur?
+  const splitsing = await splitsingControle(factuurId)
   const tikkie = { aan: tikkieAan(), geldig: tikkieGeldig(factuur) }
   const mbConfigured = !!(process.env.MONEYBIRD_API_TOKEN && process.env.MONEYBIRD_ADMIN_ID)
 
@@ -79,8 +82,11 @@ export default async function FactuurDetailPage({ params }: { params: Promise<{ 
         <RegelsUitOfferte factuurId={factuurId} offertes={offertes} standaardId={standaardOfferte(offertes)?.id ?? null} heeftRegels={heeftRegels} />
       )}
 
+      {splitsing?.afwijkend && <SplitsingHerstellen factuurId={factuurId} controle={splitsing} />}
+
       <div className="detail-grid">
-        <FactuurForm factuur={factuur} factuurId={factuurId} />
+        {/* key: na splitsen/terugdraaien/herstellen het formulier opnieuw opbouwen, zodat het nooit oude regels terugschrijft */}
+        <FactuurForm key={`${factuur.soort}-${factuur.gekoppelde_factuur_id ?? 0}-${factuur.bijgewerkt_op ?? ''}`} factuur={factuur} factuurId={factuurId} />
         <FactuurActions factuur={factuur} factuurId={factuurId} totalen={totalen} mbConfigured={mbConfigured} tikkie={tikkie} />
       </div>
     </div>

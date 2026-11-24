@@ -16,7 +16,7 @@ import { ensureTikkieKolommen, factuurBedragCenten, tikkieLinkMetAanmaken } from
    ============================================================ */
 
 export type OfferteTermijn = {
-  /** 'link' = knop; 'betaald' = ✓ Betaald; 'na_oplevering' = eindfactuur volgt; 'binnenkort' = factuur volgt */
+  /** 'link' = knop; 'betaald' = ✓ Betaald; 'na_oplevering' = alleen nog bij de oude 50/50-werkwijze; 'binnenkort' = factuur volgt */
   status: 'link' | 'betaald' | 'na_oplevering' | 'binnenkort'
   bedrag: number
   url?: string
@@ -73,7 +73,8 @@ export async function offerteBetaling(o: any): Promise<OfferteBetaling> {
       is50_50: true,
       termijnen: [
         await termijnVoorFactuur(voorschot, totaal / 2, legacy1, 'binnenkort'),
-        await termijnVoorFactuur(eind, totaal / 2, legacy2, 'na_oplevering'),
+        // Beide termijnen zijn tegelijk te betalen: de eindfactuur heeft zijn eigen Tikkie
+        await termijnVoorFactuur(eind, totaal / 2, legacy2, 'binnenkort'),
       ],
     }
   }

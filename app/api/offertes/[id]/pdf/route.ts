@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { berekenTotalen, formatEuro } from '@/lib/utils'
+import { berekenTotalen, betaalplanTermijnen, formatEuro } from '@/lib/utils'
 import { requireSession } from '@/lib/session'
 import { ibanAanwezig, ibanLeesbaar } from '@/lib/betalen'
 import { getKlantSessie } from '@/lib/klant-sessie'
@@ -97,6 +97,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     concept: 'Concept', gestuurd: 'Verstuurd',
     geaccepteerd: '✓ Akkoord', verlopen: 'Verlopen', geweigerd: 'Afgewezen',
   }
+
+  // Betaalplan zoals de klant het ook op de online offerte ziet
+  const [termijn1, termijn2] = betaalplanTermijnen(totalen.inclBtw)
+  const betaalplanHtml = totalen.inclBtw <= 0 ? '' : `
+    <div class="plan">
+      <div class="plan-title">Betaling</div>
+      ${o.betaling_50_50 ? `
+      <div class="plan-row"><span>50% bij start (voorschotfactuur)</span><span class="v">${formatEuro(termijn1)}</span></div>
+      <div class="plan-row"><span>50% na oplevering (eindfactuur)</span><span class="v">${formatEuro(termijn2)}</span></div>` : `
+      <div class="plan-row"><span>Betaling na oplevering (u ontvangt de factuur na oplevering)</span><span class="v">${formatEuro(totalen.inclBtw)}</span></div>`}
+      <div class="plan-note">Bedragen incl. ${btwPct}% btw.</div>
+    </div>`
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
@@ -226,6 +238,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .uo-tekst li { position: relative; padding-left: 13px; line-height: 1.5; margin: 2px 0; }
   .uo-tekst li::before { content: ''; position: absolute; left: 2px; top: .6em; width: 4.5px; height: 4.5px; border-radius: 50%; background: var(--navy); }
 
+  /* BETAALPLAN */
+  .plan { margin-top: 22px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; page-break-inside: avoid; }
+  .plan-title { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); padding: 10px 16px 6px; }
+  .plan-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 16px; font-size: 12px; border-top: 1px solid var(--border); }
+  .plan-row .v { font-weight: 700; white-space: nowrap; }
+  .plan-note { font-size: 10px; color: var(--muted); padding: 6px 16px 10px; border-top: 1px solid var(--border); }
+
   /* AKKOORD */
   .akkoord { margin-top: 28px; border: 1.5px dashed var(--border); border-radius: 10px; padding: 20px 22px; }
   .akkoord-title { font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
@@ -347,6 +366,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         <div class="tot-final"><span class="l">Te betalen incl. BTW</span><span class="v">${formatEuro(totalen.inclBtw)}</span></div>
       </div>
     </div>
+
+    ${betaalplanHtml}
 
     ${uoSectieHtml(uoItems, btwPct)}
 

@@ -84,12 +84,14 @@ async function metVolgendOffertenummer<T>(insert: (nr: number) => Promise<T>): P
 }
 
 /** Nieuwe, lege concept-offerte in een project; de klant komt van het project. */
-export async function maakOfferteVoorProject(klusId: number): Promise<number> {
+export async function maakOfferteVoorProject(klusId: number, opts: { betaling5050?: boolean } = {}): Promise<number> {
+  await ensureOfferteKolommen()
   const klus = await sql`SELECT klant_id FROM klussen WHERE id = ${klusId}`
   if (!klus[0]) throw new Error('Project niet gevonden')
   const result = await metVolgendOffertenummer(nextNr => sql`
-    INSERT INTO offertes (offertenummer, klant_id, klus_id, status, datum, geldig_tot, regels, korting_pct, btw_pct)
-    VALUES (${nextNr}, ${klus[0].klant_id}, ${klusId}, 'concept', CURRENT_DATE, CURRENT_DATE + INTERVAL '30 days', '[]'::jsonb, 0, 21)
+    INSERT INTO offertes (offertenummer, klant_id, klus_id, status, datum, geldig_tot, regels, korting_pct, btw_pct, betaling_50_50)
+    VALUES (${nextNr}, ${klus[0].klant_id}, ${klusId}, 'concept', CURRENT_DATE, CURRENT_DATE + INTERVAL '30 days', '[]'::jsonb, 0, 21,
+            ${!!opts.betaling5050})
     RETURNING id
   `)
   return result[0].id

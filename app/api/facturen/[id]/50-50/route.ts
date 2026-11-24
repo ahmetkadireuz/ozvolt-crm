@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/session'
-import { splitsInVoorschot, maakSplitsingOngedaan } from '@/lib/facturen'
+import { splitsInVoorschot, maakSplitsingOngedaan, herstelSplitsing } from '@/lib/facturen'
 
 // 50/50 = voorschotfactuur (50%) + eindfactuur (rest). Twee echte facturen, elk één keer in Moneybird.
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -14,6 +14,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const enabled = !!body?.enabled
 
   try {
+    // Scheefgelopen splitsing (voorschot niet precies de helft) in één stap rechtzetten
+    if (body?.herstel) {
+      const r = await herstelSplitsing(factuurId)
+      return NextResponse.json({ ok: true, ...r })
+    }
     if (enabled) {
       const r = await splitsInVoorschot(factuurId)
       return NextResponse.json({ ok: true, ...r })
