@@ -3,6 +3,7 @@ import { sql, berekenTotalen, formatEuro } from '@/lib/db'
 import { requireSession } from '@/lib/session'
 import { sendMail, offerteMailHtml } from '@/lib/mail'
 import crypto from 'crypto'
+import { offerteMailBetaalUrl } from '@/lib/offerte-betalen'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireSession()) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
@@ -56,7 +57,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         klantNaam: offerte.klant_naam,
         offerteNr,
         acceptUrl,
-        betaalUrl: offerte.betaal_url || undefined,
+        // Tikkie van de factuur (indien al verstuurd); Moneybird-link alleen als iDEAL aan staat
+        betaalUrl: await offerteMailBetaalUrl(offerte),
         totaal: formatEuro(totalen.inclBtw),
         werkafspraakUrl,
         werkafspraakNr,

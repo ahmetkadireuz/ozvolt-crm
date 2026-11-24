@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { OfferteBetaling } from '@/lib/offerte-betalen'
 import { berekenTotalen, formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
 import UitgangspuntenOptiesWeergave from '@/components/UitgangspuntenOptiesWeergave'
@@ -172,8 +173,9 @@ function leesJson(v: any): any[] {
 }
 const leesRegels = leesJson
 
-export default function OfferteDocument({ o, tekenen, onderaan }: {
+export default function OfferteDocument({ o, tekenen, onderaan, betaling }: {
   o: any
+  betaling?: OfferteBetaling | null
   tekenen: ReactNode
   onderaan?: ReactNode
 }) {
@@ -313,31 +315,42 @@ export default function OfferteDocument({ o, tekenen, onderaan }: {
           {/* Opties en uitgangspunten (informatief, telt niet mee in het totaal) */}
           <UitgangspuntenOptiesWeergave items={uoItems} btwPct={btwPct} />
 
-          {/* Betaalknop (alleen als er een betaallink is en de offerte is geaccepteerd) */}
-          {(o.betaal_url || o.betaling_50_50) && isGeaccepteerd && (
+          {/* Betaalknoppen: Tikkie van de factuur bij deze offerte (server-side bepaald) */}
+          {betaling && betaling.termijnen.length > 0 && isGeaccepteerd && (
             <div className="od-blok">
               <div className="od-sec" style={{ marginBottom: 14 }}>Online betalen</div>
-              {o.betaling_50_50 ? (
+              {betaling.is50_50 ? (
                 <div className="od-pay-grid">
-                  <a href={o.betaal_url ?? '#'} className="od-pay-btn od-pay-btn-secondary" style={{ justifyContent: 'center', flexDirection: 'column', textAlign: 'center', gap: 4 }}>
-                    <span style={{ fontSize: 12, fontWeight: 500, opacity: .75 }}>Eerste termijn (50%)</span>
-                    <span>{formatEuro(totalen.inclBtw / 2)}</span>
-                  </a>
-                  {o.betaal_url_2 ? (
-                    <a href={o.betaal_url_2} className="od-pay-btn" style={{ background: '#475569', justifyContent: 'center', flexDirection: 'column', textAlign: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 500, opacity: .75 }}>Tweede termijn (50%)</span>
-                      <span>{formatEuro(totalen.inclBtw / 2)}</span>
-                    </a>
-                  ) : (
-                    <div style={{ fontSize: 13, color: '#64748b', alignSelf: 'center', lineHeight: 1.5 }}>
-                      Tweede termijn (50%): u ontvangt de eindfactuur na oplevering.
-                    </div>
-                  )}
+                  {betaling.termijnen.slice(0, 2).map((t, i) => {
+                    const titel = `${i === 0 ? 'Eerste' : 'Tweede'} termijn (50%)`
+                    const stijl = { justifyContent: 'center', flexDirection: 'column', textAlign: 'center', gap: 4 } as const
+                    if (t.status === 'betaald') return (
+                      <div key={i} className="od-pay-btn" style={{ ...stijl, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', cursor: 'default' }}>
+                        <span style={{ fontSize: 12, fontWeight: 500, opacity: .75 }}>{titel}</span>
+                        <span>✓ Betaald</span>
+                      </div>
+                    )
+                    if (t.status === 'link' && t.url) return (
+                      <a key={i} href={t.url} className={i === 0 ? 'od-pay-btn od-pay-btn-secondary' : 'od-pay-btn'} style={{ ...stijl, ...(i === 1 ? { background: '#475569' } : {}) }}>
+                        <span style={{ fontSize: 12, fontWeight: 500, opacity: .75 }}>{titel}</span>
+                        <span>{formatEuro(t.bedrag)}</span>
+                      </a>
+                    )
+                    return (
+                      <div key={i} style={{ fontSize: 13, color: '#64748b', alignSelf: 'center', lineHeight: 1.5 }}>
+                        {titel}: {t.status === 'na_oplevering' ? 'u ontvangt de eindfactuur na oplevering.' : 'u ontvangt de factuur binnenkort.'}
+                      </div>
+                    )
+                  })}
                 </div>
-              ) : (
-                <a href={o.betaal_url} className="od-pay-btn">
-                  Betalen — {formatEuro(totalen.inclBtw)} →
+              ) : betaling.termijnen[0].status === 'betaald' ? (
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#15803d' }}>✓ Betaald</div>
+              ) : betaling.termijnen[0].status === 'link' && betaling.termijnen[0].url ? (
+                <a href={betaling.termijnen[0].url} className="od-pay-btn">
+                  Betalen — {formatEuro(betaling.termijnen[0].bedrag)} →
                 </a>
+              ) : (
+                <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>U ontvangt de factuur binnenkort.</div>
               )}
             </div>
           )}
