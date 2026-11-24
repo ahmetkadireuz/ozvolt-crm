@@ -211,7 +211,7 @@ function Betaalplan5050({ factuurId, factuur }: { factuurId: number; factuur: an
       <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: 13 }}>50/50 betaalplan</div>
       <div style={{ fontSize: 11, color: 'var(--text-mute)', marginTop: 2, lineHeight: 1.5 }}>
         {soort === 'voorschot' && <>Dit is de <strong>voorschotfactuur</strong> (50%). Het restant staat op de eindfactuur.</>}
-        {soort === 'eind' && <>Dit is de <strong>eindfactuur</strong>. Het betaalde voorschot staat als aftrekregel op de factuur.{factuur.status === 'concept' && ' Nog niet zichtbaar voor de klant: sla hem op (of verstuur hem) na oplevering.'}</>}
+        {soort === 'eind' && <>Dit is de <strong>eindfactuur</strong>. Het betaalde voorschot staat als aftrekregel op de factuur.{factuur.status === 'concept' && ' Nog niet zichtbaar voor de klant: verstuur hem (of zet de status op Verstuurd) na oplevering.'}</>}
         {soort === 'normaal' && !oudeStijl && !blokkade && 'Klant betaalt in 1x. Splitsen maakt een voorschotfactuur (50% bij start) en een eindfactuur (na oplevering).'}
         {soort === 'normaal' && !oudeStijl && blokkade && `Klant betaalt in 1x. Splitsen kan niet meer: deze factuur ${blokkade}.`}
         {oudeStijl && 'Oude 50/50-werkwijze (twee betaallinks op één factuur). Laat deze factuur zo afhandelen.'}

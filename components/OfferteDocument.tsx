@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { OfferteBetaling } from '@/lib/offerte-betalen'
-import { berekenTotalen, formatEuro } from '@/lib/utils'
+import { berekenTotalen, betaalplanTermijnen, formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
 import UitgangspuntenOptiesWeergave from '@/components/UitgangspuntenOptiesWeergave'
 import { parseUoItems } from '@/lib/uitgangspunten'
@@ -95,6 +95,13 @@ export const OD_CSS = `
           .od-pay-btn { display: inline-flex; align-items: center; gap: 8px; background: ${GREEN}; color: #fff; border-radius: 12px; padding: 14px 24px; text-decoration: none; font-weight: 700; font-size: 15px; }
           .od-pay-btn-secondary { background: ${NAVY}; }
           .od-pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+          /* Betaalplan */
+          .od-plan { border: 1px solid #e8edf3; border-radius: 12px; overflow: hidden; }
+          .od-plan-rij { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 13px 18px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+          .od-plan-rij:last-child { border-bottom: none; }
+          .od-plan-rij b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+          .od-plan-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
 
           /* Werkafspraken */
           .od-wa-lijst { border: 1px solid #e8edf3; border-radius: 12px; overflow: hidden; }
@@ -194,6 +201,10 @@ export default function OfferteDocument({ o, tekenen, onderaan, betaling }: {
   const isVervangen = !isGeaccepteerd && o.status === 'vervangen'
   const voornaam = String(o.klant_naam ?? '').trim().split(' ')[0]
   const fmtAantal = (n: any) => Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 2 })
+
+  // Betaalplan: zichtbaar vóór ondertekenen, zodat de klant weet waar hij voor tekent
+  const is5050 = !!o.betaling_50_50 || !!betaling?.is50_50
+  const [termijn1, termijn2] = betaalplanTermijnen(totalen.inclBtw)
 
   const waLink = `https://wa.me/${OZVOLT_WA}?text=${encodeURIComponent(`Hallo Ozvolt, ik heb een vraag over offerte ${offerteNr}.`)}`
 
@@ -314,6 +325,42 @@ export default function OfferteDocument({ o, tekenen, onderaan, betaling }: {
 
           {/* Opties en uitgangspunten (informatief, telt niet mee in het totaal) */}
           <UitgangspuntenOptiesWeergave items={uoItems} btwPct={btwPct} />
+
+          {/* Betaalplan */}
+          {totalen.inclBtw > 0 && (
+            <div className="od-blok">
+              <div className="od-sec">Betaling</div>
+              <div className="od-plan">
+                {is5050 ? (
+                  <>
+                    <div className="od-plan-rij">
+                      <div>
+                        <div style={{ fontWeight: 600 }}>50% bij start</div>
+                        <div className="od-plan-sub">Voorschotfactuur bij aanvang van de werkzaamheden</div>
+                      </div>
+                      <b>{formatEuro(termijn1)}</b>
+                    </div>
+                    <div className="od-plan-rij">
+                      <div>
+                        <div style={{ fontWeight: 600 }}>50% na oplevering</div>
+                        <div className="od-plan-sub">Eindfactuur na oplevering</div>
+                      </div>
+                      <b>{formatEuro(termijn2)}</b>
+                    </div>
+                  </>
+                ) : (
+                  <div className="od-plan-rij">
+                    <div>
+                      <div style={{ fontWeight: 600 }}>Betaling na oplevering</div>
+                      <div className="od-plan-sub">U ontvangt de factuur na oplevering van de werkzaamheden</div>
+                    </div>
+                    <b>{formatEuro(totalen.inclBtw)}</b>
+                  </div>
+                )}
+              </div>
+              <div className="od-plan-sub" style={{ marginTop: 8 }}>Bedragen incl. {btwPct}% btw.</div>
+            </div>
+          )}
 
           {/* Betaalknoppen: Tikkie van de factuur bij deze offerte (server-side bepaald) */}
           {betaling && betaling.termijnen.length > 0 && isGeaccepteerd && (

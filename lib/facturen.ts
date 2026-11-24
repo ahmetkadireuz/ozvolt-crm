@@ -190,17 +190,25 @@ async function factuurUitOfferte(offerteId: number) {
     klus_id: o.klus_id as number,
     regels,
     btw_pct: btwPct,
+    betaling_50_50: !!o.betaling_50_50,
   }
 }
 
-/** Factuur op basis van een offerte; de offertekorting (bedrag in €) wordt een negatieve regel. */
-export async function maakFactuurVanOfferte(offerteId: number) {
+/**
+ * Factuur op basis van een offerte; de offertekorting (bedrag in €) wordt een negatieve regel.
+ * Staat de offerte op 50/50, dan wordt de factuur direct gesplitst in een voorschotfactuur
+ * (het teruggegeven id) en een eindfactuur die concept blijft tot na oplevering.
+ */
+export async function maakFactuurVanOfferte(offerteId: number, opts: { autoSplits?: boolean } = {}) {
   const f = await factuurUitOfferte(offerteId)
-  return maakFactuur({
-    ...f,
+  const { betaling_50_50: _plan, ...basis } = f
+  const factuur = await maakFactuur({
+    ...basis,
     offerte_id: offerteId,
     notities: null, // offerte-notities zijn intern en horen niet op de factuur (pdf/Moneybird)
   })
+  if (f.betaling_50_50 && opts.autoSplits !== false) await splitsInVoorschot(factuur.id)
+  return factuur
 }
 
 /** Waarom een factuur niet (meer) uit een offerte gevuld mag worden, of null als het kan. */
@@ -208,7 +216,7 @@ export function vullenGeblokkeerd(f: any): string | null {
   if (f.moneybird_id) return 'deze factuur staat al in Moneybird'
   if (f.status === 'betaald' || f.tikkie_betaald_op) return 'deze factuur is al betaald'
   if (f.status !== 'concept') return 'deze factuur is al verstuurd'
-  if (f.soort === 'voorschot' || f.soort === 'eind') return 'deze factuur is gesplitst in voorschot en eind'
+  if (isGesplitst(f)) return 'deze factuur is gesplitst in voorschot en eind'
   return null
 }
 
@@ -230,12 +238,12 @@ export async function vulFactuurUitOfferte(factuurId: number, offerteId: number)
   `
 }
 
-export type ProjectOfferte = { id: number; offertenummer: number; status: string; geaccepteerd: boolean; inclBtw: number }
+export type ProjectOfferte = { id: number; offertenummer: number; status: string; geaccepteerd: boolean; inclBtw: number; betaling5050: boolean }
 
 /** Offertes van een project waaruit gefactureerd kan worden (niet vervangen), nieuwste eerst. */
 export async function offertesVoorFactuur(klusId: number): Promise<ProjectOfferte[]> {
   const rows = await sql`
-    SELECT id, offertenummer, status, accepted_at, regels, korting_pct, btw_pct FROM offertes
+    SELECT * FROM offertes
     WHERE klus_id = ${klusId} AND status <> 'vervangen'
     ORDER BY datum DESC, id DESC
   `
@@ -245,12 +253,120 @@ export async function offertesVoorFactuur(klusId: number): Promise<ProjectOffert
     status: o.status,
     geaccepteerd: !!o.accepted_at || o.status === 'geaccepteerd',
     inclBtw: r2(berekenTotalen(alsLijst(o.regels), Number(o.korting_pct ?? 0), Number(o.btw_pct ?? 21)).inclBtw),
+    betaling5050: !!o.betaling_50_50,
   }))
 }
 
 /** Standaardkeuze: de nieuwste geaccepteerde offerte, anders de nieuwste. */
 export function standaardOfferte(offertes: ProjectOfferte[]): ProjectOfferte | null {
   return offertes.find(o => o.geaccepteerd) ?? offertes[0] ?? null
+}
+
+/** Voorschot- of eindfactuur: de regels liggen vast en horen bij de andere helft. */
+export function isGesplitst(f: { soort?: string | null } | null | undefined): boolean {
+  return f?.soort === 'voorschot' || f?.soort === 'eind'
+}
+
+const AFTREK_PREFIX = 'Af: voorschotfactuur'
+const isAftrekRegel = (r: Regel) => Number(r.prijs) < 0 && String(r.omschrijving ?? '').startsWith(AFTREK_PREFIX)
+const aftrekRegel = (voorschotNummer: string, voorschot: number, btw: number): Regel =>
+  ({ omschrijving: `${AFTREK_PREFIX} ${voorschotNummer}`, aantal: 1, prijs: -voorschot, btw })
+
+async function voorschotRegel(f: any, eindNummer: string, voorschot: number, btw: number): Promise<Regel> {
+  let bron = 'de werkzaamheden'
+  if (f.offerte_id) {
+    const o = await sql`SELECT offertenummer FROM offertes WHERE id = ${f.offerte_id}`
+    if (o[0]) bron = `offerte ${offerteNummer(o[0].offertenummer)}`
+  }
+  return { omschrijving: `Voorschot 50% op ${bron}`, beschrijving: `Restant volgt op eindfactuur ${eindNummer}`, aantal: 1, prijs: voorschot, btw }
+}
+
+export type SplitsingControle = {
+  /** true = de voorschotfactuur is niet (meer) precies de helft / komt niet overeen met de aftrek op de eindfactuur */
+  afwijkend: boolean
+  voorschotNummer: string
+  eindNummer: string
+  /** Bedragen incl. btw */
+  voorschotNu: number
+  voorschotHoort: number
+  aftrekNu: number
+  /** Waarom herstellen niet (meer) kan, of null */
+  blokkade: string | null
+}
+
+/**
+ * Controleert een voorschot-/eindfactuurpaar: het voorschot hoort de helft te zijn van alle regels
+ * (de eindfactuur zonder aftrekregel) en gelijk aan de "Af: voorschotfactuur"-regel op de eindfactuur.
+ */
+export function controleerSplitsing(voorschot: any, eind: any): SplitsingControle {
+  const btw = Number(eind?.btw_pct ?? voorschot?.btw_pct ?? 21)
+  const incl = (netto: number) => r2(netto * (1 + btw / 100))
+  const eindRegels = alsLijst(eind?.regels)
+  const volledig = subtotaal(eindRegels.filter(r => !isAftrekRegel(r)))
+  const aftrek = -subtotaal(eindRegels.filter(isAftrekRegel))
+  const voorschotNu = subtotaal(alsLijst(voorschot?.regels))
+  const hoort = r2(volledig / 2)
+  const gelijk = (a: number, b: number) => Math.abs(a - b) < 0.005
+  const paar = [voorschot, eind]
+  return {
+    afwijkend: !gelijk(voorschotNu, hoort) || !gelijk(aftrek, hoort),
+    voorschotNummer: voorschot?.factuurnummer ?? '',
+    eindNummer: eind?.factuurnummer ?? '',
+    voorschotNu: incl(voorschotNu),
+    voorschotHoort: incl(hoort),
+    aftrekNu: incl(aftrek),
+    blokkade: paar.some(x => x?.moneybird_id) ? 'een van beide facturen staat al in Moneybird'
+      : paar.some(x => x?.status === 'betaald' || x?.tikkie_betaald_op) ? 'een van beide facturen is al betaald'
+      : volledig <= 0 ? 'de eindfactuur heeft geen regels meer' : null,
+  }
+}
+
+async function splitsPaar(factuurId: number) {
+  const rows = await sql`SELECT * FROM facturen WHERE id = ${factuurId}`
+  const f = rows[0]
+  if (!f) throw new Error('Factuur niet gevonden')
+  if (!isGesplitst(f) || !f.gekoppelde_factuur_id) return null
+  const andere = (await sql`SELECT * FROM facturen WHERE id = ${f.gekoppelde_factuur_id}`)[0]
+  if (!andere) return null
+  return f.soort === 'voorschot' ? { voorschot: f, eind: andere } : { voorschot: andere, eind: f }
+}
+
+/** Controle voor het factuurscherm; null als de factuur niet gesplitst is of de andere helft ontbreekt. */
+export async function splitsingControle(factuurId: number): Promise<SplitsingControle | null> {
+  const paar = await splitsPaar(factuurId)
+  return paar ? controleerSplitsing(paar.voorschot, paar.eind) : null
+}
+
+/**
+ * Herstelt een scheefgelopen splitsing in één stap: het resultaat is hetzelfde als de splitsing
+ * ongedaan maken en opnieuw splitsen (voorschot = 50% van alle regels, eindfactuur = alle regels
+ * minus dat voorschot), maar beide facturen houden hun nummer. Zelfde voorwaarden als
+ * maakSplitsingOngedaan: niet in Moneybird en niet betaald.
+ */
+export async function herstelSplitsing(factuurId: number) {
+  await ensureFactuurKolommen()
+  const paar = await splitsPaar(factuurId)
+  if (!paar) throw new Error('Deze factuur is niet gesplitst')
+  const { voorschot, eind } = paar
+  const c = controleerSplitsing(voorschot, eind)
+  if (c.blokkade) throw new Error(`Herstellen kan niet: ${c.blokkade}`)
+
+  const regels = alsLijst(eind.regels).filter(r => !isAftrekRegel(r))
+  const btw = Number(eind.btw_pct ?? 21)
+  const bedrag = r2(subtotaal(regels) / 2)
+  await sql`
+    UPDATE facturen SET
+      regels = ${JSON.stringify([await voorschotRegel(voorschot, eind.factuurnummer, bedrag, btw)])}::jsonb,
+      btw_pct = ${btw}, betaling_50_50 = FALSE, bijgewerkt_op = NOW()
+    WHERE id = ${voorschot.id}
+  `
+  await sql`
+    UPDATE facturen SET
+      regels = ${JSON.stringify([...regels, aftrekRegel(voorschot.factuurnummer, bedrag, btw)])}::jsonb,
+      bijgewerkt_op = NOW()
+    WHERE id = ${eind.id}
+  `
+  return { voorschotId: voorschot.id as number, eindId: eind.id as number }
 }
 
 /**
@@ -273,18 +389,12 @@ export async function splitsInVoorschot(factuurId: number) {
   const voorschot = r2(netto / 2)
   const btw = Number(f.btw_pct ?? 21)
 
-  let bron = 'de werkzaamheden'
-  if (f.offerte_id) {
-    const o = await sql`SELECT offertenummer FROM offertes WHERE id = ${f.offerte_id}`
-    if (o[0]) bron = `offerte ${offerteNummer(o[0].offertenummer)}`
-  }
-
   const eind = await maakFactuur({
     klant_id: f.klant_id,
     klus_id: f.klus_id,
     offerte_id: f.offerte_id,
     betalingstermijn: f.betalingstermijn ?? 14,
-    regels: [...regels, { omschrijving: `Af: voorschotfactuur ${f.factuurnummer}`, aantal: 1, prijs: -voorschot, btw }],
+    regels: [...regels, aftrekRegel(f.factuurnummer, voorschot, btw)],
     btw_pct: btw,
     notities: f.notities,
     soort: 'eind',
@@ -293,7 +403,7 @@ export async function splitsInVoorschot(factuurId: number) {
 
   await sql`
     UPDATE facturen SET
-      regels = ${JSON.stringify([{ omschrijving: `Voorschot 50% op ${bron}`, beschrijving: `Restant volgt op eindfactuur ${eind.factuurnummer}`, aantal: 1, prijs: voorschot, btw }])}::jsonb,
+      regels = ${JSON.stringify([await voorschotRegel(f, eind.factuurnummer, voorschot, btw)])}::jsonb,
       soort = 'voorschot',
       gekoppelde_factuur_id = ${eind.id},
       betaling_50_50 = FALSE,
@@ -317,8 +427,7 @@ export async function maakSplitsingOngedaan(factuurId: number) {
     throw new Error('Terugdraaien kan niet meer: een van beide facturen staat al in Moneybird of is betaald')
   }
   const eind = paar.find((x: any) => x.id === eindId)
-  const regels: Regel[] = (Array.isArray(eind?.regels) ? eind.regels : [])
-    .filter((r: Regel) => !(Number(r.prijs) < 0 && String(r.omschrijving).startsWith('Af: voorschotfactuur')))
+  const regels: Regel[] = alsLijst(eind?.regels).filter(r => !isAftrekRegel(r))
 
   await sql`
     UPDATE facturen SET regels = ${JSON.stringify(regels)}::jsonb, soort = 'normaal',

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { formatEuro } from '@/lib/utils'
+import { formatEuro, betaalplanTermijnen, betaalplanVergrendeld } from '@/lib/utils'
 import Icon from '@/components/Icon'
 import WhatsAppKnop from './WhatsAppKnop'
 import PortaalOpenKnop from '@/components/PortaalOpenKnop'
@@ -88,6 +88,26 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
 
   const [betaallinkLoading, setBetaallinkLoading] = useState(false)
 
+  // Betaalplan (los van Moneybird): te wijzigen tot er een factuur bij de offerte verstuurd is
+  const is5050 = !!offerte.betaling_50_50
+  const planVast = betaalplanVergrendeld(offerte, facturen)
+  const [termijn1, termijn2] = betaalplanTermijnen(totalen.inclBtw)
+  const [planBezig, setPlanBezig] = useState(false)
+
+  async function kiesBetaalplan(split: boolean) {
+    if (split === is5050 || planVast) return
+    setPlanBezig(true)
+    const res = await fetch(`/api/offertes/${offerteId}/betaalplan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ betaling_50_50: split }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setPlanBezig(false)
+    if (!res.ok) alert('Betaalplan wijzigen mislukt: ' + (data?.error ?? `Serverfout ${res.status}`))
+    router.refresh()
+  }
+
   async function maakBetaallinks(split: boolean) {
     const vraag = split
       ? 'Voorschotfactuur (50%) aanmaken en in Moneybird zetten? De eindfactuur (restant) blijft als concept klaarstaan voor na oplevering.'
@@ -144,6 +164,43 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         {Number(offerte.korting_pct) > 0 && (
           <div style={{ fontSize: '.78rem', color: '#dc2626', marginTop: 2 }}>{formatEuro(Number(offerte.korting_pct))} korting toegepast</div>
         )}
+      </div>
+
+      {/* Betaalplan */}
+      <div className="card">
+        <div className="section-label">Betaalplan</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {[
+            { split: false, label: 'In één keer', sub: 'Volledig bedrag na oplevering' },
+            { split: true, label: '50-50', sub: '50% bij start, 50% na oplevering' },
+          ].map(k => (
+            <button
+              key={k.label}
+              type="button"
+              onClick={() => kiesBetaalplan(k.split)}
+              className={`btn btn-sm ${is5050 === k.split ? 'btn-primary' : 'btn-ghost'}`}
+              style={{ justifyContent: 'space-between', textAlign: 'left' }}
+              disabled={planBezig || (!!planVast && is5050 !== k.split)}
+              aria-pressed={is5050 === k.split}
+            >
+              <span>{k.label} <span style={{ fontWeight: 400, opacity: .8 }}>· {k.sub}</span></span>
+              {is5050 === k.split && <Icon name="check" size={14} />}
+            </button>
+          ))}
+        </div>
+        {is5050 && totalen.inclBtw > 0 && (
+          <div style={{ fontSize: '.78rem', color: 'var(--text-2)', marginTop: 8, lineHeight: 1.6 }}>
+            Bij start: <strong>{formatEuro(termijn1)}</strong><br />
+            Na oplevering: <strong>{formatEuro(termijn2)}</strong>
+          </div>
+        )}
+        <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginTop: 6, lineHeight: 1.5 }}>
+          {planVast
+            ? `Het betaalplan ligt vast: ${planVast}.`
+            : facturen.length > 0
+            ? 'De klant ziet het betaalplan op de offerte en de PDF. Let op: de bestaande conceptfactuur verandert niet mee; splits hem op de factuur of draai de splitsing daar terug.'
+            : 'De klant ziet het betaalplan op de offerte en de PDF. Bij 50-50 maakt "Factuur aanmaken" direct een voorschot- en een eindfactuur.'}
+        </div>
       </div>
 
       {/* Werkafspraken */}
@@ -278,7 +335,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
       {facturen.length === 0 && kanFactureren && (
         <button type="button" className="btn btn-success" style={{ width: '100%', justifyContent: 'center' }} onClick={maakFactuur} disabled={factuurBezig}>
           <Icon name="receipt" size={16} />
-          {factuurBezig ? 'Aanmaken…' : 'Factuur aanmaken'}
+          {factuurBezig ? 'Aanmaken…' : is5050 ? 'Facturen aanmaken (voorschot + eind)' : 'Factuur aanmaken'}
         </button>
       )}
       {facturen.map((f: any) => (

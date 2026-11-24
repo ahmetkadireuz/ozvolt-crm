@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       LIMIT 1
     `
     if (bestaand[0]?.soort === 'voorschot') split = true
-    let factuurId: number = bestaand[0]?.id ?? (await maakFactuurVanOfferte(offerteId)).id
+    let factuurId: number = bestaand[0]?.id ?? (await maakFactuurVanOfferte(offerteId, { autoSplits: false })).id
 
     if (split && bestaand[0]?.soort !== 'voorschot') {
       const f = bestaand[0]
