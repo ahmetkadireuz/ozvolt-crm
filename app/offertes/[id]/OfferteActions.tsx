@@ -110,7 +110,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
 
   async function maakBetaallinks(split: boolean) {
     const vraag = split
-      ? 'Voorschotfactuur (50%) aanmaken en in Moneybird zetten? De eindfactuur (restant) blijft als concept klaarstaan voor na oplevering.'
+      ? 'Voorschotfactuur (50%) aanmaken en in Moneybird zetten? De eindfactuur (restant) wordt meteen ook zichtbaar voor de klant, maar gaat pas naar Moneybird als je hem daar zelf verwerkt.'
       : 'Factuur (100%) aanmaken en in Moneybird zetten met een online betaallink?'
     if (!confirm(vraag)) return
     setBetaallinkLoading(true)
@@ -199,7 +199,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
             ? `Het betaalplan ligt vast: ${planVast}.`
             : facturen.length > 0
             ? 'De klant ziet het betaalplan op de offerte en de PDF. Let op: de bestaande conceptfactuur verandert niet mee; splits hem op de factuur of draai de splitsing daar terug.'
-            : 'De klant ziet het betaalplan op de offerte en de PDF. Bij 50-50 maakt "Factuur aanmaken" direct een voorschot- en een eindfactuur.'}
+            : 'De klant ziet het betaalplan op de offerte en de PDF. Bij 50-50 maakt "Factuur aanmaken" direct een voorschot- en een eindfactuur; de klant kan beide meteen betalen.'}
         </div>
       </div>
 

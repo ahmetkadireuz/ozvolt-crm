@@ -343,7 +343,7 @@ export default function OfferteDocument({ o, tekenen, onderaan, betaling }: {
                     <div className="od-plan-rij">
                       <div>
                         <div style={{ fontWeight: 600 }}>50% na oplevering</div>
-                        <div className="od-plan-sub">Eindfactuur na oplevering</div>
+                        <div className="od-plan-sub">Eindfactuur; u kunt deze ook eerder al voldoen</div>
                       </div>
                       <b>{formatEuro(termijn2)}</b>
                     </div>

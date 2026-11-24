@@ -126,7 +126,7 @@ export default async function NieuweFactuurPage({
           )}
 
           <p style={{ fontSize: 12, color: 'var(--text-mute)', margin: 0 }}>
-            Staat de offerte op 50-50, dan wordt de factuur direct gesplitst in een voorschot- en een eindfactuur. Bij een lege factuur: vul eerst de regels in en zet daarna op de factuur het 50/50-betaalplan aan.
+            Staat de offerte op 50-50, dan wordt de factuur direct gesplitst in een voorschot- en een eindfactuur; de klant kan beide meteen betalen. Bij een lege factuur: vul eerst de regels in en zet daarna op de factuur het 50/50-betaalplan aan.
           </p>
 
           <div style={{ display: 'flex', gap: 10 }}>

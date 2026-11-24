@@ -197,7 +197,7 @@ async function factuurUitOfferte(offerteId: number) {
 /**
  * Factuur op basis van een offerte; de offertekorting (bedrag in €) wordt een negatieve regel.
  * Staat de offerte op 50/50, dan wordt de factuur direct gesplitst in een voorschotfactuur
- * (het teruggegeven id) en een eindfactuur die concept blijft tot na oplevering.
+ * (het teruggegeven id) en een eindfactuur; die wordt zichtbaar zodra de voorschotfactuur verstuurd is.
  */
 export async function maakFactuurVanOfferte(offerteId: number, opts: { autoSplits?: boolean } = {}) {
   const f = await factuurUitOfferte(offerteId)
@@ -321,6 +321,24 @@ export function controleerSplitsing(voorschot: any, eind: any): SplitsingControl
   }
 }
 
+/** Standaard betalingstermijn (dagen) van een eindfactuur: ruimer, want hij staat al vóór oplevering klaar. */
+export const EIND_BETALINGSTERMIJN = 30
+
+/**
+ * Bij 50/50 zijn beide termijnen tegelijk zichtbaar en te betalen: zodra de voorschotfactuur
+ * de deur uit is (niet meer concept), gaat de eindfactuur mee naar 'verstuurd' met de datum van vandaag.
+ * factuurId mag de voorschot- of de eindfactuur zijn. Idempotent.
+ */
+export async function zetEindfactuurMeeOpen(factuurId: number): Promise<void> {
+  await sql`
+    UPDATE facturen e SET status = 'verstuurd', factuurdatum = CURRENT_DATE, bijgewerkt_op = NOW()
+    FROM facturen v
+    WHERE v.soort = 'voorschot' AND e.soort = 'eind' AND v.gekoppelde_factuur_id = e.id
+      AND (v.id = ${factuurId} OR e.id = ${factuurId})
+      AND v.status <> 'concept' AND e.status = 'concept'
+  `
+}
+
 async function splitsPaar(factuurId: number) {
   const rows = await sql`SELECT * FROM facturen WHERE id = ${factuurId}`
   const f = rows[0]
@@ -366,12 +384,14 @@ export async function herstelSplitsing(factuurId: number) {
       bijgewerkt_op = NOW()
     WHERE id = ${eind.id}
   `
+  await zetEindfactuurMeeOpen(voorschot.id)
   return { voorschotId: voorschot.id as number, eindId: eind.id as number }
 }
 
 /**
  * Splitst een factuur (nog niet in Moneybird, niet betaald) in een voorschotfactuur (50%, deze factuur)
- * en een nieuwe eindfactuur (alle regels minus het voorschot).
+ * en een nieuwe eindfactuur (alle regels minus het voorschot, betalingstermijn minimaal 30 dagen).
+ * Beide termijnen zijn tegelijk te betalen: de eindfactuur volgt de voorschotfactuur naar 'verstuurd'.
  * Elke factuur gaat apart naar Moneybird, dus de omzet telt precies één keer.
  */
 export async function splitsInVoorschot(factuurId: number) {
@@ -393,7 +413,7 @@ export async function splitsInVoorschot(factuurId: number) {
     klant_id: f.klant_id,
     klus_id: f.klus_id,
     offerte_id: f.offerte_id,
-    betalingstermijn: f.betalingstermijn ?? 14,
+    betalingstermijn: Math.max(EIND_BETALINGSTERMIJN, Number(f.betalingstermijn ?? 14)),
     regels: [...regels, aftrekRegel(f.factuurnummer, voorschot, btw)],
     btw_pct: btw,
     notities: f.notities,
@@ -410,6 +430,8 @@ export async function splitsInVoorschot(factuurId: number) {
       bijgewerkt_op = NOW()
     WHERE id = ${factuurId}
   `
+  // Was de factuur al verstuurd, dan is de eindfactuur meteen ook zichtbaar en te betalen
+  await zetEindfactuurMeeOpen(factuurId)
   return { voorschotId: factuurId, eindId: eind.id, eindNummer: eind.factuurnummer }
 }
 

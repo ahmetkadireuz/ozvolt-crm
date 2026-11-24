@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { requireSession } from '@/lib/session'
-import { ensureFactuurKolommen, maakFactuurVanOfferte, splitsInVoorschot } from '@/lib/facturen'
+import { ensureFactuurKolommen, maakFactuurVanOfferte, splitsInVoorschot, zetEindfactuurMeeOpen } from '@/lib/facturen'
 import { zorgVoorMoneybirdFactuur } from '@/lib/moneybird-sync'
 
 /**
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // De factuur staat nu open in Moneybird en de klant krijgt de link: ook in het CRM 'verstuurd'
     await sql`UPDATE facturen SET betaal_url = ${betaalUrl}, status = CASE WHEN status = 'concept' THEN 'verstuurd' ELSE status END, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+    await zetEindfactuurMeeOpen(factuurId)
     await sql`
       UPDATE offertes SET betaling_50_50 = ${split}, betaal_url = ${betaalUrl}, betaal_url_2 = NULL, bijgewerkt_op = NOW()
       WHERE id = ${offerteId}

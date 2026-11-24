@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen } from '@/lib/db'
 import { requireSession } from '@/lib/session'
-import { ensureFactuurKolommen, isGesplitst } from '@/lib/facturen'
+import { ensureFactuurKolommen, isGesplitst, zetEindfactuurMeeOpen } from '@/lib/facturen'
 
 const VALID_STATUSES = ['concept','verstuurd','betaald','te_laat']
 
@@ -13,6 +13,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (body.status && VALID_STATUSES.includes(body.status)) {
     await sql`UPDATE facturen SET status = ${body.status}, bijgewerkt_op = NOW() WHERE id = ${factuurId}`
+    // 50/50: voorschotfactuur open = eindfactuur ook open (bewust terug naar concept blijft mogelijk)
+    if (body.status !== 'concept') { await ensureFactuurKolommen(); await zetEindfactuurMeeOpen(factuurId) }
     return NextResponse.json({ ok: true })
   }
 
@@ -39,10 +41,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       RETURNING regels, btw_pct
     `
     // Voorschotfactuur: opslaan = open en zichtbaar voor de klant (zoals een gewone factuur).
-    // De eindfactuur blijft concept tot hij na oplevering bewust wordt verstuurd.
+    // De eindfactuur wordt nooit los op verstuurd gezet: hij volgt de voorschotfactuur,
+    // zodat beide termijnen tegelijk in het klantportaal te betalen zijn.
     if (huidig.soort === 'voorschot' && berekenTotalen(bijgewerkt[0]?.regels ?? [], 0, Number(bijgewerkt[0]?.btw_pct ?? 21)).inclBtw > 0) {
       await sql`UPDATE facturen SET status = 'verstuurd' WHERE id = ${factuurId} AND status = 'concept'`
     }
+    await zetEindfactuurMeeOpen(factuurId)
     return NextResponse.json({ ok: true })
   }
 
