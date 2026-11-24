@@ -9,6 +9,7 @@ import { berekenTotalen, formatEuro } from '@/lib/utils'
 import StatusBadge from '@/components/StatusBadge'
 import Icon from '@/components/Icon'
 import OfferteActions from './OfferteActions'
+import { idealAan } from '@/lib/betalen'
 import OfferteForm from './OfferteForm'
 import WhatsAppKnop from './WhatsAppKnop'
 import OfferteKoppelen from '@/app/klussen/[id]/OfferteKoppelen'
@@ -34,7 +35,7 @@ export default async function OfferteDetailPage({
         FROM offertes o JOIN klanten kt ON kt.id = o.klant_id
         LEFT JOIN klussen ks ON ks.id = o.klus_id
         WHERE o.id = ${offerteId}`,
-    sql`SELECT id, factuurnummer, status FROM facturen WHERE offerte_id = ${offerteId}`,
+    sql`SELECT id, factuurnummer, status, soort FROM facturen WHERE offerte_id = ${offerteId} ORDER BY id`,
     sql`SELECT id, afspraaknummer, status, accept_token, sent_at FROM werkafspraken WHERE offerte_id = ${offerteId} ORDER BY aangemaakt_op DESC`.catch(() => []),
   ])
 
@@ -130,6 +131,7 @@ export default async function OfferteDetailPage({
           acceptUrl={acceptUrl}
           facturen={facturen2}
           afspraken={afspraken2}
+          idealAan={idealAan()}
         />
       </div>
 

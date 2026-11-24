@@ -9,8 +9,8 @@ import WhatsAppKnop from './WhatsAppKnop'
 import PortaalOpenKnop from '@/components/PortaalOpenKnop'
 import { waNummer } from '@/lib/whatsapp'
 
-export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl, facturen, afspraken }: {
-  offerte: any; offerteId: number; totalen: any; acceptUrl: string | null; facturen: any[]; afspraken: any[]
+export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl, facturen, afspraken, idealAan = false }: {
+  offerte: any; offerteId: number; totalen: any; acceptUrl: string | null; facturen: any[]; afspraken: any[]; idealAan?: boolean
 }) {
   const router = useRouter()
   const [inclAfspraak, setInclAfspraak] = useState(false)
@@ -287,8 +287,31 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
         </Link>
       ))}
 
+      {/* Online betaling: Tikkie staat op de factuur. Moneybird-iDEAL alleen als BETAAL_IDEAL=aan */}
+      {!idealAan && (
+        <div className="card">
+          <div className="section-label">Online betaling</div>
+          {facturen.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {facturen.map((f: any) => (
+                <Link key={f.id} href={`/facturen/${f.id}`} className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }}>
+                  <Icon name="payments" size={16} />
+                  Ga naar {f.soort === 'voorschot' ? 'voorschotfactuur' : f.soort === 'eind' ? 'eindfactuur' : 'factuur'} {f.factuurnummer}
+                  {f.status === 'betaald' ? ' ✓' : ''}
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: '.78rem', color: 'var(--text-2)' }}>Nog geen factuur bij deze offerte.</div>
+          )}
+          <div style={{ fontSize: '.72rem', color: 'var(--text-soft)', marginTop: 6 }}>
+            De klant betaalt via de Tikkie op de factuur. Op de offerte verschijnt de betaalknop zodra de factuur is verstuurd.
+          </div>
+        </div>
+      )}
+
       {/* Online betaallinks (via Moneybird) */}
-      <div className="card">
+      {idealAan && <div className="card">
         <div className="section-label">Online betaling</div>
         {offerte.betaal_url ? (
           <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -332,7 +355,7 @@ export default function OfferteActions({ offerte, offerteId, totalen, acceptUrl,
           Maakt de factuur aan en zet hem in Moneybird; de klant betaalt via iDEAL of overschrijving.
           {offerte.betaal_url && ' De link hoort bij de factuur hieronder — een nieuwe link is niet nodig.'}
         </div>
-      </div>
+      </div>}
 
       {/* Status */}
       <div className="card">

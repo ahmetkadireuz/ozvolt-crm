@@ -6,6 +6,7 @@ import { getKlantSessie } from '@/lib/klant-sessie'
 import { sql } from '@/lib/db'
 import { formatEuro } from '@/lib/utils'
 import Icon from '@/components/Icon'
+import { offerteBetaling } from '@/lib/offerte-betalen'
 import OfferteDocument, { offerteTotalen } from '@/components/OfferteDocument'
 import SignForm from '@/components/OfferteSignForm'
 import OfferteGeopendMelder from '@/components/OfferteGeopendMelder'
@@ -32,6 +33,9 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
     o.accept_token = upd[0].accept_token
   }
   const totalen = offerteTotalen(o)
+  // Token/klantsessie is hierboven al gecontroleerd: alleen dan de Tikkie-links bepalen
+  const isGeaccepteerd = !!o.accepted_at || o.status === 'geaccepteerd'
+  const betaling = isGeaccepteerd ? await offerteBetaling(o).catch(err => { console.error('[offerte betaling]', err); return null }) : null
 
   return (
     <div>
@@ -39,6 +43,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
       <a href="/klant/dashboard" className="kp-terug">← Terug naar overzicht</a>
       <OfferteDocument
         o={o}
+        betaling={betaling}
         tekenen={
           <SignForm
             token={o.accept_token}
@@ -48,10 +53,7 @@ export default async function KlantOffertePagina({ params }: { params: Promise<{
             klantEmail={o.klant_email ?? ''}
             totaal={formatEuro(totalen.inclBtw)}
             btwPct={Number(o.btw_pct ?? 21)}
-            betaalUrl={o.betaal_url ?? null}
-            betaling50_50={!!o.betaling_50_50}
-            betaalUrl2={o.betaal_url_2 ?? null}
-            eersteTermijn={formatEuro(totalen.inclBtw / 2)}
+            betaling={betaling}
           />
         }
         onderaan={

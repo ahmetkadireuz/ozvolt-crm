@@ -1,9 +1,13 @@
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { sql } from '@/lib/db'
 import { formatEuro } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import SignForm from '@/components/OfferteSignForm'
 import OfferteGeopendMelder from '@/components/OfferteGeopendMelder'
+import { offerteBetaling } from '@/lib/offerte-betalen'
 import OfferteDocument, { offerteNummer, offerteTotalen } from '@/components/OfferteDocument'
 
 const SITE = 'https://portaal.ozvoltelektro.nl'
@@ -53,6 +57,9 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
   if (!o) notFound()
 
   const totalen = offerteTotalen(o)
+  // Token/klantsessie is hierboven al gecontroleerd: alleen dan de Tikkie-links bepalen
+  const isGeaccepteerd = !!o.accepted_at || o.status === 'geaccepteerd'
+  const betaling = isGeaccepteerd ? await offerteBetaling(o).catch(err => { console.error('[offerte betaling]', err); return null }) : null
 
   return (
     <>
@@ -61,6 +68,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
       <OfferteGeopendMelder token={token} />
         <OfferteDocument
           o={o}
+          betaling={betaling}
           tekenen={
             <SignForm
               token={token}
@@ -70,10 +78,7 @@ export default async function OffertePage({ params }: { params: Promise<{ token:
               klantEmail={o.klant_email ?? ''}
               totaal={formatEuro(totalen.inclBtw)}
               btwPct={Number(o.btw_pct ?? 21)}
-              betaalUrl={o.betaal_url ?? null}
-              betaling50_50={!!o.betaling_50_50}
-              betaalUrl2={o.betaal_url_2 ?? null}
-              eersteTermijn={formatEuro(totalen.inclBtw / 2)}
+              betaling={betaling}
             />
           }
         />

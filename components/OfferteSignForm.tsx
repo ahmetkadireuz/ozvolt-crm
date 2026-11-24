@@ -1,38 +1,57 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import type { OfferteBetaling, OfferteTermijn } from '@/lib/offerte-betalen'
 
-function BetaalLinks({ betaalUrl, betaalUrl2, is50_50, totaal, eersteTermijn }: {
-  betaalUrl: string | null; betaalUrl2: string | null; is50_50: boolean; totaal: string; eersteTermijn: string
-}) {
-  if (!betaalUrl) return null
-  if (is50_50) {
+const fmtEuro = (n: number) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n)
+
+function TermijnKnop({ t, titel, kleur }: { t: OfferteTermijn; titel: string; kleur: string }) {
+  if (t.status === 'betaald') {
+    return (
+      <div style={{ flex: 1, minWidth: 160, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: 10, padding: '12px 16px', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
+        {titel}<br /><strong>✓ Betaald</strong>
+      </div>
+    )
+  }
+  if (t.status === 'link' && t.url) {
+    return (
+      <a href={t.url} style={{ flex: 1, minWidth: 160, display: 'block', background: kleur, color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
+        {titel} betalen<br /><strong>{fmtEuro(t.bedrag)}</strong>
+      </a>
+    )
+  }
+  return (
+    <div style={{ flex: 1, minWidth: 160, fontSize: 12, color: '#64748b', alignSelf: 'center', lineHeight: 1.5 }}>
+      {titel}: {t.status === 'na_oplevering' ? 'u ontvangt de eindfactuur na oplevering.' : 'u ontvangt de factuur binnenkort.'}
+    </div>
+  )
+}
+
+export function BetaalLinks({ betaling }: { betaling: OfferteBetaling | null }) {
+  if (!betaling || betaling.termijnen.length === 0) return null
+  if (betaling.is50_50) {
     return (
       <div style={{ marginTop: 20 }}>
-        <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>U kunt nu de betaling voldoen:</div>
+        <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Betaling in twee termijnen:</div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <a href={betaalUrl} style={{ flex: 1, minWidth: 160, display: 'block', background: '#1d2f4c', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
-            Eerste termijn betalen<br /><strong>{eersteTermijn}</strong>
-          </a>
-          {!betaalUrl2 && (
-            <div style={{ flex: 1, minWidth: 160, fontSize: 12, color: '#64748b', alignSelf: 'center', lineHeight: 1.5 }}>
-              Tweede termijn: u ontvangt de eindfactuur na oplevering.
-            </div>
-          )}
-          {betaalUrl2 && (
-            <a href={betaalUrl2} style={{ flex: 1, minWidth: 160, display: 'block', background: '#4c7191', color: '#fff', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', textAlign: 'center', fontWeight: 700, fontSize: 13 }}>
-              Tweede termijn betalen<br /><strong>{eersteTermijn}</strong>
-            </a>
-          )}
+          <TermijnKnop t={betaling.termijnen[0]} titel="Eerste termijn" kleur="#1d2f4c" />
+          {betaling.termijnen[1] && <TermijnKnop t={betaling.termijnen[1]} titel="Tweede termijn" kleur="#4c7191" />}
         </div>
       </div>
     )
   }
+  const t = betaling.termijnen[0]
+  if (t.status === 'betaald') {
+    return <div style={{ marginTop: 20, fontSize: 15, fontWeight: 700, color: '#15803d' }}>✓ Betaald</div>
+  }
+  if (t.status !== 'link' || !t.url) {
+    return <div style={{ marginTop: 20, fontSize: 13, color: '#64748b' }}>U ontvangt de factuur binnenkort.</div>
+  }
   return (
     <div style={{ marginTop: 20 }}>
       <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>U kunt nu direct betalen:</div>
-      <a href={betaalUrl} style={{ display: 'inline-block', background: '#16a34a', color: '#fff', borderRadius: 10, padding: '13px 28px', textDecoration: 'none', fontWeight: 700, fontSize: 15 }}>
-        Nu betalen → {totaal}
+      <a href={t.url} style={{ display: 'inline-block', background: '#16a34a', color: '#fff', borderRadius: 10, padding: '13px 28px', textDecoration: 'none', fontWeight: 700, fontSize: 15 }}>
+        Nu betalen → {fmtEuro(t.bedrag)}
       </a>
     </div>
   )
@@ -46,20 +65,16 @@ interface Props {
   klantEmail: string
   totaal: string
   btwPct: number
-  betaalUrl?: string | null
-  betaling50_50?: boolean
-  betaalUrl2?: string | null
-  eersteTermijn?: string
+  /** Server-side bepaald (Tikkie van de factuur); alleen meegeven aan wie de offerte mag zien */
+  betaling?: OfferteBetaling | null
 }
 
-export default function SignForm({ token, isGeaccepteerd, acceptedName, acceptedAt, klantEmail, totaal, btwPct, betaalUrl, betaling50_50, betaalUrl2, eersteTermijn }: Props) {
+export default function SignForm({ token, isGeaccepteerd, acceptedName, acceptedAt, klantEmail, totaal, btwPct, betaling }: Props) {
   const [naam, setNaam] = useState('')
   const [email, setEmail] = useState(klantEmail)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(isGeaccepteerd)
-  const [dynamischeBetaalUrl, setDynamischeBetaalUrl] = useState<string | null>(null)
-  const [dynamischeBetaalUrl2, setDynamischeBetaalUrl2] = useState<string | null>(null)
-  const [dynamisch50_50, setDynamisch50_50] = useState(false)
+  const [dynamischeBetaling, setDynamischeBetaling] = useState<OfferteBetaling | null>(null)
   const [error, setError] = useState('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -120,9 +135,7 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
       })
       const data = await res.json()
       if (data.ok) {
-        if (data.betaal_url) setDynamischeBetaalUrl(data.betaal_url)
-        if (data.betaal_url_2) setDynamischeBetaalUrl2(data.betaal_url_2)
-        if (data.betaling_50_50) setDynamisch50_50(true)
+        if (data.betaling) setDynamischeBetaling(data.betaling)
         setDone(true)
       }
       else setError(data.error ?? 'Er ging iets mis')
@@ -146,13 +159,7 @@ export default function SignForm({ token, isGeaccepteerd, acceptedName, accepted
           <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Ozvolt neemt spoedig contact met u op om de werkzaamheden in te plannen.</div>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#1d2f4c' }}>financien@ozvoltelektro.nl</div>
         </div>
-        <BetaalLinks
-          betaalUrl={dynamischeBetaalUrl ?? betaalUrl ?? null}
-          betaalUrl2={dynamischeBetaalUrl2 ?? betaalUrl2 ?? null}
-          is50_50={dynamisch50_50 || !!betaling50_50}
-          totaal={totaal}
-          eersteTermijn={eersteTermijn ?? ''}
-        />
+        <BetaalLinks betaling={dynamischeBetaling ?? betaling ?? null} />
       </div>
     )
   }

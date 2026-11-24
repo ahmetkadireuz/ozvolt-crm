@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql, berekenTotalen, formatEuro } from '@/lib/db'
 import { sendMail, offerteBevestigingMailHtml } from '@/lib/mail'
+import { offerteBetaling } from '@/lib/offerte-betalen'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -60,10 +61,12 @@ export async function POST(req: NextRequest) {
     )
   `
 
-  // Betaallinks worden niet meer automatisch aangemaakt bij ondertekening.
-  // Voor online betaling: maak handmatig een Moneybird-link aan via de offerte-detailpagina.
-  const betaalUrl: string | null = offerte.betaal_url ?? null
-  const betaalUrl2: string | null = offerte.betaal_url_2 ?? null
+  // Betaalknoppen: Tikkie van de factuur bij deze offerte (token is hierboven gecontroleerd).
+  // Bestaat er nog geen verstuurde factuur, dan ziet de klant "U ontvangt de factuur binnenkort".
+  const betaling = await offerteBetaling(offerte).catch(err => {
+    console.error('[accepteren betaling]', err)
+    return null
+  })
 
   // Stuur bevestigingsemail naar Ozvolt
   try {
@@ -86,9 +89,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     ok: true,
-    betaal_url: betaalUrl,
-    betaal_url_2: betaalUrl2,
-    betaling_50_50: !!offerte.betaling_50_50,
+    betaling,
   })
 }
 
